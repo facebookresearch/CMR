@@ -48,17 +48,17 @@ def main():
                         help="The initial learning rate for Adam.")
     parser.add_argument("--warmup_proportion", default=0.01, type=float,
                         help="Weight decay if we apply some.")
-    parser.add_argument("--weight_decay", default=0.01, type=float,
+    parser.add_argument("--weight_decay", default=0.00, type=float,
                         help="Weight deay if we apply some.")
     parser.add_argument("--adam_epsilon", default=1e-8, type=float,
                         help="Epsilon for Adam optimizer.")
-    parser.add_argument("--max_grad_norm", default=0.1, type=float,
+    parser.add_argument("--max_grad_norm", default=1.0, type=float,
                         help="Max gradient norm.")
     parser.add_argument("--gradient_accumulation_steps", default=1, type=int,
                         help="Max gradient norm.")
     parser.add_argument("--num_train_epochs", default=1000.0, type=float,
                         help="Total number of training epochs to perform.")
-    parser.add_argument("--warmup_steps", default=500, type=int,
+    parser.add_argument("--warmup_steps", default=300, type=int,
                         help="Linear warmup over warmup_steps.")
     parser.add_argument("--total_steps", default=100000, type=int,
                         help="Linear warmup over warmup_steps.")
@@ -76,8 +76,8 @@ def main():
     parser.add_argument('--seed', type=int, default=42,
                         help="random seed for initialization")
     args = parser.parse_args()
-    if os.path.exists(args.output_dir) and os.listdir(args.output_dir):
-        print("Output directory () already exists and is not empty.")
+    # if os.path.exists(args.output_dir) and os.listdir(args.output_dir):
+    #     print("Output directory () already exists and is not empty.")
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir, exist_ok=True)
 

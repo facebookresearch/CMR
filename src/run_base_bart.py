@@ -13,8 +13,8 @@ from models.utils import freeze_embeds, trim_batch
 from tqdm import tqdm
 
 def run(args, logger):
-    tokenizer = BartTokenizer.from_pretrained(args.model)
-    
+    tokenizer = BartTokenizer.from_pretrained("bart-large")
+
     train_data = GeneralDataset(logger, args, args.train_file, data_type="train", is_training=True, task_name=args.dataset)
     dev_data = GeneralDataset(logger, args, args.dev_file, data_type="dev", is_training=False, task_name=args.dataset)
 
@@ -90,7 +90,7 @@ def run(args, logger):
         test_data.load_dataset(tokenizer)
         test_data.load_dataloader()
 
-        test_performance = inference(model, test_data, save_predictions=True, verbose=True)
+        test_performance = inference(model, test_data, save_predictions=False, verbose=True, args=args, logger=logger)
         logger.info("%s on %s data: %.2f" % (test_data.metric, test_data.data_type, test_performance))
 
     return best_dev_performance, test_performance
@@ -134,7 +134,7 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
 
             if global_step % args.eval_period == 0:
                 model.eval()
-                curr_performance = inference(model if args.n_gpu==1 else model.module, dev_data)
+                curr_performance = inference(model if args.n_gpu==1 else model.module, dev_data, args=args, save_predictions=False, logger=logger)
                 logger.info("Step %d Train loss %.2f %s %s on epoch=%d" % (
                         global_step,
                         np.mean(train_losses),
@@ -146,7 +146,7 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
                     best_model_state_dict = {k:v.cpu() for (k, v) in model.state_dict().items()}
                     # model_state_dict = {k:v.cpu() for (k, v) in model.state_dict().items()}
                     # torch.save(model_state_dict, os.path.join(args.output_dir, "best-model.pt"))
-                    logger.info("Not saving model with best %s: %s -> %s on epoch=%d, global_step=%d" % \
+                    logger.info("New best perfromance %s: %s -> %s on epoch=%d, global_step=%d" % \
                             (dev_data.metric, best_performance, curr_performance, epoch, global_step))
                     best_performance = curr_performance
                     wait_step = 0
@@ -170,10 +170,15 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
     # torch.save(model_state_dict, os.path.join(args.output_dir, "last-model.pt"))
     return best_performance, best_model_state_dict
 
-def inference(model, dev_data, save_predictions=False, verbose=False):
+def inference(model, dev_data, save_predictions=False, verbose=False, args=None, logger=None):
     predictions = []
     bos_token_id = dev_data.tokenizer.bos_token_id
-    for i, batch in enumerate(dev_data.dataloader):
+    if args:
+        quiet=args.quiet
+    else:
+        quiet=False
+    logger.info("Starting inference ...")
+    for batch in tqdm(dev_data.dataloader, desc="Infernece on Dev", disable=quiet): 
         if torch.cuda.is_available():
             batch = [b.to(torch.device("cuda")) for b in batch]
         pad_token_id = dev_data.tokenizer.pad_token_id
@@ -187,6 +192,10 @@ def inference(model, dev_data, save_predictions=False, verbose=False):
         for input_, output in zip(batch[0], outputs):
             pred = dev_data.decode(output)
             predictions.append(pred)
+    logger.info("Starting inference ... Done")
     if save_predictions:
         dev_data.save_predictions(predictions)
-    return dev_data.evaluate(predictions, verbose=verbose)
+    logger.info("Starting evaluation metric ...")
+    result = dev_data.evaluate(predictions, verbose=verbose)
+    logger.info("Starting evaluation metric ... Done!")
+    return result

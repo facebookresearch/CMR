@@ -134,8 +134,10 @@ def get_exact_match_over_list(prediction, groundtruth):
     if type(groundtruth)==list:
         if len(groundtruth)==0:
             return 0
-        return np.max([get_exact_match_over_list(prediction, gt) for gt in groundtruth])
-    return (normalize_answer(prediction) == normalize_answer(groundtruth))
+        prediction_norm = normalize_answer(prediction)
+        return np.max([(prediction_norm == normalize_answer(gt)) for gt in groundtruth])
+    
+    # return (normalize_answer(prediction) == groundtruth)
 
 def normalize_answer(s):
     def remove_articles(text):
