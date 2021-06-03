@@ -22,6 +22,9 @@ pip install git+https://github.com/huggingface/transformers.git@7b75aa9fa55bee57
 ## Base Training 
 
 ```bash
-bash src/scripts/run_trivia_qa.sh > train.log 2>&1 &
-tail -f train.log
+bash src/scripts/run_triviaqa.sh > train_trivaqa.log 2>&1 &
+tail -f train_trivaqa.log
+
+bash src/scripts/run_qnli.sh > train_qnli.log 2>&1 &
+tail -f train_qnli.log
 ```

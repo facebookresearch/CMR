@@ -4,6 +4,9 @@ import numpy as np
 import os
  
 
+def escape(s):
+    return s.replace("\n", " ").replace("\t", " ").strip()
+
 def write_to_tsv(lst, out_file):
     with open(out_file, "w") as fout:
         for line in lst:
@@ -46,7 +49,7 @@ class Kilt_NQ(TextToTextDataset):
     def map_hf_dataset_to_list(self, hf_dataset, split_name):
         lines = []
         for datapoint in hf_dataset[split_name]:
-            lines.append((datapoint["input"].replace("\n", " ").replace("\t", " "), "\t".join([item["answer"] for item in datapoint["output"]])))
+            lines.append((escape(datapoint["input"]), "\t".join([escape(item["answer"]) for item in datapoint["output"]])))
         return lines
 
     def load_dataset(self):
@@ -60,7 +63,7 @@ class Kilt_TriviaQA(TextToTextDataset):
     def map_hf_dataset_to_list(self, hf_dataset, split_name):
         lines = []
         for datapoint in hf_dataset[split_name]:
-            lines.append((datapoint["input"].replace("\n", " ").replace("\t", " "), "\t".join([item["answer"] for item in datapoint["output"]])))
+            lines.append((escape(datapoint["input"]), "\t".join([escape(item["answer"]) for item in datapoint["output"]])))
         return lines
 
     def load_dataset(self):
@@ -81,14 +84,41 @@ class Kilt_TriviaQA(TextToTextDataset):
         return kilt_triviaqa
 
 
+class Glue_QNLI(TextToTextDataset):
+
+    def __init__(self, hf_identifier="glue_qnli"):
+        self.hf_identifier = hf_identifier
+        # for classification tasks, specify the meaning of each label
+        self.prompt = " " # are two sentences entailment or not entailment?
+        self.label = {
+            0: "entailment",    # entailment
+            1: "irrelevant",  # not_entailment
+            -1: "unkown"
+        }
+
+    def map_hf_dataset_to_list(self, hf_dataset, split_name):
+        lines = []
+        for datapoint in hf_dataset[split_name]:
+            lines.append(("Context: " + datapoint["sentence"] + " | Question: " + datapoint["question"], self.label[datapoint["label"]]))
+        print("Three examples: \n"+ "\n".join([str(_) for _ in lines[:3]]))
+        return lines
+
+    def load_dataset(self):
+        return datasets.load_dataset('glue','qnli')
+
+
 def download(dataset_name, path="./"):
+    print("Downloading ", dataset_name)
     if dataset_name == "kilt_nq":
         data = Kilt_NQ()
         data.write_dataset(path)
-
-    if dataset_name == "kilt_triviaqa":
+    elif dataset_name == "kilt_triviaqa":
         data = Kilt_TriviaQA()
         data.write_dataset(path)   
+    elif dataset_name == "glue_qnli":
+        data = Glue_QNLI()
+        data.write_dataset(path)   
 
-download("kilt_nq")
-download("kilt_triviaqa")
+# download("kilt_nq")
+# download("kilt_triviaqa")
+download("glue_qnli")
