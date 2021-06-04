@@ -2,10 +2,14 @@ from re import L
 import datasets
 import numpy as np
 import os
- 
+
+import sys 
 
 def escape(s):
     return s.replace("\n", " ").replace("\t", " ").strip()
+
+def add_qmark(s):
+    return s if s.endswith("?") else s + " ?"
 
 def write_to_tsv(lst, out_file):
     with open(out_file, "w") as fout:
@@ -49,7 +53,7 @@ class Kilt_NQ(TextToTextDataset):
     def map_hf_dataset_to_list(self, hf_dataset, split_name):
         lines = []
         for datapoint in hf_dataset[split_name]:
-            lines.append((escape(datapoint["input"]), "\t".join([escape(item["answer"]) for item in datapoint["output"]])))
+            lines.append((escape(add_qmark(datapoint["input"])), "\t".join([escape(item["answer"]) for item in datapoint["output"]])))
         return lines
 
     def load_dataset(self):
@@ -63,7 +67,7 @@ class Kilt_TriviaQA(TextToTextDataset):
     def map_hf_dataset_to_list(self, hf_dataset, split_name):
         lines = []
         for datapoint in hf_dataset[split_name]:
-            lines.append((escape(datapoint["input"]), "\t".join([escape(item["answer"]) for item in datapoint["output"]])))
+            lines.append((escape(add_qmark(datapoint["input"])), "\t".join([escape(item["answer"]) for item in datapoint["output"]])))
         return lines
 
     def load_dataset(self):
@@ -119,6 +123,9 @@ def download(dataset_name, path="./"):
         data = Glue_QNLI()
         data.write_dataset(path)   
 
-# download("kilt_nq")
-# download("kilt_triviaqa")
-download("glue_qnli")
+path = "."
+if len(sys.argv) >=2:
+    path = sys.argv[1] 
+download("kilt_nq", path)
+# download("kilt_triviaqa", path)
+# download("glue_qnli", path)

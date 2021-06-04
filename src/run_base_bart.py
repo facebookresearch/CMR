@@ -69,7 +69,7 @@ def run(args, logger):
                                        state_dict=best_model_state_dict)
             logger.info("Loading checkpoint from CPU")
         else:
-            checkpoint = os.path.join(args.output_dir, args.predict_checkpoint)
+            checkpoint = os.path.join(args.predict_checkpoint)
             def convert_to_single_gpu(state_dict):
                 def _convert(key):
                     if key.startswith('module.'):
@@ -90,7 +90,7 @@ def run(args, logger):
         test_data.load_dataset(tokenizer)
         test_data.load_dataloader()
 
-        test_performance = inference(model, test_data, save_predictions=False, verbose=True, args=args, logger=logger)
+        test_performance = inference(model, test_data, save_predictions=True, verbose=True, args=args, logger=logger)
         logger.info("%s on %s data: %.2f" % (test_data.metric, test_data.data_type, test_performance))
 
     return best_dev_performance, test_performance

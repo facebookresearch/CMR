@@ -27,4 +27,10 @@ tail -f train_trivaqa.log
 
 bash src/scripts/run_qnli.sh > train_qnli.log 2>&1 &
 tail -f train_qnli.log
+
+bash src/scripts/run_nq_triviaqa.sh > train_nq_trivaqa.log 2>&1 &
+tail -f train_nq_trivaqa.log
+
+bash src/scripts/run_nq.sh > train_nq.log 2>&1 &
+tail -f train_nq.log
 ```

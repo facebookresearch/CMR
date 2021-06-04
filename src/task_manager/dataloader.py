@@ -74,7 +74,9 @@ class GeneralDataset(object):
             outputs = []
 
             for dp in self.data:
-                inputs.append(" [{}] {}".format(self.task_name, dp[0]))
+                # Add the task name to the input
+                # inputs.append(" [{}] {}".format(self.task_name, dp[0]))
+                inputs.append(dp[0])
                 outputs.append(dp[1]) # is a list
 
             self.logger.info("Printing 3 examples")
