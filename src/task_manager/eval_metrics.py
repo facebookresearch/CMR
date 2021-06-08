@@ -26,9 +26,9 @@ METRICS = {
     'lama_google_re': 'EM',
     'lama_squad': 'EM',
     'lama_trex': 'EM', 
-    'mrqa_squad': 'EM', # QA-F1
-    'mrqa_naturalquestions': 'EM',
-    'mrqa_triviaqa': 'EM',
+    'mrqa_squad': 'EM|QA-F1', # QA-F1
+    'mrqa_naturalquestions': 'EM|QA-F1',
+    'mrqa_triviaqa': 'EM|QA-F1',
     # 'mrqa_squad': 'EM',
 }
 
@@ -49,33 +49,37 @@ def evaluate_func(predictions, data, metric):
 
     assert len(predictions) == len(data)
 
-    if metric == "EM":
-        ems = []
-        for (prediction, dp) in zip(predictions, data):
-            ems.append(get_exact_match_over_list(prediction, dp[1]))
-        return np.mean(ems)
-    elif metric == "ACC":
-        accs = []
-        for (prediction, dp) in zip(predictions, data):
-            accs.append(get_accruacy_over_list(prediction, dp[1]))
-        return np.mean(accs)
-    elif metric == "QA-F1":
-        f1s = []
-        for (prediction, dp) in zip(predictions, data):
-            f1s.append(get_f1_over_list(prediction, dp[1]))
-        return np.mean(f1s)
-    elif metric == "Classification-F1":
-        return f1_score([dp[1][0] for dp in data], predictions, average="macro")
-    elif metric == "Matthew-Correlation":
-        return get_matthews_corr(data, predictions)
-    elif metric == "Pearson-Correlation":
-        predictions = cast_to_float(predictions)
-        return pearsonr([float(dp[1][0]) for dp in data], predictions)[0]
-    # elif metric == "Rouge-L":
+    all_metrics = [m.strip() for m in metric.split("|")]
+    results = {}
+    for m in all_metrics:
+        if m == "EM":
+            ems = []
+            for (prediction, dp) in zip(predictions, data):
+                ems.append(get_exact_match_over_list(prediction, dp[1]))
+            results[m] = np.mean(ems)
+        elif m == "ACC":
+            accs = []
+            for (prediction, dp) in zip(predictions, data):
+                accs.append(get_accruacy_over_list(prediction, dp[1]))
+            results[m] = np.mean(accs)
+        elif m == "QA-F1":
+            f1s = []
+            for (prediction, dp) in zip(predictions, data):
+                f1s.append(get_f1_over_list(prediction, dp[1]))
+            results[m] = np.mean(f1s)
+        elif m == "Classification-F1":
+            results[m] = f1_score([dp[1][0] for dp in data], predictions, average="macro")
+        elif m == "Matthew-Correlation":
+            results[m] = get_matthews_corr(data, predictions)
+        elif m == "Pearson-Correlation":
+            predictions = cast_to_float(predictions)
+            results[m] = pearsonr([float(dp[1][0]) for dp in data], predictions)[0]
+    # elif m == "Rouge-L":
     #     rouges = []
     #     for (prediction, dp) in zip(predictions, data):
     #         rouges.append(get_rouge_over_list(prediction, dp[1]))
-    #     return np.mean(rouges)
+    #     results[m] = np.mean(rouges)
+    return results
 
 def get_matthews_corr(data, predictions):
     # only cola is using this...?
@@ -94,8 +98,8 @@ def get_matthews_corr(data, predictions):
     return matthews_corrcoef(new_gold, new_predictions)
 
 def qa_f1_score(prediction, ground_truth):
-    prediction_tokens = normalize_answer(prediction).split()
-    ground_truth_tokens = normalize_answer(ground_truth).split()
+    prediction_tokens = prediction.split()
+    ground_truth_tokens = ground_truth.split()
     common = Counter(prediction_tokens) & Counter(ground_truth_tokens)
     num_same = sum(common.values())
     if num_same == 0:
@@ -128,18 +132,19 @@ def get_accruacy_over_list(prediction, groundtruth):
     return accuracy(prediction, groundtruth)
 
 def get_f1_over_list(prediction, groundtruth):
-    if type(groundtruth)==list:
-        if len(groundtruth)==0:
-            return 0
-        return np.max([qa_f1_score(prediction, gt) for gt in groundtruth])
-    return qa_f1_score(prediction, groundtruth)
+    # if type(groundtruth)==list:
+    if len(groundtruth)==0:
+        return 0
+    prediction_norm = normalize_answer(prediction)
+    return np.max([qa_f1_score(prediction_norm, normalize_answer(gt)) for gt in groundtruth])
+    # return qa_f1_score(prediction, groundtruth)
 
 def get_exact_match_over_list(prediction, groundtruth):
-    if type(groundtruth)==list:
-        if len(groundtruth)==0:
-            return 0
-        prediction_norm = normalize_answer(prediction)
-        return np.max([(prediction_norm == normalize_answer(gt)) for gt in groundtruth])
+    # if type(groundtruth)==list:
+    if len(groundtruth)==0:
+        return 0
+    prediction_norm = normalize_answer(prediction)
+    return np.max([(prediction_norm == normalize_answer(gt)) for gt in groundtruth])
     
     # return (normalize_answer(prediction) == groundtruth)
 

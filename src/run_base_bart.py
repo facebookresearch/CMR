@@ -91,7 +91,7 @@ def run(args, logger):
         test_data.load_dataloader()
 
         test_performance = inference(model, test_data, save_predictions=True, verbose=True, args=args, logger=logger)
-        logger.info("%s on %s data: %.2f" % (test_data.metric, test_data.data_type, test_performance))
+        logger.info("%s on %s data: %.s" % (test_data.metric, test_data.data_type, str(test_performance)))
 
     return best_dev_performance, test_performance
 
@@ -99,7 +99,8 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
     model.train()
     global_step = 0
     train_losses = []
-    best_performance = -1.0
+    best_performance = -1.0 # a single metric
+    best_results = None
     stop_training=False
 
     logger.info("Starting training!")
@@ -142,7 +143,13 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
                         curr_performance,
                         epoch))
                 train_losses = []
-                if best_performance < curr_performance:
+
+                def is_improved(best, curr):
+                    if best is None:
+                        return True
+                    return any([best[m] < curr[m] for m in best])
+
+                if is_improved(best_performance, curr_performance):
                     best_model_state_dict = {k:v.cpu() for (k, v) in model.state_dict().items()}
                     # model_state_dict = {k:v.cpu() for (k, v) in model.state_dict().items()}
                     # torch.save(model_state_dict, os.path.join(args.output_dir, "best-model.pt"))
