@@ -8,7 +8,17 @@ import sys
 import json
 
 def escape(s):
+    # TODO: remove the markups 
+    s = s.replace("</P>", " ")
+    s = s.replace("<P>", " ")
     return s.replace("\n", " ").replace("\t", " ").strip()
+
+# Filtering the bad examples.
+def example_pass(context):
+    if "<table>" in context.lower() or "<td>" in context.lower():
+        return False
+    else:
+        return True
 
 def add_qmark(s):
     return s if s.endswith("?") else s + " ?"
@@ -117,8 +127,9 @@ class MRQA(TextToTextDataset):
 
     def __init__(self, task_identifier="mrqa", subset="SQuAD", mrqa_path="data/mrqa"):
         self.task_identifier = task_identifier + "_" + subset.lower()
-        self.subset = subset
         self.mrqa_path = mrqa_path
+        self.subset = subset
+ 
 
     def map_to_list(self, dataset, split_name):
         if split_name not in dataset:
@@ -128,6 +139,8 @@ class MRQA(TextToTextDataset):
         for datapoint in dataset[split_name]:
             if not datapoint["answers"]:
                 print("empty answer")
+                continue
+            if not example_pass(datapoint["context"]):
                 continue
             lines.append(("Context: " + escape(datapoint["context"]) + 
                             " | Question: " + escape(datapoint["question"]), 
@@ -188,3 +201,6 @@ if len(sys.argv) >=2:
 format("mrqa_SQuAD", path)
 format("mrqa_TriviaQA", path)
 format("mrqa_NaturalQuestions", path)
+
+
+# shuf -n 1000 dev_file data/${task}/${task}_dev.mini.tsv

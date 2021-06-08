@@ -1,5 +1,15 @@
-task="mrqa_squad"
+task="mrqa_naturalquestions"
 logname="train_bart-base"
+
+if [[ -f "data/${task}/${task}_dev.mini.tsv" ]]
+then
+    echo "data/${task}/${task}_dev.mini.tsv exists on your filesystem."
+else
+    shuf -n 1000 "data/${task}/${task}_dev.tsv" > "data/${task}/${task}_dev.mini.tsv"
+fi
+
+
+
 python src/cli_base.py \
         --do_train \
         --output_dir out/${task} \
@@ -12,7 +22,7 @@ python src/cli_base.py \
         --warmup_steps 100 \
         --train_batch_size 32 \
         --predict_batch_size 64 \
-        --eval_period 1000 \
+        --eval_period 500 \
         --num_train_epochs 10 \
         --max_input_length 888 \
         --max_output_length 50 \

@@ -9,6 +9,7 @@ from task_manager.dataloader import GeneralDataset
 
 from models.mybart import MyBart
 from models.utils import freeze_embeds, trim_batch
+import json
 
 from tqdm import tqdm
 
@@ -99,8 +100,7 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
     model.train()
     global_step = 0
     train_losses = []
-    best_performance = -1.0 # a single metric
-    best_results = None
+    best_performance = None
     stop_training=False
 
     logger.info("Starting training!")
@@ -151,10 +151,14 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
 
                 if is_improved(best_performance, curr_performance):
                     best_model_state_dict = {k:v.cpu() for (k, v) in model.state_dict().items()}
-                    # model_state_dict = {k:v.cpu() for (k, v) in model.state_dict().items()}
-                    # torch.save(model_state_dict, os.path.join(args.output_dir, "best-model.pt"))
+                    # save results
                     logger.info("New best perfromance %s: %s -> %s on epoch=%d, global_step=%d" % \
-                            (dev_data.metric, best_performance, curr_performance, epoch, global_step))
+                            (dev_data.metric, best_performance, curr_performance, epoch, global_step))                    
+                    best_model_path = os.path.join(args.output_dir, "best-model.pt")
+                    with open(best_model_path.replace(".pt", "_results.join"), "w") as f:
+                        json.dump(curr_performance, f)
+                    logger.info("Saving the new best model to {}".format(best_model_path))
+                    torch.save(best_model_state_dict, best_model_path)
                     best_performance = curr_performance
                     wait_step = 0
                     stop_training = False
