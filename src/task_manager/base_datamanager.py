@@ -17,7 +17,7 @@ class MyQADataset(Dataset):
         self.out_metadata = list(zip(range(len(decoder_input_ids)), range(1, 1+len(decoder_input_ids)))) \
             if out_metadata is None else out_metadata
         self.is_training = is_training
-
+        
         assert len(self.input_ids)==len(self.attention_mask)==self.in_metadata[-1][-1]
         assert len(self.decoder_input_ids)==len(self.decoder_attention_mask)==self.out_metadata[-1][-1]
 

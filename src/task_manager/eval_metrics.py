@@ -26,6 +26,10 @@ METRICS = {
     'lama_google_re': 'EM',
     'lama_squad': 'EM',
     'lama_trex': 'EM', 
+    'mrqa_squad': 'EM', # QA-F1
+    'mrqa_naturalquestions': 'EM',
+    'mrqa_triviaqa': 'EM',
+    # 'mrqa_squad': 'EM',
 }
 
 

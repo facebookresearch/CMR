@@ -126,7 +126,12 @@ class MRQA(TextToTextDataset):
             return []
         lines = []
         for datapoint in dataset[split_name]:
-            lines.append(("Context: " + datapoint["context"] + " | Question: " + datapoint["question"], "\t".join([escape(a) for a in datapoint["answers"]])))
+            if not datapoint["answers"]:
+                print("empty answer")
+                continue
+            lines.append(("Context: " + escape(datapoint["context"]) + 
+                            " | Question: " + escape(datapoint["question"]), 
+                            "\t".join([escape(a) for a in datapoint["answers"]])))
         print("Three examples: \n"+ "\n".join([str(_) for _ in lines[:3]]))
         return lines
 

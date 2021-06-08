@@ -85,6 +85,10 @@ class GeneralDataset(object):
                 self.logger.info(outputs[i])
 
             outputs, metadata = self.flatten(outputs) # what is metadata?
+            self.logger.info("Printing 3 examples's outputs and metadata after flattening")
+            for i in range(3):
+                self.logger.info(outputs[i])
+                self.logger.info(metadata[i])
 
             if self.args.do_lowercase:
                 inputs = [input0.lower() for input0 in inputs]
@@ -115,7 +119,11 @@ class GeneralDataset(object):
                                decoder_input_ids, decoder_attention_mask,
                                metadata], f)
                 self.logger.info("Save preprocessed data ... Done!")
-
+        self.logger.info("len(input_ids): {}".format(len(input_ids)))
+        self.logger.info("len(decoder_input_ids): {}".format(len(decoder_input_ids)))
+        self.logger.info("len(attention_mask): {}".format(len(attention_mask)))
+        self.logger.info("len(decoder_attention_mask): {}".format(len(decoder_attention_mask)))
+        
         self.dataset = MyQADataset(input_ids, attention_mask,
                                         decoder_input_ids, decoder_attention_mask,
                                         in_metadata=None, out_metadata=metadata,
