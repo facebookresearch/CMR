@@ -1,5 +1,5 @@
 task="kilt_nq"
-# python src/cli_base.py --do_train \
+# python src/cli_bart.py --do_train \
 #         --output_dir out/${task} \
 #         --model facebook/bart-base \
 #         --dataset ${task} \
@@ -14,7 +14,7 @@ task="kilt_nq"
 #         --max_output_length 16 \
 #         --num_beams 3 \
 #         --append_another_bos
-python src/cli_base.py \
+python src/cli_bart.py \
         --do_predict \
         --output_dir out/${task} \
         --model facebook/bart-large \

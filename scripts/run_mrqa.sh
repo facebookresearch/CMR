@@ -1,23 +1,25 @@
 task="mrqa_naturalquestions"
-modelsize="base"
-logname="train_bart-${modelsize}"
-lr=3e-5
-train_bsz=32
-pred_bsz=64
+modelsize="large"
+lr=1e-5
+train_bsz=16
+pred_bsz=32
 warmup=100
+
+logname="train_bart-${modelsize}"
 
 if [[ -f "data/${task}/${task}_dev.mini.tsv" ]]
 then
     echo "data/${task}/${task}_dev.mini.tsv exists on your filesystem."
 else
     shuf -n 1000 "data/${task}/${task}_dev.tsv" > "data/${task}/${task}_dev.mini.tsv"
+    echo "data/${task}/${task}_dev.mini.tsv generated."
 fi
 
 
 
-python src/cli_base.py \
+python src/cli_bart.py \
         --do_train \
-        --output_dir out/${task} \
+        --output_dir "out/${task}_bart-${modelsize}" \
         --model facebook/bart-${modelsize} \
         --dataset ${task} \
         --train_file data/${task}/${task}_train.tsv \

@@ -206,7 +206,7 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
     logger.info("Starting inference ... Done")
     if save_predictions:
         dev_data.save_predictions(predictions)
-    logger.info("Starting evaluation metric ...")
+    # logger.info("Starting evaluation metric ...")
     result = dev_data.evaluate(predictions, verbose=verbose)
-    logger.info("Starting evaluation metric ... Done!")
+    # logger.info("Starting evaluation metric ... Done!")
     return result
