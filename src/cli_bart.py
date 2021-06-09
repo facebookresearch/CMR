@@ -11,7 +11,7 @@ import random
 import numpy as np
 import torch
 
-from run_base_bart import run
+from run_bart import run
 
 def main():
     parser = argparse.ArgumentParser()

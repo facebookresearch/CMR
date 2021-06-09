@@ -18,20 +18,16 @@ pip install git+https://github.com/huggingface/transformers.git@7b75aa9fa55bee57
 ```
 
 
+## Cleaning
+```bash
+python data/data_formatter.py
+rm data/*/*-BartTokenized.json
+```
+
 
 
 ## Base Training 
 
 ```bash
-bash src/scripts/run_triviaqa.sh > train_trivaqa.log 2>&1 &
-tail -f train_trivaqa.log
-
-bash src/scripts/run_qnli.sh > train_qnli.log 2>&1 &
-tail -f train_qnli.log
-
-bash src/scripts/run_nq_triviaqa.sh > train_nq_trivaqa.log 2>&1 &
-tail -f train_nq_trivaqa.log
-
-bash src/scripts/run_nq.sh > train_nq.log 2>&1 &
-tail -f train_nq.log
+bash scripts/run_mrqa.sh
 ```

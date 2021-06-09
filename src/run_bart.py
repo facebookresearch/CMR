@@ -155,7 +155,7 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
                     logger.info("New best perfromance %s: %s -> %s on epoch=%d, global_step=%d" % \
                             (dev_data.metric, best_performance, curr_performance, epoch, global_step))                    
                     best_model_path = os.path.join(args.output_dir, "best-model.pt")
-                    with open(best_model_path.replace(".pt", "_results.join"), "w") as f:
+                    with open(best_model_path.replace(".pt", "_results.json"), "w") as f:
                         json.dump(curr_performance, f)
                     logger.info("Saving the new best model to {}".format(best_model_path))
                     torch.save(best_model_state_dict, best_model_path)

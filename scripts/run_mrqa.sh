@@ -1,5 +1,10 @@
 task="mrqa_naturalquestions"
-logname="train_bart-base"
+modelsize="base"
+logname="train_bart-${modelsize}"
+lr=3e-5
+train_bsz=32
+pred_bsz=64
+warmup=100
 
 if [[ -f "data/${task}/${task}_dev.mini.tsv" ]]
 then
@@ -13,15 +18,15 @@ fi
 python src/cli_base.py \
         --do_train \
         --output_dir out/${task} \
-        --model facebook/bart-base \
+        --model facebook/bart-${modelsize} \
         --dataset ${task} \
         --train_file data/${task}/${task}_train.tsv \
         --dev_file data/${task}/${task}_dev.mini.tsv \
         --test_file data/${task}/${task}_dev.tsv \
-        --learning_rate 3e-5 \
-        --warmup_steps 100 \
-        --train_batch_size 32 \
-        --predict_batch_size 64 \
+        --learning_rate ${lr} \
+        --warmup_steps ${warmup} \
+        --train_batch_size ${train_bsz} \
+        --predict_batch_size ${pred_bsz} \
         --eval_period 500 \
         --num_train_epochs 10 \
         --max_input_length 888 \
