@@ -1,7 +1,7 @@
 task="mrqa_naturalquestions"
 modelsize="large"
 lr=1e-5
-train_bsz=16
+train_bsz=8
 pred_bsz=32
 warmup=100
 

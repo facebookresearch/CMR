@@ -7,8 +7,8 @@ from transformers import AdamW, get_linear_schedule_with_warmup
  
 from task_manager.dataloader import GeneralDataset
 
-from models.mybart import MyBart
-from models.utils import freeze_embeds, trim_batch, convert_model_to_single_gpu
+from .mybart import MyBart
+from .utils import freeze_embeds, trim_batch, convert_model_to_single_gpu
 import json
 
 from tqdm import tqdm

@@ -21,8 +21,8 @@ def main():
     parser.add_argument("--output_file", default="path to save the bugs", required=True)
     parser.add_argument("--model_conigfile", default="path to load the model parameters", required=True)
     ## API for Evaluation
-
-    ## Model related 
+    
+    ## Sampling
     parser.add_argument('--seed', type=int, default=42,
                         help="random seed for initialization")
     args = parser.parse_args()
