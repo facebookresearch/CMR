@@ -8,10 +8,11 @@ from transformers import AdamW, get_linear_schedule_with_warmup
 from task_manager.dataloader import GeneralDataset
 
 from models.mybart import MyBart
-from models.utils import freeze_embeds, trim_batch
+from models.utils import freeze_embeds, trim_batch, convert_model_to_single_gpu
 import json
 
 from tqdm import tqdm
+
 
 def run(args, logger):
     tokenizer = BartTokenizer.from_pretrained("bart-large")
@@ -32,14 +33,8 @@ def run(args, logger):
 
     if args.do_train:
         if args.checkpoint is not None and args.checkpoint != "None":
-            def convert_to_single_gpu(state_dict):
-                def _convert(key):
-                    if key.startswith('module.'):
-                        return key[7:]
-                    return key
-                return {_convert(key):value for key, value in state_dict.items()}
             model = MyBart.from_pretrained(args.model,
-                                           state_dict=convert_to_single_gpu(torch.load(args.checkpoint)))
+                                           state_dict=convert_model_to_single_gpu(torch.load(args.checkpoint)))
         else:
             model = MyBart.from_pretrained(args.model)
 
@@ -71,14 +66,8 @@ def run(args, logger):
             logger.info("Loading checkpoint from CPU")
         else:
             checkpoint = os.path.join(args.predict_checkpoint)
-            def convert_to_single_gpu(state_dict):
-                def _convert(key):
-                    if key.startswith('module.'):
-                        return key[7:]
-                    return key
-                return {_convert(key):value for key, value in state_dict.items()}
             model = MyBart.from_pretrained(args.model,
-                                        state_dict=convert_to_single_gpu(torch.load(checkpoint)))
+                                        state_dict=convert_model_to_single_gpu(torch.load(checkpoint)))
             logger.info("Loading checkpoint from {}".format(checkpoint))
 
         if torch.cuda.is_available():

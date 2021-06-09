@@ -2,6 +2,13 @@ import torch.nn as nn
 # from dataloader.default_split import DEFAULT_SPLIT
 import json
 
+def convert_model_to_single_gpu(state_dict):
+    def _convert(key):
+        if key.startswith('module.'):
+            return key[7:]
+        return key
+    return {_convert(key):value for key, value in state_dict.items()}
+
 def label_smoothed_nll_loss(lprobs, target, epsilon=0.1, ignore_index=-100):
     """From fairseq"""
     if target.dim() == lprobs.dim() - 1:
