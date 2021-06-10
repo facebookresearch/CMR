@@ -11,9 +11,9 @@ import random
 import numpy as np
 import torch
 
-from models.run_bart import run
+from semanticdebugger.models.run_bart import run
 
-def main():
+def get_parser():
     parser = argparse.ArgumentParser()
 
     ## Basic parameters
@@ -75,7 +75,10 @@ def main():
                         help="Use a subset of data for debugging")
     parser.add_argument('--seed', type=int, default=42,
                         help="random seed for initialization")
-    args = parser.parse_args()
+    return parser
+
+def main():
+    args = get_parser().parse_args()
     # if os.path.exists(args.output_dir) and os.listdir(args.output_dir):
     #     print("Output directory () already exists and is not empty.")
     if not os.path.exists(args.output_dir):

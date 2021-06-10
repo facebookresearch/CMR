@@ -5,15 +5,14 @@ import torch
 from transformers import BartTokenizer, BartConfig
 from transformers import AdamW, get_linear_schedule_with_warmup
  
-from task_manager.dataloader import GeneralDataset
+from semanticdebugger.task_manager.dataloader import GeneralDataset
 
 from .mybart import MyBart
 from .utils import freeze_embeds, trim_batch, convert_model_to_single_gpu
 import json
 
 from tqdm import tqdm
-
-
+ 
 def run(args, logger):
     tokenizer = BartTokenizer.from_pretrained("bart-large")
 

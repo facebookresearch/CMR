@@ -4,6 +4,7 @@ lr=1e-5
 train_bsz=8
 pred_bsz=32
 warmup=100
+max_input_length=500
 
 logname="train_bart-${modelsize}"
 
@@ -17,7 +18,7 @@ fi
 
 
 
-python src/cli_bart.py \
+python semanticdebugger/cli_bart.py \
         --do_train \
         --output_dir "out/${task}_bart-${modelsize}" \
         --model facebook/bart-${modelsize} \
@@ -31,7 +32,7 @@ python src/cli_bart.py \
         --predict_batch_size ${pred_bsz} \
         --eval_period 500 \
         --num_train_epochs 10 \
-        --max_input_length 888 \
+        --max_input_length ${max_input_length} \
         --max_output_length 50 \
         --num_beams 3 \
         --append_another_bos  > logs/${task}.${logname}.log 2>&1 &

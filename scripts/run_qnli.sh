@@ -1,5 +1,5 @@
 task="glue_qnli"
-# python src/cli_bart.py --do_train \
+# python semanticdebugger/cli_bart.py --do_train \
 #         --output_dir out/${task} \
 #         --model facebook/bart-base \
 #         --dataset ${task} \
@@ -15,7 +15,7 @@ task="glue_qnli"
 #         --num_beams 3 \
 #         --append_another_bos
 
-python src/cli_bart.py --do_train \
+python semanticdebugger/cli_bart.py --do_train \
         --output_dir out/${task} \
         --model facebook/bart-large \
         --dataset ${task} \
