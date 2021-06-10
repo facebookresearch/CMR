@@ -8,15 +8,13 @@ from tqdm import tqdm
 from transformers import BartTokenizer, BartConfig
 from semanticdebugger.task_manager.dataloader import GeneralDataset
 from semanticdebugger.models.run_bart import inference
-from semanticdebugger.cli_bart import get_parser
-from argparse import Namespace
-import logging
+from argparse import Namespace 
 
-def inference_api(config_file, test_file, logger):
-    parser = get_parser()
-    with open(config_file) as f:
-        config_args = eval(f.read())  # an Namespace object in python language
-    args = parser.parse_args(namespace=config_args) 
+def inference_api(config_file, test_file, logger): 
+    
+    with open(config_file) as f: 
+        config_args = eval(f.read())  # an Namespace object in python language  
+    args = config_args
     # load config from json  
     
     test_data = GeneralDataset(logger, args, test_file, data_type="dev", is_training=False, task_name=args.dataset)

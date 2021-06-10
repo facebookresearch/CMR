@@ -32,7 +32,7 @@ def generate_bugs(predictions, truth_data, results_all):
 
 def main():
     parser = argparse.ArgumentParser()
-
+    
     ## Basic parameters
     parser.add_argument("--data_file", default="data/mrqa_naturalquestions/mrqa_naturalquestions_dev.100.tsv", required=False)     
     parser.add_argument("--bug_file", default="bug_data/mrqa_naturalquestions_dev.bugs.jsonl", required=False)
@@ -47,7 +47,7 @@ def main():
                         help="random seed for initialization")
     args = parser.parse_args()
 
-    log_filename = "logs/{}_build_bugpool_log.txt".format(args.prefix)
+    log_filename = "logs/build_bugpool_log_{}.txt".format(args.prefix)
 
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
