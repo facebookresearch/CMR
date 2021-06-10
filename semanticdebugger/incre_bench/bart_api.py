@@ -9,17 +9,21 @@ from transformers import BartTokenizer, BartConfig
 from semanticdebugger.task_manager.dataloader import GeneralDataset
 from semanticdebugger.models.run_bart import inference
 from semanticdebugger.cli_bart import get_parser
+from argparse import Namespace
+import logging
 
-
-def inference_api(config_file, test_file):
+def inference_api(config_file, test_file, logger):
     parser = get_parser()
-    args = parser.parse_args()
-    # load config from json 
+    with open(config_file) as f:
+        config_args = eval(f.read())  # an Namespace object in python language
+    args = parser.parse_args(namespace=config_args) 
+    # load config from json  
     
-    logger = None 
-
+    test_data = GeneralDataset(logger, args, test_file, data_type="dev", is_training=False, task_name=args.dataset)
     tokenizer = BartTokenizer.from_pretrained("bart-large")
-    test_data = GeneralDataset(logger, args, args.dev_file, data_type="dev", is_training=False, task_name=args.dataset)
+    test_data.load_dataset(tokenizer)
+    test_data.load_dataloader()
+
     checkpoint = os.path.join(args.predict_checkpoint)
 
     logger.info("Loading checkpoint from {} ....".format(checkpoint))
@@ -33,5 +37,3 @@ def inference_api(config_file, test_file):
     test_performance = inference(model, test_data, save_predictions=True, verbose=True, args=args, logger=logger)
     logger.info("%s on %s data: %.s" % (test_data.metric, test_data.data_type, str(test_performance)))
 
-
-inference_api(config_file="scripts/infer_mrqa_bart_base.config", test_file="data/mrqa_naturalquestions/mrqa_naturalquestions_dev.tsv")

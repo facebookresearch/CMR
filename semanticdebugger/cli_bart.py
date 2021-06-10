@@ -17,13 +17,13 @@ def get_parser():
     parser = argparse.ArgumentParser()
 
     ## Basic parameters
-    parser.add_argument("--train_file", default="data", required=True)
-    parser.add_argument("--dev_file", default="data", required=True)
+    parser.add_argument("--train_file", default="data", required=False)
+    parser.add_argument("--dev_file", default="data", required=False)
     parser.add_argument("--test_file", default="data", required=False)
-    parser.add_argument("--dataset", default="None", required=True)
-    parser.add_argument("--model", default="facebook/bart-base", required=True)
+    parser.add_argument("--dataset", default="None", required=False)
+    parser.add_argument("--model", default="facebook/bart-base", required=False)
     
-    parser.add_argument("--output_dir", default=None, type=str, required=True)
+    parser.add_argument("--output_dir", default=None, type=str, required=False)
     parser.add_argument("--do_train", action='store_true')
     parser.add_argument("--do_predict", action='store_true')
     parser.add_argument("--predict_checkpoint", type=str, default="best-model.pt")
