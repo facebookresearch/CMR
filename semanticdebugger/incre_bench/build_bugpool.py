@@ -17,15 +17,18 @@ from semanticdebugger.task_manager.eval_metrics import evaluate_func, normalize_
 def generate_bugs(predictions, truth_data, results_all):
     assert len(predictions) == len(truth_data) == len(results_all["EM"]) == len(results_all["QA-F1"])
     bug_lines = []
+    pass_lines = []
     for p, t, em, f1 in zip(predictions, truth_data, results_all["EM"], results_all["QA-F1"]):
+        item = dict()
+        item["input"] = t[0]
+        item["truth"] = t[1]
+        item["mistake"] = p.strip()
+        item["score"] = float(f1)
         if em == False and f1<0.5: # decide later about the threshold of f1 score
-            bug = dict()
-            bug["input"] = t[0]
-            bug["truth"] = t[1]
-            bug["mistake"] = p.strip()
-            bug["score"] = float(f1)
-            bug_lines.append(json.dumps(bug))
-    return bug_lines
+            bug_lines.append(json.dumps(item))
+        else:
+            pass_lines.append(json.dumps(item))
+    return bug_lines, pass_lines
     
     
 
@@ -72,16 +75,22 @@ def main():
                             config_file=args.conig_file, 
                             test_file=args.data_file, 
                             logger=logger)
+    with open(args.bug_file.replace("bugs.jsonl", "predictions.json"), "w") as f:
+        json.dump(predictions, f)
     
     # get evaluation results.
     results, results_all = evaluate_func(predictions, truth_data, args.metric, return_all=True)
     logging.info("Evaluation results " + str(results))
-    bug_lines = generate_bugs(predictions, truth_data, results_all)  
-    logging.info("Found {} bugs ".format(len(bug_lines)))
+    bug_lines, pass_lines = generate_bugs(predictions, truth_data, results_all)  
+    logging.info("{} example are passed. Found {} bugs ".format(len(pass_lines), len(bug_lines)))
     
     # save the bugs
     with open(args.bug_file, "w") as f:
         f.write("\n".join(bug_lines))
+    
+    # save the passes
+    with open(args.bug_file.replace("bugs", "pass"), "w") as f:
+        f.write("\n".join(pass_lines))
 
 if __name__=='__main__':
     main()
