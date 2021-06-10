@@ -36,7 +36,7 @@ METRICS = {
 def accuracy(prediction, ground_truth):
     return prediction.lower() == ground_truth.lower()
 
-def evaluate_func(predictions, data, metric):
+def evaluate_func(predictions, data, metric, return_all=False):
     def cast_to_float(predictions):
         new_predictions = []
         for prediction in predictions:
@@ -51,22 +51,26 @@ def evaluate_func(predictions, data, metric):
 
     all_metrics = [m.strip() for m in metric.split("|")]
     results = {}
+    results_all = {}
     for m in all_metrics:
         if m == "EM":
             ems = []
             for (prediction, dp) in zip(predictions, data):
                 ems.append(get_exact_match_over_list(prediction, dp[1]))
-            results[m] = np.mean(ems)
+            results[m] = np.mean(ems) 
+            results_all[m] = ems
         elif m == "ACC":
             accs = []
             for (prediction, dp) in zip(predictions, data):
                 accs.append(get_accruacy_over_list(prediction, dp[1]))
             results[m] = np.mean(accs)
+            results_all[m] = accs
         elif m == "QA-F1":
             f1s = []
             for (prediction, dp) in zip(predictions, data):
                 f1s.append(get_f1_over_list(prediction, dp[1]))
             results[m] = np.mean(f1s)
+            results_all[m] = f1s
         elif m == "Classification-F1":
             results[m] = f1_score([dp[1][0] for dp in data], predictions, average="macro")
         elif m == "Matthew-Correlation":
@@ -79,6 +83,9 @@ def evaluate_func(predictions, data, metric):
     #     for (prediction, dp) in zip(predictions, data):
     #         rouges.append(get_rouge_over_list(prediction, dp[1]))
     #     results[m] = np.mean(rouges)
+
+    if return_all:
+        return results, results_all
     return results
 
 def get_matthews_corr(data, predictions):

@@ -169,9 +169,10 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
     # torch.save(model_state_dict, os.path.join(args.output_dir, "last-model.pt"))
     return best_performance, best_model_state_dict
 
-def inference(model, dev_data, save_predictions=False, verbose=False, args=None, logger=None):
+def inference(model, dev_data, save_predictions=False, verbose=False, args=None, logger=None, return_all=False):
     predictions = []
     bos_token_id = dev_data.tokenizer.bos_token_id
+    loss = []   # if needed
     if args:
         quiet=args.quiet
     else:
@@ -182,6 +183,8 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
             batch = [b.to(torch.device("cuda")) for b in batch]
         pad_token_id = dev_data.tokenizer.pad_token_id
         batch[0], batch[1] = trim_batch(batch[0], pad_token_id, batch[1])
+        if return_all:
+            pass
         outputs = model.generate(input_ids=batch[0],
                                  attention_mask=batch[1],
                                  num_beams=dev_data.args.num_beams,
@@ -193,8 +196,10 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
             predictions.append(pred)
     logger.info("Starting inference ... Done")
     if save_predictions:
-        dev_data.save_predictions(predictions)
+        dev_data.save_predictions(predictions, )
     # logger.info("Starting evaluation metric ...")
     result = dev_data.evaluate(predictions, verbose=verbose)
     # logger.info("Starting evaluation metric ... Done!")
+    if return_all:
+        return predictions, result, loss
     return result

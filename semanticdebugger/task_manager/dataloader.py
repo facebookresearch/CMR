@@ -147,12 +147,15 @@ class GeneralDataset(object):
         #     ems.append(get_exact_match(prediction.strip(), [dp[1]]))
         # return np.mean(ems)
 
-    def save_predictions(self, predictions):
+    def save_predictions(self, predictions, path_to_save=None):
         assert len(predictions)==len(self), (len(predictions), len(self))
 
         predictions = ['n/a' if len(prediction.strip())==0 else prediction for prediction in predictions]
         prediction_text = [prediction.strip()+'\n' for prediction in predictions]
-        save_path = os.path.join(self.args.output_dir, "{}_predictions.txt".format(self.args.prefix))
+        if path_to_save:
+            save_path = path_to_save
+        else:
+            save_path = os.path.join(self.args.output_dir, "{}_predictions.txt".format(self.args.prefix))
         with open(save_path, "w") as f:
             f.writelines(prediction_text)
         

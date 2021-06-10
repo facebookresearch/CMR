@@ -34,6 +34,8 @@ def inference_api(config_file, test_file, logger):
         model.to(torch.device("cuda"))
     model.eval()
 
-    test_performance = inference(model, test_data, save_predictions=True, verbose=True, args=args, logger=logger)
-    logger.info("%s on %s data: %.s" % (test_data.metric, test_data.data_type, str(test_performance)))
+    predictions, result, loss = inference(model, test_data, save_predictions=False, verbose=True, args=args, logger=logger, return_all=True)
+    return predictions
+    # logger.info("%s on %s data: %.s" % (test_data.metric, test_data.data_type, str(result)))
+
 

@@ -11,13 +11,13 @@ import random
 import numpy as np
 import torch
 from semanticdebugger.incre_bench import bart_api
-
+from semanticdebugger.task_manager.eval_metrics import evaluate_func
 
 def main():
     parser = argparse.ArgumentParser()
 
     ## Basic parameters
-    parser.add_argument("--input_file", default="data/mrqa_naturalquestions/mrqa_naturalquestions_dev.tsv", required=False)     
+    parser.add_argument("--input_file", default="data/mrqa_naturalquestions/mrqa_naturalquestions_dev.100.tsv", required=False)     
     parser.add_argument("--output_file", default="bug_data/mrqa_naturalquestions_dev.bugs.tsv", required=False)
     parser.add_argument("--model_conigfile", default="scripts/infer_mrqa_bart_base.config", required=False)
     parser.add_argument("--prefix", default="", required=False)
@@ -36,9 +36,33 @@ def main():
                     handlers=[logging.FileHandler(os.path.join(log_filename)),
                                 logging.StreamHandler()])
     logger = logging.getLogger(__name__)
-    bart_api.inference_api(config_file="scripts/infer_mrqa_bart_base.config", 
-                            test_file="data/mrqa_naturalquestions/mrqa_naturalquestions_dev.tsv", 
+
+
+    # get the truth data 
+    truth_data = []
+    with open(args.input_file) as fin:
+        lines = fin.readlines()
+    # train_examples = []
+    for line in lines:
+        d = line.strip().split("\t")
+        truth_data.append((d[0], d[1:]))
+
+    # get the predictions of a model via its API and config file.
+
+    predictions = bart_api.inference_api(
+                            config_file=args.model_conigfile, 
+                            test_file=args.input_file, 
                             logger=logger)
+    
+    # get evaluation results.
+    metric = "EM|F1"
+    results, results_all = evaluate_func(predictions, truth_data, metric, return_all=True)
+    print(results)
+    print(results_all["EM"])
+    print(results_all["F1"])
+    
+
+    
 
 if __name__=='__main__':
     main()
