@@ -55,11 +55,11 @@ def main():
                             logger=logger)
     
     # get evaluation results.
-    metric = "EM|F1"
+    metric = "EM|QA-F1"
     results, results_all = evaluate_func(predictions, truth_data, metric, return_all=True)
     print(results)
     print(results_all["EM"])
-    print(results_all["F1"])
+    print(results_all["QA-F1"])
     
 
     
