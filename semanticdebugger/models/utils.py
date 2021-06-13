@@ -6,7 +6,8 @@ def convert_model_to_single_gpu(state_dict):
         if key.startswith('module.'):
             return key[7:]
         return key
-    return {_convert(key):value for key, value in state_dict.items()}
+    return {_convert(key): value for key, value in state_dict.items()}
+
 
 def label_smoothed_nll_loss(lprobs, target, epsilon=0.1, ignore_index=-100):
     """From fairseq"""
@@ -27,6 +28,7 @@ def label_smoothed_nll_loss(lprobs, target, epsilon=0.1, ignore_index=-100):
     eps_i = epsilon / lprobs.size(-1)
     loss = (1.0 - epsilon) * nll_loss + eps_i * smooth_loss
     return loss, nll_loss
+
 
 def freeze_params(model: nn.Module):
     """Set requires_grad=False for each of model.parameters()"""
@@ -52,6 +54,7 @@ def freeze_embeds(model):
             freeze_params(d.embed_positions)
             freeze_params(d.embed_tokens)
 
+
 def trim_batch(
     input_ids,
     pad_token_id,
@@ -63,4 +66,3 @@ def trim_batch(
         return input_ids[:, keep_column_mask]
     else:
         return (input_ids[:, keep_column_mask], attention_mask[:, keep_column_mask])
-

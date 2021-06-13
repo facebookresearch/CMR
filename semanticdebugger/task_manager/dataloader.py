@@ -5,24 +5,27 @@ from .eval_metrics import METRICS, evaluate_func
 
 class GeneralDataset(object):
 
-    def __init__(self, logger, args, data_path, data_type, is_training, task_name):
+    def __init__(self, logger, args, data_path, data_type, is_training, task_name, given_data=None):
         # should give the tasks used in this split in the var "tasks"
         self.data_path = data_path
         self.data_type = data_type
         
         self.data = []
         self.task_name = task_name
-        with open(data_path) as fin:
-            lines = fin.readlines()
+        if given_data:
+            self.data = given_data
+        else:
+            with open(data_path) as fin:
+                lines = fin.readlines()
 
-        # train_examples = []
-        for line in lines:
-            d = line.strip().split("\t")
-            self.data.append((d[0], d[1:]))
+            # train_examples = []
+            for line in lines:
+                d = line.strip().split("\t")
+                self.data.append((d[0], d[1:]))
             
 
         self.is_training = is_training
-        self.load = not args.debug
+        self.load = not args.debug if hasattr(args, "debug") else True
         self.logger = logger
         self.args = args
 
@@ -51,7 +54,7 @@ class GeneralDataset(object):
             new_answers += answer
         return new_answers, metadata
 
-    def load_dataset(self, tokenizer, do_return=False):
+    def load_dataset(self, tokenizer, do_return=False, skip_cache=False):
         self.tokenizer = tokenizer
         postfix = tokenizer.__class__.__name__.replace("zer", "zed")
         
@@ -60,7 +63,7 @@ class GeneralDataset(object):
             self.data_path.split("/")[-1].replace(".tsv", "-{}.json".format(postfix)))
         
         
-        if self.load and os.path.exists(preprocessed_path):
+        if self.load and os.path.exists(preprocessed_path) and not skip_cache:
             # load preprocessed input
             self.logger.info("Loading pre-tokenized data from {}".format(preprocessed_path))
             with open(preprocessed_path, "r") as f:
@@ -109,7 +112,7 @@ class GeneralDataset(object):
             self.logger.info("Tokenizing Output ... Done!")
             input_ids, attention_mask = tokenized_input["input_ids"], tokenized_input["attention_mask"]
             decoder_input_ids, decoder_attention_mask = tokenized_output["input_ids"], tokenized_output["attention_mask"]
-            if self.load: 
+            if self.load and not skip_cache: 
                 preprocessed_data = [input_ids, attention_mask,
                                      decoder_input_ids, decoder_attention_mask,
                                      metadata]
@@ -119,10 +122,11 @@ class GeneralDataset(object):
                                decoder_input_ids, decoder_attention_mask,
                                metadata], f)
                 self.logger.info("Save preprocessed data ... Done!")
-        self.logger.info("len(input_ids): {}".format(len(input_ids)))
-        self.logger.info("len(decoder_input_ids): {}".format(len(decoder_input_ids)))
-        self.logger.info("len(attention_mask): {}".format(len(attention_mask)))
-        self.logger.info("len(decoder_attention_mask): {}".format(len(decoder_attention_mask)))
+
+        # self.logger.info("len(input_ids): {}".format(len(input_ids)))
+        # self.logger.info("len(decoder_input_ids): {}".format(len(decoder_input_ids)))
+        # self.logger.info("len(attention_mask): {}".format(len(attention_mask)))
+        # self.logger.info("len(decoder_attention_mask): {}".format(len(decoder_attention_mask)))
         
         self.dataset = MyQADataset(input_ids, attention_mask,
                                         decoder_input_ids, decoder_attention_mask,
