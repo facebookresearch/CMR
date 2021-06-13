@@ -1,6 +1,5 @@
 import torch.nn as nn
-# from dataloader.default_split import DEFAULT_SPLIT
-import json
+
 
 def convert_model_to_single_gpu(state_dict):
     def _convert(key):
@@ -65,7 +64,3 @@ def trim_batch(
     else:
         return (input_ids[:, keep_column_mask], attention_mask[:, keep_column_mask])
 
-def get_tasks_list(filename, split_name):
-    with open(filename, "r") as fin:
-        split_dict = json.load(fin)
-    return split_dict[split_name]
