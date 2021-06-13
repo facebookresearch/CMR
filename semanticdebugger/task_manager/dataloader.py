@@ -58,9 +58,10 @@ class GeneralDataset(object):
         self.tokenizer = tokenizer
         postfix = tokenizer.__class__.__name__.replace("zer", "zed")
         
-        preprocessed_path = os.path.join(
-            "/".join(self.data_path.split("/")[:-1]),
-            self.data_path.split("/")[-1].replace(".tsv", "-{}.json".format(postfix)))
+        if not skip_cache:
+            preprocessed_path = os.path.join(
+                "/".join(self.data_path.split("/")[:-1]),
+                self.data_path.split("/")[-1].replace(".tsv", "-{}.json".format(postfix)))
         
         
         if self.load and os.path.exists(preprocessed_path) and not skip_cache:

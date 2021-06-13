@@ -1,11 +1,14 @@
-from .common_utils import OnlineDebuggingMethod
-from semanticdebugger.models.mybart import MyBart
-from semanticdebugger.models.utils import freeze_embeds, trim_batch, convert_model_to_single_gpu
-import torch
 import numpy as np
-from transformers import BartTokenizer, BartConfig
-from transformers import AdamW, get_linear_schedule_with_warmup
+import torch
+from semanticdebugger.models.mybart import MyBart
+from semanticdebugger.models.utils import (convert_model_to_single_gpu,
+                                           freeze_embeds, trim_batch)
+from semanticdebugger.task_manager.dataloader import GeneralDataset
+from transformers import (AdamW, BartConfig, BartTokenizer,
+                          get_linear_schedule_with_warmup)
 
+from .common_utils import OnlineDebuggingMethod
+from tqdm import tqdm
 
 class ContinualFinetuning(OnlineDebuggingMethod):
     def __init__(self, logger):
@@ -21,6 +24,25 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         if self.use_cuda:
             self.base_model.to(torch.device("cuda"))
             self.logger.info("Moving to the GPUs.")
+
+    def bug_formatter(self, bug_batch):
+        # The continual fine-tuning method only uses the correct answers for fixing bugs.
+        formatted_bug_batch = []
+        for bug in bug_batch:
+            _input = bug["input"]
+            # _mistake = bug["mistake"]
+            _truth = bug["truth"]   # a list of answers
+            formatted_bug_batch.append((_input, _truth))
+        return formatted_bug_batch
+
+    def get_dataloader(self, bug_data_args, formatted_bug_batch):
+        # mini bug-batch size.
+        assert hasattr(bug_data_args, "train_batch_size")
+        bug_dataloader = GeneralDataset(self.logger, bug_data_args, None,
+                                        data_type="train", is_training=True, task_name=bug_data_args.task_name, given_data=formatted_bug_batch)
+        bug_dataloader.load_dataset(self.tokenizer, skip_cache=True)
+        bug_dataloader.load_dataloader()
+        return bug_dataloader
 
     def debugger_setup(self, debugger_args):
         self.logger.info(f"Debugger Setup ......")
@@ -42,8 +64,39 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                                                          num_training_steps=debugger_args.total_steps)
 
         self.logger.info(f"Debugger Setup ...... Done!")
+        return
 
-    def fix_bugs(self, bug_batch):
+    def fix_bugs(self, bug_loader, bug_fixing_args):
+        # bug_dataloader is from self.bug_loaders
+        required_atts = ["num_epochs", "gradient_accumulation_steps", "max_grad_norm"]
+        assert all([hasattr(bug_fixing_args, att) for att in required_atts])
+
         self.base_model.train()
-        if self.use_cuda:
-            bug_batch = [b.to(torch.device("cuda")) for b in bug_batch]
+
+        if self.n_gpu > 1:
+            self.base_model = torch.nn.DataParallel(self.base_model)
+        train_losses = []
+        global_step = 0
+        for epoch_id in range(int(bug_fixing_args.num_epochs)):
+            for batch in tqdm(bug_loader, desc=f"Bug-fixing Epoch {epoch_id}"):
+                # here the batch is a mini batch of the current bug batch
+                if self.use_cuda:
+                    batch = [b.to(torch.device("cuda")) for b in batch]
+                pad_token_id = self.tokenizer.pad_token_id
+                batch[0], batch[1] = trim_batch(batch[0], pad_token_id, batch[1])
+                batch[2], batch[3] = trim_batch(batch[2], pad_token_id, batch[3])
+                loss = self.base_model(input_ids=batch[0], attention_mask=batch[1],
+                            decoder_input_ids=batch[2], decoder_attention_mask=batch[3],
+                            is_training=True)
+                if self.n_gpu > 1:
+                    loss = loss.mean()  # mean() to average on multi-gpu.
+                train_losses.append(loss.detach().cpu())
+                loss.backward()
+
+                if global_step % bug_fixing_args.gradient_accumulation_steps == 0:
+                    torch.nn.utils.clip_grad_norm_(
+                        self.model.parameters(), bug_fixing_args.max_grad_norm)
+                    self.optimizer.step()    # We have accumulated enough gradients
+                    self.scheduler.step()
+                    self.model.zero_grad()
+        return 
