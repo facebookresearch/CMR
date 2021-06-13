@@ -14,7 +14,7 @@ METRICS = {
     'glue_qqp': 'ACC',
     'glue_rte': 'ACC',
     'glue_sst2': 'ACC',
-    'glue_wnli': 'ACC', 
+    'glue_wnli': 'ACC',
     'kilt_ay2': 'EM',
     'kilt_fever': 'ACC',
     'kilt_hotpotqa': 'EM',
@@ -25,8 +25,8 @@ METRICS = {
     'lama_conceptnet': 'EM',
     'lama_google_re': 'EM',
     'lama_squad': 'EM',
-    'lama_trex': 'EM', 
-    'mrqa_squad': 'EM|QA-F1', # QA-F1
+    'lama_trex': 'EM',
+    'mrqa_squad': 'EM|QA-F1',  # QA-F1
     'mrqa_naturalquestions': 'EM|QA-F1',
     'mrqa_triviaqa': 'EM|QA-F1',
     # 'mrqa_squad': 'EM',
@@ -35,6 +35,7 @@ METRICS = {
 
 def accuracy(prediction, ground_truth):
     return prediction.lower() == ground_truth.lower()
+
 
 def evaluate_func(predictions, data, metric, return_all=False):
     def cast_to_float(predictions):
@@ -57,7 +58,7 @@ def evaluate_func(predictions, data, metric, return_all=False):
             ems = []
             for (prediction, dp) in zip(predictions, data):
                 ems.append(get_exact_match_over_list(prediction, dp[1]))
-            results[m] = np.mean(ems) 
+            results[m] = np.mean(ems)
             results_all[m] = ems
         elif m == "ACC":
             accs = []
@@ -72,12 +73,14 @@ def evaluate_func(predictions, data, metric, return_all=False):
             results[m] = np.mean(f1s)
             results_all[m] = f1s
         elif m == "Classification-F1":
-            results[m] = f1_score([dp[1][0] for dp in data], predictions, average="macro")
+            results[m] = f1_score([dp[1][0]
+                                  for dp in data], predictions, average="macro")
         elif m == "Matthew-Correlation":
             results[m] = get_matthews_corr(data, predictions)
         elif m == "Pearson-Correlation":
             predictions = cast_to_float(predictions)
-            results[m] = pearsonr([float(dp[1][0]) for dp in data], predictions)[0]
+            results[m] = pearsonr([float(dp[1][0])
+                                  for dp in data], predictions)[0]
     # elif m == "Rouge-L":
     #     rouges = []
     #     for (prediction, dp) in zip(predictions, data):
@@ -87,6 +90,7 @@ def evaluate_func(predictions, data, metric, return_all=False):
     if return_all:
         return results, results_all
     return results
+
 
 def get_matthews_corr(data, predictions):
     # only cola is using this...?
@@ -103,6 +107,7 @@ def get_matthews_corr(data, predictions):
         else:
             new_gold.append(0.0)
     return matthews_corrcoef(new_gold, new_predictions)
+
 
 def qa_f1_score(prediction, ground_truth):
     prediction_tokens = prediction.split()
@@ -132,38 +137,43 @@ def qa_f1_score(prediction, ground_truth):
 #     return rouge.get_scores(prediction, groundtruth, avg=True)["rouge-l"]["f"]
 
 def get_accruacy_over_list(prediction, groundtruth):
-    if type(groundtruth)==list:
-        if len(groundtruth)==0:
+    if type(groundtruth) == list:
+        if len(groundtruth) == 0:
             return 0
         return np.max([accuracy(prediction, gt) for gt in groundtruth])
     return accuracy(prediction, groundtruth)
 
+
 def get_f1_over_list(prediction, groundtruth):
     # if type(groundtruth)==list:
-    if len(groundtruth)==0:
+    if len(groundtruth) == 0:
         return 0
     prediction_norm = normalize_answer(prediction)
     return np.max([qa_f1_score(prediction_norm, normalize_answer(gt)) for gt in groundtruth])
     # return qa_f1_score(prediction, groundtruth)
 
+
 def get_exact_match_over_list(prediction, groundtruth):
     # if type(groundtruth)==list:
-    if len(groundtruth)==0:
+    if len(groundtruth) == 0:
         return 0
     prediction_norm = normalize_answer(prediction)
     return np.max([(prediction_norm == normalize_answer(gt)) for gt in groundtruth])
-    
+
     # return (normalize_answer(prediction) == groundtruth)
+
 
 def normalize_answer(s):
     def remove_articles(text):
         return re.sub(r'\b(a|an|the)\b', ' ', text)
+
     def white_space_fix(text):
         return ' '.join(text.split())
+
     def remove_punc(text):
         exclude = set(string.punctuation)
         return ''.join(ch for ch in text if ch not in exclude)
+
     def lower(text):
         return text.lower()
     return white_space_fix(remove_articles(remove_punc(lower(s))))
-
