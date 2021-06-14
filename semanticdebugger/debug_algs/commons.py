@@ -101,7 +101,7 @@ class OnlineDebuggingMethod():
             if len(res_on_passes) == 0:
                 pass_before_results = self.evaluate(self.forget_eval_loader)
             else:
-                pass_before_results = res_on_passes[-1][0]
+                pass_before_results = res_on_passes[-1][1]
             self.logger.info(
                 f"Before Bug-fixing the results on the sampled pass cases = {pass_before_results}")
 
