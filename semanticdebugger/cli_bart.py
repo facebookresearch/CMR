@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from semanticdebugger.models.utils import set_seeds
 import sys
 import argparse
 import logging
@@ -101,9 +102,7 @@ def main():
     logger.info(args)
     logger.info(args.output_dir)
 
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
+    set_seeds(args.seed)
     args.n_gpu = torch.cuda.device_count()
 
     if args.n_gpu > 0:

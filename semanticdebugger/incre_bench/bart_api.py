@@ -18,6 +18,7 @@ def inference_api(config_file, test_file, logger):
     with open(config_file) as f:
         config_args = eval(f.read())  # an Namespace object in python language
     args = config_args
+    logger.info(f"Config args: {config_args}")
     # load config from json
 
     test_data = GeneralDataset(
@@ -36,7 +37,7 @@ def inference_api(config_file, test_file, logger):
         model.to(torch.device("cuda"))
     model.eval()
 
-    predictions, result, loss = inference(
-        model, test_data, save_predictions=False, verbose=True, args=args, logger=logger, return_all=True)
+    predictions = inference(
+        model, test_data, save_predictions=False, verbose=True, args=args, logger=logger, return_all=False, predictions_only=True)
     return predictions
     # logger.info("%s on %s data: %.s" % (test_data.metric, test_data.data_type, str(result)))

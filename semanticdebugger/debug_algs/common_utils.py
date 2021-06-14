@@ -1,5 +1,6 @@
 
 import logging
+from random import random
 from semanticdebugger.task_manager.eval_metrics import evaluate_func
 import torch
 from transformers import BartTokenizer, BartConfig
@@ -14,15 +15,18 @@ class OnlineDebuggingMethod():
         # args
         self.debugger_args = None
         self.base_model_args = None
-        self.bug_data_args = None
+        self.data_args = None
         # modules
         self.base_model = None
         self.debugger = None
+        # data
         self.bug_stream = []
         self.bug_train_loaders = []
         self.bug_eval_loaders = []
         self.num_bug_batches = None
         self.bug_batch_size = None
+        self.pass_pool = []
+        self.forget_eval_loader = None
         # utils
         self.use_cuda = torch.cuda.is_available()
         self.tokenizer = BartTokenizer.from_pretrained("bart-large")
@@ -35,21 +39,43 @@ class OnlineDebuggingMethod():
             self.n_gpu = 0
         return
 
-    def load_bug_streams(self, bug_data_args):
-        required_atts = ["bug_stream_json_path", "do_lowercase", "append_another_bos",
-                         "max_input_length", "max_output_length", "task_name", "num_beams"]
-        assert all([hasattr(bug_data_args, att) for att in required_atts])
-        with open(bug_data_args.bug_stream_json_path) as f:
+    def _check_data_args(self):
+        required_atts = ["bug_stream_json_path",
+                         "pass_pool_jsonl_path",
+                         "pass_sample_size",
+                         "do_lowercase",
+                         "append_another_bos",
+                         "max_input_length",
+                         "max_output_length",
+                         "task_name",
+                         "num_beams"]
+        assert all([hasattr(self.data_args, att) for att in required_atts])
+        return
+
+    def load_data(self, data_args):
+        self.data_args = data_args
+        self._check_data_args()
+        # Load bug stream
+        with open(data_args.bug_stream_json_path) as f:
             bug_stream = json.load(f)
         self.bug_stream = bug_stream
         self.num_bug_batches = len(bug_stream)
         self.bug_batch_size = len(bug_stream[0])
+        # Create data loaders
         for bug_batch in tqdm(self.bug_stream, desc="Creating the bug data loaders."):
-            formatted_bug_batch = self.bug_formatter(bug_batch)
+            formatted_bug_batch = self.data_formatter(bug_batch)
             train_bug_dataloader, eval_bug_dataloader = self.get_dataloader(
-                bug_data_args, formatted_bug_batch, mode="both")
+                data_args, formatted_bug_batch, mode="both")
             self.bug_train_loaders.append(train_bug_dataloader)
             self.bug_eval_loaders.append(eval_bug_dataloader)
+        # Create loaders for the sampled pass examples
+        with open(data_args.pass_pool_jsonl_path) as f:
+            pass_pool = [json.loads(line) for line in f.read().splitlines()]
+        random.shuffle(pass_pool)
+        sample_examples = pass_pool[:data_args.pass_sample_size]
+        sample_examples = self.data_formatter(sample_examples)
+        _, self.forget_eval_loader = self.get_dataloader(
+            data_args, sample_examples, mode="eval")
         return
 
     def online_debug(self):
@@ -84,11 +110,11 @@ class OnlineDebuggingMethod():
         raise NotImplementedError(
             "Please Implement the `check_debugger_args` method.")
 
-    def bug_formatter(self, bug_batch):
+    def data_formatter(self, bug_batch):
         raise NotImplementedError(
-            "Please Implement the `bug_formatter` method.")
+            "Please Implement the `data_formatter` method.")
 
-    def get_dataloader(self, bug_data_args, formatted_bug_batch):
+    def get_dataloader(self, data_args, formatted_bug_batch):
         raise NotImplementedError(
             "Please Implement the `get_dataloader` method.")
 

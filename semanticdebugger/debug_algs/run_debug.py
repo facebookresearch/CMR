@@ -1,11 +1,14 @@
 
 from argparse import Namespace
+from semanticdebugger.models.utils import set_seeds
 from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
 import logging
 import os
 
 
 def run():
+    set_seeds(42)
+
     log_filename = "/tmp/debug.log"
 
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
@@ -19,14 +22,16 @@ def run():
 
     bug_data_args = Namespace(
         bug_stream_json_path="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json",
+        pass_pool_jsonl_path="bug_data/mrqa_naturalquestions_dev.pass.jsonl",
+        pass_sample_size=50,
         do_lowercase=True,
         append_another_bos=True,
         max_input_length=888,
-        max_output_length=30,
+        max_output_length=50,
         task_name="mrqa_naturalquestions",
         train_batch_size=10,
         predict_batch_size=10,
-        num_beams=3,
+        num_beams=4,
     )
 
     base_model_args = Namespace(
@@ -45,7 +50,7 @@ def run():
         max_grad_norm=0.1
     )
 
-    debugging_alg.load_bug_streams(bug_data_args)
+    debugging_alg.load_data(bug_data_args)
     debugging_alg.load_base_model(base_model_args)
     debugging_alg.debugger_setup(debugger_args)
     debugging_alg.online_debug()

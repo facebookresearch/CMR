@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import random
+from semanticdebugger.models.utils import set_seeds
 import sys
 
 import numpy as np
@@ -24,7 +25,7 @@ def generate_bugs(predictions, truth_data, results_all):
         item["input"] = t[0]
         item["truth"] = t[1]
         item["mistake"] = p.strip()
-        item["score"] = float(f1)
+        item["score"] = {"EM": int(em == False), "QA-F1": float(f1)}
         if em == False and f1 < 0.5:  # decide later about the threshold of f1 score
             bug_lines.append(json.dumps(item))
         else:
@@ -51,6 +52,8 @@ def main():
     parser.add_argument('--seed', type=int, default=42,
                         help="random seed for initialization")
     args = parser.parse_args()
+
+    set_seeds(args.seed)
 
     log_filename = "logs/build_bugpool_log_{}.txt".format(args.prefix)
 

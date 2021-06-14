@@ -17,9 +17,15 @@ class ContinualFinetuning(OnlineDebuggingMethod):
     def __init__(self, logger):
         super().__init__(logger=logger)
 
-    def check_debugger_args(self):
-        required_atts = ["weight_decay", "learning_rate", "adam_epsilon", "warmup_steps",
-                         "total_steps", "num_epochs", "gradient_accumulation_steps", "max_grad_norm"]
+    def _check_debugger_args(self):
+        required_atts = ["weight_decay",
+                         "learning_rate",
+                         "adam_epsilon",
+                         "warmup_steps",
+                         "total_steps",
+                         "num_epochs",
+                         "gradient_accumulation_steps",
+                         "max_grad_norm"]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
         return
 
@@ -34,14 +40,15 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         if self.use_cuda:
             self.base_model.to(torch.device("cuda"))
             self.logger.info("Moving to the GPUs.")
-    
+
     def base_model_infer(self, eval_dataloader):
         self.base_model.eval()
-        model = self.base_model if self.n_gpu == 1 else self.model.module        
-        predictions = run_bart.inference(model, eval_dataloader, save_predictions=False, verbose=False, logger=self.logger, return_all=False, predictions_only=True, args=Namespace(quiet=True))
+        model = self.base_model if self.n_gpu == 1 else self.model.module
+        predictions = run_bart.inference(model, eval_dataloader, save_predictions=False, verbose=False,
+                                         logger=self.logger, return_all=False, predictions_only=True, args=Namespace(quiet=True))
         return predictions
 
-    def bug_formatter(self, bug_batch):
+    def data_formatter(self, bug_batch):
         # The continual fine-tuning method only uses the correct answers for fixing bugs.
         formatted_bug_batch = []
         for bug in bug_batch:
@@ -68,8 +75,8 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         if mode == "both" or mode == "eval":
             # for evaluation
             eval_bug_dataloader = GeneralDataset(self.logger, bug_data_args, None,
-                                                 data_type="dev", is_training=False, 
-                                                 task_name=bug_data_args.task_name, 
+                                                 data_type="dev", is_training=False,
+                                                 task_name=bug_data_args.task_name,
                                                  given_data=formatted_bug_batch)
             eval_bug_dataloader.load_dataset(
                 self.tokenizer, skip_cache=True, quiet=True)
@@ -79,7 +86,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
 
     def debugger_setup(self, debugger_args):
         self.debugger_args = debugger_args
-        self.check_debugger_args()
+        self._check_debugger_args()
         self.logger.info(f"Debugger Setup ......")
         self.logger.info(f"debugger_args: {debugger_args} ......")
 
@@ -134,4 +141,3 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                     self.scheduler.step()
                     self.base_model.zero_grad()
         return
-    

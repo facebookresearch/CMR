@@ -9,7 +9,7 @@ def get_static_stream(bug_pool, batch_size, num_batches, use_score=False):
     assert batch_size * num_batches <= len(bug_pool)
     if use_score:
         # from easier to harder
-        sorted_bugs = sorted(bug_pool, key=lambda x: x["score"], reverse=True)
+        sorted_bugs = sorted(bug_pool, key=lambda x: x["score"]["QA-F1"], reverse=True)
     else:
         sorted_bugs = bug_pool
     static_bug_stream = []
@@ -45,7 +45,6 @@ def main():
         bug_pool, args.batch_size, args.num_batches, use_score=True)
     with open(args.bug_strema_file, "w") as f:
         json.dump(static_bug_stream, f)
-
-
+        
 if __name__ == '__main__':
     main()
