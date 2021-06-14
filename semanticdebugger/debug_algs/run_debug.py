@@ -38,14 +38,14 @@ def run():
     data_args = Namespace(
         bug_stream_json_path="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json",
         pass_pool_jsonl_path="bug_data/mrqa_naturalquestions_dev.pass.jsonl",
-        pass_sample_size=50,
+        pass_sample_size=64,
         do_lowercase=True,
         append_another_bos=True,
         max_input_length=888,
         max_output_length=50,
         task_name="mrqa_naturalquestions",
-        train_batch_size=10,
-        predict_batch_size=10,
+        train_batch_size=16,
+        predict_batch_size=16,
         num_beams=4,
     )
 

@@ -44,5 +44,6 @@ python semanticdebugger/incre_bench/sample_bug_stream.py \
     --num_batches 40 \
     --bug_strema_file "bug_data/mrqa_naturalquestions_dev.static_bug_stream.json"
 
-python semanticdebugger/debug_algs/run_debug.py
+python semanticdebugger/debug_algs/run_debug.py > logs/tmp/online_debug.log 2>&1 &
+tail -f logs/tmp/online_debug.log
 ```

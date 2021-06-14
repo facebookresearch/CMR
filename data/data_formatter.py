@@ -4,29 +4,39 @@ import datasets
 import numpy as np
 import os
 import gzip
-import sys 
+import sys
 import json
 
+
 def escape(s):
-    # TODO: remove the markups 
+    # TODO: remove the markups
     s = s.replace("</P>", " ")
     s = s.replace("<P>", " ")
+    s = s.replace("<Li>", " ")
+    s = s.replace("</Li>", " ")
+    s = s.replace("<Ul>", " ")
+    s = s.replace("</Ul>", " ")
     return s.replace("\n", " ").replace("\t", " ").strip()
 
 # Filtering the bad examples.
+
+
 def example_pass(context):
     if "<table>" in context.lower() or "<td>" in context.lower():
         return False
     else:
         return True
 
+
 def add_qmark(s):
     return s if s.endswith("?") else s + " ?"
+
 
 def write_to_tsv(lst, out_file):
     with open(out_file, "w") as fout:
         for line in lst:
             fout.write("{}\t{}\n".format(line[0], line[1]))
+
 
 class TextToTextDataset():
 
@@ -34,9 +44,9 @@ class TextToTextDataset():
         train_lines = self.map_to_list(dataset, "train")
         val_lines = self.map_to_list(dataset, "validation")
         test_lines = self.map_to_list(dataset, "test")
+        # TODO: de-duplicate the lines!
         return train_lines, val_lines, test_lines
 
-    
     def write_dataset(self, path):
         """
         return train, dev, test
@@ -50,13 +60,15 @@ class TextToTextDataset():
 
         # shuffle the data
         # np.random.seed(seed)
-        # np.random.shuffle(train_lines) 
+        # np.random.shuffle(train_lines)
         os.makedirs(os.path.join(path, self.task_identifier), exist_ok=True)
-        prefix = os.path.join(path, self.task_identifier, "{}".format(self.task_identifier))
+        prefix = os.path.join(path, self.task_identifier,
+                              "{}".format(self.task_identifier))
         write_to_tsv(train_lines, prefix + "_train.tsv")
         write_to_tsv(val_lines, prefix + "_dev.tsv")
         if test_lines:
-            write_to_tsv(test_lines, prefix + "_test.tsv") 
+            write_to_tsv(test_lines, prefix + "_test.tsv")
+
 
 class Kilt_NQ(TextToTextDataset):
 
@@ -66,11 +78,13 @@ class Kilt_NQ(TextToTextDataset):
     def map_to_list(self, dataset, split_name):
         lines = []
         for datapoint in dataset[split_name]:
-            lines.append((escape(add_qmark(datapoint["input"])), "\t".join([escape(item["answer"]) for item in datapoint["output"]])))
+            lines.append((escape(add_qmark(datapoint["input"])), "\t".join(
+                [escape(item["answer"]) for item in datapoint["output"]])))
         return lines
 
     def load_dataset(self):
-        return datasets.load_dataset('kilt_tasks','nq')
+        return datasets.load_dataset('kilt_tasks', 'nq')
+
 
 class Kilt_TriviaQA(TextToTextDataset):
 
@@ -80,12 +94,14 @@ class Kilt_TriviaQA(TextToTextDataset):
     def map_to_list(self, dataset, split_name):
         lines = []
         for datapoint in dataset[split_name]:
-            lines.append((escape(add_qmark(datapoint["input"])), "\t".join([escape(item["answer"]) for item in datapoint["output"]])))
+            lines.append((escape(add_qmark(datapoint["input"])), "\t".join(
+                [escape(item["answer"]) for item in datapoint["output"]])))
         return lines
 
     def load_dataset(self):
-         # Get the KILT task datasets
-        kilt_triviaqa = datasets.load_dataset("kilt_tasks", name="triviaqa_support_only")
+        # Get the KILT task datasets
+        kilt_triviaqa = datasets.load_dataset(
+            "kilt_tasks", name="triviaqa_support_only")
 
         # Most tasks in KILT already have all required data, but KILT-TriviaQA
         # only provides the question IDs, not the questions themselves.
@@ -94,9 +110,12 @@ class Kilt_TriviaQA(TextToTextDataset):
 
         # The KILT IDs can then be mapped to the TriviaQA questions with: triviaqa_map
         for k in ['train', 'validation', 'test']:
-            triviaqa_map = dict([(q_id, i) for i, q_id in enumerate(trivia_qa[k]['question_id'])])
-            kilt_triviaqa[k] = kilt_triviaqa[k].filter(lambda x: x['id'] in triviaqa_map)
-            kilt_triviaqa[k] = kilt_triviaqa[k].map(lambda x: {'input': trivia_qa[k][triviaqa_map[x['id']]]['question']})
+            triviaqa_map = dict(
+                [(q_id, i) for i, q_id in enumerate(trivia_qa[k]['question_id'])])
+            kilt_triviaqa[k] = kilt_triviaqa[k].filter(
+                lambda x: x['id'] in triviaqa_map)
+            kilt_triviaqa[k] = kilt_triviaqa[k].map(
+                lambda x: {'input': trivia_qa[k][triviaqa_map[x['id']]]['question']})
 
         return kilt_triviaqa
 
@@ -106,7 +125,7 @@ class Glue_QNLI(TextToTextDataset):
     def __init__(self, task_identifier="glue_qnli"):
         self.task_identifier = task_identifier
         # for classification tasks, specify the meaning of each label
-        self.prompt = " " # are two sentences entailment or not entailment?
+        self.prompt = " "  # are two sentences entailment or not entailment?
         self.label = {
             0: "entailment",    # entailment
             1: "irrelevant",  # not_entailment
@@ -116,12 +135,14 @@ class Glue_QNLI(TextToTextDataset):
     def map_to_list(self, dataset, split_name):
         lines = []
         for datapoint in dataset[split_name]:
-            lines.append(("Context: " + datapoint["sentence"] + " | Question: " + datapoint["question"], self.label[datapoint["label"]]))
-        print("Three examples: \n"+ "\n".join([str(_) for _ in lines[:3]]))
+            lines.append(("Context: " + datapoint["sentence"] + " | Question: " +
+                         datapoint["question"], self.label[datapoint["label"]]))
+        print("Three examples: \n" + "\n".join([str(_) for _ in lines[:3]]))
         return lines
 
     def load_dataset(self):
-        return datasets.load_dataset('glue','qnli')
+        return datasets.load_dataset('glue', 'qnli')
+
 
 class MRQA(TextToTextDataset):
 
@@ -129,7 +150,6 @@ class MRQA(TextToTextDataset):
         self.task_identifier = task_identifier + "_" + subset.lower()
         self.mrqa_path = mrqa_path
         self.subset = subset
- 
 
     def map_to_list(self, dataset, split_name):
         if split_name not in dataset:
@@ -142,10 +162,12 @@ class MRQA(TextToTextDataset):
                 continue
             if not example_pass(datapoint["context"]):
                 continue
-            lines.append(("Context: " + escape(datapoint["context"]) + 
-                            " | Question: " + escape(datapoint["question"]), 
-                            "\t".join([escape(a) for a in datapoint["answers"]])))
-        print("Three examples: \n"+ "\n".join([str(_) for _ in lines[:3]]))
+            # add question mark!
+            lines.append(("Context: " + escape(datapoint["context"]) +
+                          " | Question: " +
+                          add_qmark(escape(datapoint["question"])),
+                          "\t".join([escape(a) for a in datapoint["answers"]])))
+        print("Three examples: \n" + "\n".join([str(_) for _ in lines[:3]]))
         return lines
 
     def load_dataset(self):
@@ -161,19 +183,22 @@ class MRQA(TextToTextDataset):
                         context = json_line["context"]
                         qa_items = []
                         for item in json_line["qas"]:
-                            qa_items.append(dict(context=context, 
-                                                    qid=item["qid"], 
-                                                    question=item["question"], 
-                                                    answers=item["answers"]))
+                            qa_items.append(dict(context=context,
+                                                 qid=item["qid"],
+                                                 question=item["question"],
+                                                 answers=item["answers"]))
                         data.extend(qa_items)
             return data
-                    
-        path_to_train = os.path.join(self.mrqa_path, "mrqa_train", self.subset+".jsonl.gz")
-        path_to_dev = os.path.join(self.mrqa_path, "mrqa_dev", self.subset+".jsonl.gz")
+
+        path_to_train = os.path.join(
+            self.mrqa_path, "mrqa_train", self.subset+".jsonl.gz")
+        path_to_dev = os.path.join(
+            self.mrqa_path, "mrqa_dev", self.subset+".jsonl.gz")
         dataset = {}
         dataset["train"] = load_jsonl_gz(path_to_train)
         dataset["validation"] = load_jsonl_gz(path_to_dev)
         return dataset
+
 
 def format(dataset_name, path="./"):
     print("Formatting ", dataset_name)
@@ -182,17 +207,18 @@ def format(dataset_name, path="./"):
         data.write_dataset(path)
     elif dataset_name == "kilt_triviaqa":
         data = Kilt_TriviaQA()
-        data.write_dataset(path)   
+        data.write_dataset(path)
     elif dataset_name == "glue_qnli":
         data = Glue_QNLI()
-        data.write_dataset(path)   
+        data.write_dataset(path)
     elif dataset_name.startswith("mrqa_"):
         data = MRQA(subset=dataset_name.split("_")[1])
-        data.write_dataset(path)   
+        data.write_dataset(path)
+
 
 path = "data/"
-if len(sys.argv) >=2:
-    path = sys.argv[1] 
+if len(sys.argv) >= 2:
+    path = sys.argv[1]
 
 # format("kilt_nq", path)
 # format("kilt_triviaqa", path)

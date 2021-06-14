@@ -25,7 +25,7 @@ def generate_bugs(predictions, truth_data, results_all):
         item["input"] = t[0]
         item["truth"] = t[1]
         item["mistake"] = p.strip()
-        item["score"] = {"EM": int(em == False), "QA-F1": float(f1)}
+        item["score"] = {"EM": int(em == True), "QA-F1": float(f1)}
         if em == False and f1 < 0.5:  # decide later about the threshold of f1 score
             bug_lines.append(json.dumps(item))
         else:
