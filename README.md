@@ -32,3 +32,15 @@ rm data/*/*-BartTokenized.json
 ```bash
 bash scripts/run_mrqa.sh
 ```
+
+
+## Debugging 
+```bash
+bash scripts/build_bugs_mrqa.sh
+
+python semanticdebugger/incre_bench/sample_bug_stream.py \
+    --bug_pool_file "bug_data/mrqa_naturalquestions_dev.bugs.jsonl" \
+    --batch_size 50 \
+    --num_batches 40 \
+    --bug_strema_file "bug_data/mrqa_naturalquestions_dev.static_bug_stream.json"
+```

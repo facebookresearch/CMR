@@ -3,13 +3,14 @@ import json
 from .base_datamanager import MyQADataset, MyDataLoader
 from .eval_metrics import METRICS, evaluate_func
 
+
 class GeneralDataset(object):
 
     def __init__(self, logger, args, data_path, data_type, is_training, task_name, given_data=None):
         # should give the tasks used in this split in the var "tasks"
         self.data_path = data_path
         self.data_type = data_type
-        
+
         self.data = []
         self.task_name = task_name
         if given_data:
@@ -22,7 +23,6 @@ class GeneralDataset(object):
             for line in lines:
                 d = line.strip().split("\t")
                 self.data.append((d[0], d[1:]))
-            
 
         self.is_training = is_training
         self.load = not args.debug if hasattr(args, "debug") else True
@@ -54,25 +54,27 @@ class GeneralDataset(object):
             new_answers += answer
         return new_answers, metadata
 
-    def load_dataset(self, tokenizer, do_return=False, skip_cache=False):
+    def load_dataset(self, tokenizer, do_return=False, skip_cache=False, quiet=False):
         self.tokenizer = tokenizer
         postfix = tokenizer.__class__.__name__.replace("zer", "zed")
-        
+
         if not skip_cache:
             preprocessed_path = os.path.join(
                 "/".join(self.data_path.split("/")[:-1]),
                 self.data_path.split("/")[-1].replace(".tsv", "-{}.json".format(postfix)))
-        
-        
-        if self.load and os.path.exists(preprocessed_path) and not skip_cache:
+
+        if not skip_cache and self.load and os.path.exists(preprocessed_path):
             # load preprocessed input
-            self.logger.info("Loading pre-tokenized data from {}".format(preprocessed_path))
+            self.logger.info(
+                "Loading pre-tokenized data from {}".format(preprocessed_path))
             with open(preprocessed_path, "r") as f:
                 input_ids, attention_mask, decoder_input_ids, decoder_attention_mask, \
                     metadata = json.load(f)
 
         else:
-            self.logger.info("Start tokenizing ... {} instances".format(len(self.data)))
+            if not quiet:
+                self.logger.info(
+                    "Start tokenizing ... {} instances".format(len(self.data)))
 
             inputs = []
             outputs = []
@@ -81,39 +83,45 @@ class GeneralDataset(object):
                 # Add the task name to the input
                 # inputs.append(" [{}] {}".format(self.task_name, dp[0]))
                 inputs.append(dp[0])
-                outputs.append(dp[1]) # is a list
+                outputs.append(dp[1])  # is a list
 
-            self.logger.info("Printing 3 examples")
-            for i in range(3):
-                self.logger.info(inputs[i])
-                self.logger.info(outputs[i])
+            if not quiet:
+                self.logger.info("Printing 3 examples")
+                for i in range(3):
+                    self.logger.info(inputs[i])
+                    self.logger.info(outputs[i])
 
-            outputs, metadata = self.flatten(outputs) # what is metadata?
-            self.logger.info("Printing 3 examples's outputs and metadata after flattening")
-            for i in range(3):
-                self.logger.info(outputs[i])
-                self.logger.info(metadata[i])
+            outputs, metadata = self.flatten(outputs)  # what is metadata?
+            # self.logger.info("Printing 3 examples's outputs and metadata after flattening")
+            # for i in range(3):
+            #     self.logger.info(outputs[i])
+            #     self.logger.info(metadata[i])
 
             if self.args.do_lowercase:
                 inputs = [input0.lower() for input0 in inputs]
                 outputs = [output0.lower() for output0 in outputs]
             if self.args.append_another_bos:
                 inputs = ["<s> "+input0 for input0 in inputs]
-                outputs = ["<s> " +output0 for output0 in outputs]
-            
-            self.logger.info("Tokenizing Input ...")
+                outputs = ["<s> " + output0 for output0 in outputs]
+
+            if not quiet:
+                self.logger.info("Tokenizing Input ...")
             tokenized_input = tokenizer.batch_encode_plus(inputs,
-                                                         pad_to_max_length=True,
-                                                         max_length=self.args.max_input_length)
-            self.logger.info("Tokenizing Input ... Done!")
-            self.logger.info("Tokenizing Output ...")
+                                                          pad_to_max_length=True,
+                                                          max_length=self.args.max_input_length)
+            if not quiet:
+                self.logger.info("Tokenizing Input ... Done!")
+                self.logger.info("Tokenizing Output ...")
             tokenized_output = tokenizer.batch_encode_plus(outputs,
-                                                       pad_to_max_length=True,
-                                                       max_length=self.args.max_output_length)
-            self.logger.info("Tokenizing Output ... Done!")
+                                                           pad_to_max_length=True,
+                                                           max_length=self.args.max_output_length)
+            if not quiet:
+                self.logger.info("Tokenizing Output ... Done!")
             input_ids, attention_mask = tokenized_input["input_ids"], tokenized_input["attention_mask"]
-            decoder_input_ids, decoder_attention_mask = tokenized_output["input_ids"], tokenized_output["attention_mask"]
-            if self.load and not skip_cache: 
+            decoder_input_ids, decoder_attention_mask = tokenized_output[
+                "input_ids"], tokenized_output["attention_mask"]
+
+            if self.load and not skip_cache:
                 preprocessed_data = [input_ids, attention_mask,
                                      decoder_input_ids, decoder_attention_mask,
                                      metadata]
@@ -128,23 +136,26 @@ class GeneralDataset(object):
         # self.logger.info("len(decoder_input_ids): {}".format(len(decoder_input_ids)))
         # self.logger.info("len(attention_mask): {}".format(len(attention_mask)))
         # self.logger.info("len(decoder_attention_mask): {}".format(len(decoder_attention_mask)))
-        
+
         self.dataset = MyQADataset(input_ids, attention_mask,
-                                        decoder_input_ids, decoder_attention_mask,
-                                        in_metadata=None, out_metadata=metadata,
-                                        is_training=self.is_training)
-        self.logger.info("Loaded {} examples from {} data".format(len(self.dataset), self.data_type))
+                                   decoder_input_ids, decoder_attention_mask,
+                                   in_metadata=None, out_metadata=metadata,
+                                   is_training=self.is_training)
+        if not quiet:
+            self.logger.info("Loaded {} examples from {} data".format(
+                len(self.dataset), self.data_type))
 
         if do_return:
             return self.dataset
 
     def load_dataloader(self, do_return=False):
-        self.dataloader = MyDataLoader(self.args, self.dataset, self.is_training)
+        self.dataloader = MyDataLoader(
+            self.args, self.dataset, self.is_training)
         if do_return:
             return self.dataloader
 
     def evaluate(self, predictions, verbose=False):
-        assert len(predictions)==len(self), (len(predictions), len(self))
+        assert len(predictions) == len(self), (len(predictions), len(self))
         predictions = [prediction.strip() for prediction in predictions]
         return evaluate_func(predictions, self.data, self.metric)
         # ems = []
@@ -153,15 +164,18 @@ class GeneralDataset(object):
         # return np.mean(ems)
 
     def save_predictions(self, predictions, path_to_save=None):
-        assert len(predictions)==len(self), (len(predictions), len(self))
+        assert len(predictions) == len(self), (len(predictions), len(self))
 
-        predictions = ['n/a' if len(prediction.strip())==0 else prediction for prediction in predictions]
-        prediction_text = [prediction.strip()+'\n' for prediction in predictions]
+        predictions = ['n/a' if len(prediction.strip()) ==
+                       0 else prediction for prediction in predictions]
+        prediction_text = [
+            prediction.strip()+'\n' for prediction in predictions]
         if path_to_save:
             save_path = path_to_save
         else:
-            save_path = os.path.join(self.args.output_dir, "{}_predictions.txt".format(self.args.prefix))
+            save_path = os.path.join(
+                self.args.output_dir, "{}_predictions.txt".format(self.args.prefix))
         with open(save_path, "w") as f:
             f.writelines(prediction_text)
-        
+
         self.logger.info("Saved prediction in {}".format(save_path))

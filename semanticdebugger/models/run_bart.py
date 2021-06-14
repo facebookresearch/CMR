@@ -186,7 +186,7 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
     return best_performance, best_model_state_dict
 
 
-def inference(model, dev_data, save_predictions=False, verbose=False, args=None, logger=None, return_all=False):
+def inference(model, dev_data, save_predictions=False, verbose=False, args=None, logger=None, return_all=False, predictions_only=False):
     predictions = []
     bos_token_id = dev_data.tokenizer.bos_token_id
     loss = []   # if needed
@@ -194,7 +194,8 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
         quiet = args.quiet
     else:
         quiet = False
-    logger.info("Starting inference ...")
+    if not quiet:
+        logger.info("Starting inference ...")
     for batch in tqdm(dev_data.dataloader, desc="Infernece on Dev", disable=quiet):
         if torch.cuda.is_available():
             batch = [b.to(torch.device("cuda")) for b in batch]
@@ -211,7 +212,11 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
         for input_, output in zip(batch[0], outputs):
             pred = dev_data.decode(output)
             predictions.append(pred)
-    logger.info("Starting inference ... Done")
+    if not quiet:
+        logger.info("Starting inference ... Done")
+
+    if predictions_only:
+        return predictions
     if save_predictions:
         dev_data.save_predictions(predictions, )
     # logger.info("Starting evaluation metric ...")
