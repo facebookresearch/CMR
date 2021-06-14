@@ -1,4 +1,5 @@
 from argparse import Namespace
+from logging import disable
 import numpy as np
 import torch
 from semanticdebugger.models.mybart import MyBart
@@ -9,7 +10,7 @@ from semanticdebugger.task_manager.dataloader import GeneralDataset
 from transformers import (AdamW, BartConfig, BartTokenizer,
                           get_linear_schedule_with_warmup)
 
-from semanticdebugger.debug_algs.common_utils import OnlineDebuggingMethod
+from semanticdebugger.debug_algs.commons import OnlineDebuggingMethod
 from tqdm import tqdm
 
 
@@ -40,10 +41,12 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         if self.use_cuda:
             self.base_model.to(torch.device("cuda"))
             self.logger.info("Moving to the GPUs.")
+            if self.n_gpu > 1:
+                self.base_model = torch.nn.DataParallel(self.base_model)
 
     def base_model_infer(self, eval_dataloader):
         self.base_model.eval()
-        model = self.base_model if self.n_gpu == 1 else self.model.module
+        model = self.base_model if self.n_gpu == 1 else self.base_model.module
         predictions = run_bart.inference(model, eval_dataloader, save_predictions=False, verbose=False,
                                          logger=self.logger, return_all=False, predictions_only=True, args=Namespace(quiet=True))
         return predictions
@@ -111,13 +114,10 @@ class ContinualFinetuning(OnlineDebuggingMethod):
     def fix_bugs(self, bug_loader):
         # bug_dataloader is from self.bug_loaders
         self.base_model.train()
-
-        if self.n_gpu > 1:
-            self.base_model = torch.nn.DataParallel(self.base_model)
         train_losses = []
         global_step = 0
         for epoch_id in range(int(self.debugger_args.num_epochs)):
-            for batch in tqdm(bug_loader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}"):
+            for batch in tqdm(bug_loader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}", disable=True):
                 # here the batch is a mini batch of the current bug batch
                 if self.use_cuda:
                     batch = [b.to(torch.device("cuda")) for b in batch]

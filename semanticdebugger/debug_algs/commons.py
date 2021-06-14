@@ -1,6 +1,6 @@
 
 import logging
-from random import random
+import random
 from semanticdebugger.task_manager.eval_metrics import evaluate_func
 import torch
 from transformers import BartTokenizer, BartConfig
@@ -68,6 +68,7 @@ class OnlineDebuggingMethod():
                 data_args, formatted_bug_batch, mode="both")
             self.bug_train_loaders.append(train_bug_dataloader)
             self.bug_eval_loaders.append(eval_bug_dataloader)
+        assert len(self.bug_train_loaders) == self.num_bug_batches
         # Create loaders for the sampled pass examples
         with open(data_args.pass_pool_jsonl_path) as f:
             pass_pool = [json.loads(line) for line in f.read().splitlines()]
@@ -83,12 +84,29 @@ class OnlineDebuggingMethod():
         self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
         self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
         self.timecode = 0
-        for bug_batch in tqdm(self.bug_train_loaders, desc="Online Debugging"):
-            results = self.evaluate()
-            self.logger.info(f"Before Bug-fixing results = {results}")
-            self.fix_bugs(bug_batch)
-            results = self.evaluate()
-            self.logger.info(f"After Bug-fixing results = {results}")
+        for bug_train_loader, bug_eval_loader in tqdm(
+                zip(self.bug_train_loaders, self.bug_eval_loaders), desc="Online Debugging", total=self.num_bug_batches):
+
+            # Before Bug-Fixing
+            results = self.evaluate(bug_eval_loader)
+            self.logger.info("-"*30)
+            self.logger.info(
+                f"Before Bug-fixing the results on bug-batch-{self.timecode} = {results}")
+            results = self.evaluate(self.forget_eval_loader)
+            self.logger.info(
+                f"Before Bug-fixing the results on the sampled pass cases = {results}")
+
+            # Fix the bugs by mini-batch based "training"
+            self.fix_bugs(bug_train_loader)
+
+            # After Bug-Fixing
+            results = self.evaluate(bug_eval_loader)
+            self.logger.info(
+                f"After Bug-fixing the results on bug-batch-{self.timecode} = {results}")
+            results = self.evaluate(self.forget_eval_loader)
+            self.logger.info(
+                f"Before Bug-fixing the results on the sampled pass cases = {results}")
+
             self.timecode += 1
         return
 
@@ -104,27 +122,27 @@ class OnlineDebuggingMethod():
 
     def base_model_infer(self, eval_dataloader):
         raise NotImplementedError(
-            "Please Implement the `base_model_infer` method.")
+            "Please Implement the `base_model_infer` method in your class.")
 
     def check_debugger_args(self):
         raise NotImplementedError(
-            "Please Implement the `check_debugger_args` method.")
+            "Please Implement the `check_debugger_args` method in your class.")
 
     def data_formatter(self, bug_batch):
         raise NotImplementedError(
-            "Please Implement the `data_formatter` method.")
+            "Please Implement the `data_formatter` method in your class.")
 
     def get_dataloader(self, data_args, formatted_bug_batch):
         raise NotImplementedError(
-            "Please Implement the `get_dataloader` method.")
+            "Please Implement the `get_dataloader` method in your class.")
 
     def load_base_model(self, base_model_args):
         raise NotImplementedError(
-            "Please Implement the `load_base_model` method.")
+            "Please Implement the `load_base_model` method in your class.")
 
     def debugger_setup(self):
         raise NotImplementedError(
-            "Please Implement the `debugger_setup` method.")
+            "Please Implement the `debugger_setup` method in your class.")
 
     def fix_bugs(self, bug_batch):
-        raise NotImplementedError("Please Implement the `fix_bugs` method.")
+        raise NotImplementedError("Please Implement the `fix_bugs` method in your class.")
