@@ -38,12 +38,19 @@ def write_to_tsv(lst, out_file):
             fout.write("{}\t{}\n".format(line[0], line[1]))
 
 
+def deduplicate(lines):
+    result = list(set(lines))
+    print("deduplicate", len(lines), len(result))
+    return result
+
 class TextToTextDataset():
 
+
     def get_all_lines(self, dataset):
-        train_lines = self.map_to_list(dataset, "train")
-        val_lines = self.map_to_list(dataset, "validation")
-        test_lines = self.map_to_list(dataset, "test")
+        train_lines = deduplicate(self.map_to_list(dataset, "train"))
+        val_lines = deduplicate(self.map_to_list(dataset, "validation"))
+        test_lines = deduplicate(self.map_to_list(dataset, "test"))
+
         # TODO: de-duplicate the lines!
         return train_lines, val_lines, test_lines
 
