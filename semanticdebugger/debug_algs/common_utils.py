@@ -23,9 +23,9 @@ class OnlineDebuggingMethod():
         self.bug_eval_loaders = []
         self.num_bug_batches = None
         self.bug_batch_size = None
-        # utils        
+        # utils
         self.use_cuda = torch.cuda.is_available()
-        self.tokenizer = BartTokenizer.from_pretrained("bart-large")        
+        self.tokenizer = BartTokenizer.from_pretrained("bart-large")
         self.timecode = None
         self.metric = "EM|QA-F1"
 
@@ -73,7 +73,7 @@ class OnlineDebuggingMethod():
         predictions = self.base_model_infer(eval_dataloader)
         assert len(predictions) == len(eval_dataloader)
         predictions = [p.strip() for p in predictions]
-        results = evaluate_func(predictions, eval_dataloader.data, self.metric) 
+        results = evaluate_func(predictions, eval_dataloader.data, self.metric)
         return results
 
     def base_model_infer(self, eval_dataloader):

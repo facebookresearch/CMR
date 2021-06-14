@@ -30,13 +30,13 @@ def run():
     )
 
     base_model_args = Namespace(
-        model_type = "facebook/bart-base",
-        base_model_path = "out/mrqa_naturalquestions_bart-base/best-model.pt"
+        model_type="facebook/bart-base",
+        base_model_path="out/mrqa_naturalquestions_bart-base/best-model.pt"
     )
 
     debugger_args = Namespace(
-        weight_decay = 0.01,
-        learning_rate = 1e-5,
+        weight_decay=0.01,
+        learning_rate=1e-5,
         adam_epsilon=1e-8,
         warmup_steps=0,
         total_steps=10000,
@@ -44,7 +44,7 @@ def run():
         gradient_accumulation_steps=1,
         max_grad_norm=0.1
     )
-    
+
     debugging_alg.load_bug_streams(bug_data_args)
     debugging_alg.load_base_model(base_model_args)
     debugging_alg.debugger_setup(debugger_args)
@@ -54,4 +54,3 @@ def run():
 
 if __name__ == '__main__':
     run()
-
