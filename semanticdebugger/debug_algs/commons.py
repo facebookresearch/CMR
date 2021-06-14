@@ -5,7 +5,7 @@ from semanticdebugger.task_manager.eval_metrics import evaluate_func
 import torch
 from transformers import BartTokenizer, BartConfig
 import json
-from tqdm import tqdm
+from tqdm import tqdm 
 
 
 class OnlineDebuggingMethod():
@@ -25,14 +25,14 @@ class OnlineDebuggingMethod():
         self.bug_eval_loaders = []
         self.num_bug_batches = None
         self.bug_batch_size = None
-        self.pass_pool = []
+        self.sampled_passes = []
         self.forget_eval_loader = None
         # utils
         self.use_cuda = torch.cuda.is_available()
         self.tokenizer = BartTokenizer.from_pretrained("bart-large")
         self.timecode = None
         self.metric = "EM|QA-F1"
-
+        
         if self.use_cuda:
             self.n_gpu = torch.cuda.device_count()
         else:
@@ -72,8 +72,12 @@ class OnlineDebuggingMethod():
         # Create loaders for the sampled pass examples
         with open(data_args.pass_pool_jsonl_path) as f:
             pass_pool = [json.loads(line) for line in f.read().splitlines()]
-        random.shuffle(pass_pool)
+        # TODO: decide how to sample later.
+        # random.shuffle(pass_pool)
+        # sample the most correct ones.
+        pass_pool.sort(key = lambda x: x["score"]["F1"], reverse=True)
         sample_examples = pass_pool[:data_args.pass_sample_size]
+        self.sampled_passes = sample_examples
         sample_examples = self.data_formatter(sample_examples)
         _, self.forget_eval_loader = self.get_dataloader(
             data_args, sample_examples, mode="eval")
@@ -84,31 +88,36 @@ class OnlineDebuggingMethod():
         self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
         self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
         self.timecode = 0
+        res_on_bugs = []
+        res_on_passes = []
         for bug_train_loader, bug_eval_loader in tqdm(
                 zip(self.bug_train_loaders, self.bug_eval_loaders), desc="Online Debugging", total=self.num_bug_batches):
 
             # Before Bug-Fixing
-            results = self.evaluate(bug_eval_loader)
-            self.logger.info("-"*30)
+            bug_before_results = self.evaluate(bug_eval_loader)
+            self.logger.info("-"*10+f"Timecode: {self.timecode}"+"-"*10)
             self.logger.info(
-                f"Before Bug-fixing the results on bug-batch-{self.timecode} = {results}")
-            results = self.evaluate(self.forget_eval_loader)
+                f"Before Bug-fixing the results on bug-batch-{self.timecode} = {bug_before_results}")
+            pass_before_results = self.evaluate(self.forget_eval_loader)
             self.logger.info(
-                f"Before Bug-fixing the results on the sampled pass cases = {results}")
+                f"Before Bug-fixing the results on the sampled pass cases = {pass_before_results}")
 
             # Fix the bugs by mini-batch based "training"
+            self.logger.info("Start bug-fixing ....")
             self.fix_bugs(bug_train_loader)
+            self.logger.info("Start bug-fixing .... Done!")
 
             # After Bug-Fixing
-            results = self.evaluate(bug_eval_loader)
+            bug_after_results = self.evaluate(bug_eval_loader)
             self.logger.info(
-                f"After Bug-fixing the results on bug-batch-{self.timecode} = {results}")
-            results = self.evaluate(self.forget_eval_loader)
+                f"After Bug-fixing the results on bug-batch-{self.timecode} = {bug_after_results}")
+            pass_after_results = self.evaluate(self.forget_eval_loader)
             self.logger.info(
-                f"Before Bug-fixing the results on the sampled pass cases = {results}")
-
+                f"Before Bug-fixing the results on the sampled pass cases = {pass_after_results}")
+            res_on_bugs.append((bug_before_results, bug_after_results))
+            res_on_passes.append((pass_before_results, pass_after_results))
             self.timecode += 1
-        return
+        return res_on_bugs, res_on_passes
 
     def evaluate(self, eval_dataloader=None):
         """Evaluates the performance"""

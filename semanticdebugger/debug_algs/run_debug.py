@@ -4,23 +4,38 @@ from semanticdebugger.models.utils import set_seeds
 from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
 import logging
 import os
+import json
+from tqdm import tqdm
+
+
+class TqdmHandler(logging.Handler):
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            tqdm.write(msg)  # , file=sys.stderr)
+            self.flush()
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
 
 
 def run():
     set_seeds(42)
 
-    log_filename = "/tmp/debug.log"
-
+    log_filename = "logs/online_debug.log"
+    result_file = "logs/online_debug_result.json"
+    sampled_passcases_file = "logs/online_debug_sampled_pass.jsonl"
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S',
                         level=logging.INFO,
                         handlers=[logging.FileHandler(log_filename),
-                                  logging.StreamHandler()])
+                                  logging.StreamHandler(), TqdmHandler()])
     logger = logging.getLogger(__name__)
 
     debugging_alg = ContinualFinetuning(logger=logger)
 
-    bug_data_args = Namespace(
+    data_args = Namespace(
         bug_stream_json_path="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json",
         pass_pool_jsonl_path="bug_data/mrqa_naturalquestions_dev.pass.jsonl",
         pass_sample_size=50,
@@ -50,10 +65,18 @@ def run():
         max_grad_norm=0.1
     )
 
-    debugging_alg.load_data(bug_data_args)
+    debugging_alg.load_data(data_args)
     debugging_alg.load_base_model(base_model_args)
     debugging_alg.debugger_setup(debugger_args)
-    debugging_alg.online_debug()
+    res_on_bugs, res_on_passes = debugging_alg.online_debug()
+
+    with open(result_file, "w") as f:
+        results = {"results_on_bugs":res_on_bugs, "results_on_passes": res_on_passes}
+        json.dump(results, f)
+
+    with open(sampled_passcases_file, "w") as f:
+        f.write("\n".join([json.dumps(item) for item in debugging_alg.sampled_passes]))
+    
     return
 
 
