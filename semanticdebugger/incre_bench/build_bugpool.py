@@ -70,9 +70,10 @@ def main():
         lines = fin.readlines()
     # train_examples = []
     for line in lines:
-        d = line.strip().split("\t")
-        truth_data.append((d[0], d[1:]))
-
+        # d = line.strip().split("\t")
+        # truth_data.append((d[0], d[1:]))
+        d = json.loads(line)
+        truth_data.append((d["input"], d["output"]))
     # get the predictions of a model via its API and config file.
 
     predictions = bart_api.inference_api(

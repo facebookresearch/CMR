@@ -1,3 +1,4 @@
+from enum import unique
 from posixpath import split
 from re import L
 import datasets
@@ -8,15 +9,22 @@ import sys
 import json
 
 
+def show_statistics(lines):
+    len_list = []
+    for l in lines:
+        item = json.loads(l) 
+        len_list.append(len(item["input"].split()))
+    print(np.min(len_list), np.max(len_list),
+          np.mean(len_list), np.median(len_list))
+    return
+
+
 def escape(s):
     # TODO: remove the markups
-    s = s.replace("</P>", " ")
-    s = s.replace("<P>", " ")
-    s = s.replace("<Li>", " ")
-    s = s.replace("</Li>", " ")
-    s = s.replace("<Ul>", " ")
-    s = s.replace("</Ul>", " ")
-    return s.replace("\n", " ").replace("\t", " ").strip()
+    filter_words = ["</P>", "<P>", "<Li>", "</Li>", "<Ul>", "</Ul>", "[DOC]", "[TLE]", "[PAR]", "[SEP]", "\n", "\t"]
+    for fw in filter_words:
+        s = s.replace(fw, "")
+    return s.strip()
 
 # Filtering the bad examples.
 
@@ -32,24 +40,36 @@ def add_qmark(s):
     return s if s.endswith("?") else s + " ?"
 
 
-def write_to_tsv(lst, out_file):
+def write_to_jsonl(lst, out_file):
     with open(out_file, "w") as fout:
-        for line in lst:
-            fout.write("{}\t{}\n".format(line[0], line[1]))
+        fout.write("\n".join(lst))
+        # for line in lst:
+        #     fout.write("{}\t{}\n".format(line[0], line[1]))
 
 
 def deduplicate(lines):
-    result = list(set(lines))
-    print("deduplicate", len(lines), len(result))
-    return result
+    seen_inputs = set()
+    unique_lines = []
+    for line in lines:
+        # print(line)
+        item = json.loads(line)
+        if item['input'] not in seen_inputs:
+            unique_lines.append(line)
+            seen_inputs.add(f"{item['input']}")
+    # result = list(set(lines))
+    print("deduplicate", len(lines), len(unique_lines))
+    return unique_lines
+
 
 class TextToTextDataset():
-
 
     def get_all_lines(self, dataset):
         train_lines = deduplicate(self.map_to_list(dataset, "train"))
         val_lines = deduplicate(self.map_to_list(dataset, "validation"))
         test_lines = deduplicate(self.map_to_list(dataset, "test"))
+
+        show_statistics(train_lines)
+        show_statistics(val_lines)
 
         # TODO: de-duplicate the lines!
         return train_lines, val_lines, test_lines
@@ -71,10 +91,10 @@ class TextToTextDataset():
         os.makedirs(os.path.join(path, self.task_identifier), exist_ok=True)
         prefix = os.path.join(path, self.task_identifier,
                               "{}".format(self.task_identifier))
-        write_to_tsv(train_lines, prefix + "_train.tsv")
-        write_to_tsv(val_lines, prefix + "_dev.tsv")
+        write_to_jsonl(train_lines, prefix + "_train.jsonl")
+        write_to_jsonl(val_lines, prefix + "_dev.jsonl")
         if test_lines:
-            write_to_tsv(test_lines, prefix + "_test.tsv")
+            write_to_jsonl(test_lines, prefix + "_test.jsonl")
 
 
 class Kilt_NQ(TextToTextDataset):
@@ -170,10 +190,16 @@ class MRQA(TextToTextDataset):
             if not example_pass(datapoint["context"]):
                 continue
             # add question mark!
-            lines.append(("Context: " + escape(datapoint["context"]) +
-                          " | Question: " +
-                          add_qmark(escape(datapoint["question"])),
-                          "\t".join([escape(a) for a in datapoint["answers"]])))
+            # lines.append(("Context: " + escape(datapoint["context"]) +
+            #               " | Question: " +
+            #               add_qmark(escape(datapoint["question"])),
+            #               "\t".join([escape(a) for a in datapoint["answers"]])))
+            _input = "Context: " + escape(datapoint["context"]) + \
+                " | " + "Question: " + add_qmark(escape(datapoint["question"]))
+            _output = [escape(a) for a in datapoint["answers"]]
+            _id = f"{self.task_identifier}-{split_name}-{len(lines)}"
+            instance = {"id": _id, "input": _input, "output": _output}
+            lines.append(json.dumps(instance))
         print("Three examples: \n" + "\n".join([str(_) for _ in lines[:3]]))
         return lines
 
@@ -193,7 +219,7 @@ class MRQA(TextToTextDataset):
                             qa_items.append(dict(context=context,
                                                  qid=item["qid"],
                                                  question=item["question"],
-                                                 answers=item["answers"]))
+                                                 answers=list(set(item["answers"]))))
                         data.extend(qa_items)
             return data
 
@@ -234,6 +260,7 @@ if len(sys.argv) >= 2:
 format("mrqa_SQuAD", path)
 format("mrqa_TriviaQA", path)
 format("mrqa_NaturalQuestions", path)
+format("mrqa_HotpotQA", path)
 
 
-# shuf -n 1000 dev_file data/${task}/${task}_dev.mini.tsv
+# shuf -n 1000 dev_file data/${task}/${task}_dev.mini.jsonl

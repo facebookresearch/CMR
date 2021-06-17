@@ -21,8 +21,10 @@ class GeneralDataset(object):
 
             # train_examples = []
             for line in lines:
-                d = line.strip().split("\t")
-                self.data.append((d[0], d[1:]))
+                # d = line.strip().split("\t")
+                # self.data.append((d[0], d[1:]))
+                d = json.loads(line)
+                self.data.append((d["input"], d["output"]))
 
         self.is_training = is_training
         self.load = not args.debug if hasattr(args, "debug") else True
