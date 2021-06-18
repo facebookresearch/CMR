@@ -57,6 +57,9 @@ def run(args, logger):
             {'params': [p for n, p in model.named_parameters() if any(
                 nd in n for nd in no_decay)], 'weight_decay': 0.0}
         ]
+        
+        args.total_steps = args.num_train_epochs * len(train_data.dataloader)
+        logger.info(f"args.total_steps = {args.total_steps}")
         optimizer = AdamW(optimizer_grouped_parameters,
                           lr=args.learning_rate, eps=args.adam_epsilon)
         scheduler = get_linear_schedule_with_warmup(optimizer,
@@ -187,6 +190,7 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
 
 
 def inference(model, dev_data, save_predictions=False, verbose=False, args=None, logger=None, return_all=False, predictions_only=False):
+    model.eval()
     predictions = []
     bos_token_id = dev_data.tokenizer.bos_token_id
     loss = []   # if needed

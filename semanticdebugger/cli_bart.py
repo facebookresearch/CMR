@@ -64,7 +64,7 @@ def get_parser():
                         help="Total number of training epochs to perform.")
     parser.add_argument("--warmup_steps", default=300, type=int,
                         help="Linear warmup over warmup_steps.")
-    parser.add_argument("--total_steps", default=100000, type=int,
+    parser.add_argument("--total_steps", default=-1, type=int,
                         help="Linear warmup over warmup_steps.")
     parser.add_argument('--wait_step', type=int, default=10)
 

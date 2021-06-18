@@ -58,13 +58,13 @@ class GeneralDataset(object):
 
     def load_dataset(self, tokenizer, do_return=False, skip_cache=False, quiet=False):
         self.tokenizer = tokenizer
-        postfix = tokenizer.__class__.__name__.replace("zer", "zed")
+        postfix = "prepro" + tokenizer.__class__.__name__.replace("zer", "zed")
 
         if not skip_cache:
             preprocessed_path = os.path.join(
                 "/".join(self.data_path.split("/")[:-1]),
-                self.data_path.split("/")[-1].replace(".tsv", "-{}.json".format(postfix)))
-
+                self.data_path.split("/")[-1].replace(".jsonl", "-{}.json".format(postfix)))
+        self.logger.info(f"preprocessed_path={preprocessed_path}")
         if not skip_cache and self.load and os.path.exists(preprocessed_path):
             # load preprocessed input
             self.logger.info(
