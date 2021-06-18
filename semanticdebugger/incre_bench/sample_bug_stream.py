@@ -38,7 +38,7 @@ def main():
         for line in f.read().splitlines():
             bug_pool.append(json.loads(line))
     if args.batch_size * args.num_batches > len(bug_pool):
-        logging.info("Error: args.batch_size ({}) * args.num_batches ({}) > # of bugs ({})".format(
+        print("Error: args.batch_size ({}) * args.num_batches ({}) > # of bugs ({})".format(
             args.batch_size, args.num_batches, len(bug_pool)))
         return
     static_bug_stream = get_static_stream(

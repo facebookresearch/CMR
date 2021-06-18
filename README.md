@@ -40,8 +40,8 @@ bash scripts/build_bugs_mrqa.sh
 
 python semanticdebugger/incre_bench/sample_bug_stream.py \
     --bug_pool_file "bug_data/mrqa_naturalquestions_dev.bugs.jsonl" \
-    --batch_size 50 \
-    --num_batches 40 \
+    --batch_size 20 \
+    --num_batches 50 \
     --bug_strema_file "bug_data/mrqa_naturalquestions_dev.static_bug_stream.json"
 
 python semanticdebugger/debug_algs/run_debug.py > logs/tmp/online_debug.log 2>&1 &

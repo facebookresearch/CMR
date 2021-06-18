@@ -107,7 +107,7 @@ class OnlineDebuggingMethod():
 
             # Fix the bugs by mini-batch based "training"
             self.logger.info("Start bug-fixing ....")
-            self.fix_bugs(bug_train_loader)
+            self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
 
             # After Bug-Fixing

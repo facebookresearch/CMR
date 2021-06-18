@@ -51,7 +51,7 @@ def run():
 
     base_model_args = Namespace(
         model_type="facebook/bart-base",
-        base_model_path="out/mrqa_naturalquestions_bart-base/best-model.pt"
+        base_model_path="out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt"
     )
 
     debugger_args = Namespace(
