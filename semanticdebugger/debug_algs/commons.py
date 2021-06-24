@@ -83,44 +83,107 @@ class OnlineDebuggingMethod():
             data_args, sample_examples, mode="eval")
         return
 
+
+    def _eval_before_fixing(self):
+        # Before Bug-Fixing
+        assert self.online_debug_results is not None
+        bug_eval_loader = self.bug_eval_loaders[self.timecode]
+        bug_before_predictions, bug_before_results, bug_before_results_all  = self.evaluate(bug_eval_loader)
+        self.logger.info("-"*10+f"Timecode: {self.timecode}"+"-"*10)
+        self.logger.info(
+            f"Before Bug-fixing the results on bug-batch-{self.timecode} = {bug_before_results}")
+        if len(self.online_debug_results["res_on_passes"]) == 0:
+            pass_before_predictions, pass_before_results, pass_before_results_all  = self.evaluate(self.forget_eval_loader)
+            self.online_debug_results["res_on_passes"].append((pass_before_results, pass_before_results_all))
+        else:
+            pass_before_predictions = None # TODO: 
+            pass_before_results,pass_before_results_all = self.online_debug_results["res_on_passes"][-1]
+        self.logger.info(
+            f"Before Bug-fixing the results on the sampled pass cases = {pass_before_results}")
+        return bug_before_results, bug_before_results_all, pass_before_results, pass_before_results_all
+
+
+    def _eval_after_fixing(self, bug_before_results, bug_before_results_all, pass_before_results, pass_before_results_all):
+         # After Bug-Fixing
+        assert self.online_debug_results is not None
+        bug_eval_loader = self.bug_eval_loaders[self.timecode]
+        bug_after_predictions, bug_after_results, bug_after_results_all  = self.evaluate(bug_eval_loader)
+        self.logger.info(
+            f"After Bug-fixing the results on bug-batch-{self.timecode} = {bug_after_results}")
+        pass_after_predictions, pass_after_results, pass_after_results_all  = self.evaluate(self.forget_eval_loader)
+        self.logger.info(
+            f"After Bug-fixing the results on the sampled pass cases = {pass_after_results}")
+
+        # Log the overall results 
+        self.online_debug_results["res_on_bugs"].append((bug_before_results, bug_after_results))
+        self.online_debug_results["res_on_passes"].append((pass_after_results, pass_after_results_all))
+
+        # Log the specific fixed bugs and forget examples
+        em_fixed_bugs = []
+        f1_fixed_bugs = []
+        assert len(bug_eval_loader.data) == len(bug_before_results_all["EM"]) == len(bug_after_results_all["EM"])
+        for ind in range(len(bug_eval_loader.data)):
+            em_before = bug_before_results_all["EM"][ind]
+            em_after = bug_after_results_all["EM"][ind]
+            f1_before = bug_before_results_all["QA-F1"][ind]
+            f1_after = bug_after_results_all["QA-F1"][ind]
+            uuid = bug_eval_loader.data[ind][2] # (input, output, uuid)
+            if em_before == 0 and em_after == 1:
+                em_fixed_bugs.append(uuid)
+            if f1_before < 0.5 and f1_after > 0.5 and f1_after-f1_before >= 0.25:
+                f1_fixed_bugs.append(uuid)
+
+        # log the forgotten bugs 
+        em_forgotten_passes = []
+
+        for ind in range(len(self.forget_eval_loader.data)):
+            em_before = pass_before_results_all["EM"][ind]
+            em_after = pass_after_results_all["EM"][ind]
+            # f1_before = pass_before_results_all["QA-F1"][ind]
+            # f1_after = pass_after_results_all["QA-F1"][ind]
+            uuid = self.forget_eval_loader.data[ind][2] # (input, output, uuid)
+            if em_before == 1 and em_after == 0:
+                em_forgotten_passes.append(uuid)
+
+            
+        self.online_debug_results["em_fixed_bugs"].append(em_fixed_bugs)
+        self.online_debug_results["f1_fixed_bugs"].append(f1_fixed_bugs)
+        self.online_debug_results["forgotten_passes"].append(em_forgotten_passes)
+
+        self.logger.info(f"Number of em_fixed_bugs = {len(em_fixed_bugs)}; Number of f1_fixed_bugs = {len(f1_fixed_bugs)}")
+        self.logger.info(f"Number of em_forgotten_passes = {len(em_forgotten_passes)}.")
+        # self.logger.info(f"UUIDS of fixed bugs = {em_fixed_bugs}")
+
+        
+
+
     def online_debug(self):
         self.logger.info("Start Online Debugging")
         self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
         self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
         self.timecode = 0
-        res_on_bugs = []
-        res_on_passes = []
-        for bug_train_loader, bug_eval_loader in tqdm(
-                zip(self.bug_train_loaders, self.bug_eval_loaders), desc="Online Debugging", total=self.num_bug_batches):
+        self.online_debug_results = {}
+        self.online_debug_results["res_on_bugs"] = []
+        self.online_debug_results["res_on_passes"] = []
+        self.online_debug_results["em_fixed_bugs"] = []
+        self.online_debug_results["f1_fixed_bugs"] = []
+        self.online_debug_results["forgotten_passes"] = []
 
-            # Before Bug-Fixing
-            bug_before_results = self.evaluate(bug_eval_loader)
-            self.logger.info("-"*10+f"Timecode: {self.timecode}"+"-"*10)
-            self.logger.info(
-                f"Before Bug-fixing the results on bug-batch-{self.timecode} = {bug_before_results}")
-            if len(res_on_passes) == 0:
-                pass_before_results = self.evaluate(self.forget_eval_loader)
-            else:
-                pass_before_results = res_on_passes[-1][1]
-            self.logger.info(
-                f"Before Bug-fixing the results on the sampled pass cases = {pass_before_results}")
-
+        for bug_train_loader in tqdm(self.bug_train_loaders, desc="Online Debugging", total=self.num_bug_batches):
+            bug_before_results, bug_before_results_all, pass_before_results, pass_before_results_all = self._eval_before_fixing()
+            ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
             self.logger.info("Start bug-fixing ....")
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
+            ############### CORE ###############
+            self._eval_after_fixing(bug_before_results, bug_before_results_all, pass_before_results, pass_before_results_all)
 
-            # After Bug-Fixing
-            bug_after_results = self.evaluate(bug_eval_loader)
-            self.logger.info(
-                f"After Bug-fixing the results on bug-batch-{self.timecode} = {bug_after_results}")
-            pass_after_results = self.evaluate(self.forget_eval_loader)
-            self.logger.info(
-                f"After Bug-fixing the results on the sampled pass cases = {pass_after_results}")
-            res_on_bugs.append((bug_before_results, bug_after_results))
-            res_on_passes.append((pass_before_results, pass_after_results))
             self.timecode += 1
-        return res_on_bugs, res_on_passes
+            # for debug only 
+            # if self.timecode == 3:
+            #     break 
+        return self.online_debug_results
 
     def evaluate(self, eval_dataloader=None):
         """Evaluates the performance"""
@@ -129,8 +192,9 @@ class OnlineDebuggingMethod():
         predictions = self.base_model_infer(eval_dataloader)
         assert len(predictions) == len(eval_dataloader)
         predictions = [p.strip() for p in predictions]
-        results = evaluate_func(predictions, eval_dataloader.data, self.metric)
-        return results
+        results, return_all = evaluate_func(predictions, eval_dataloader.data, self.metric, return_all=True)
+
+        return predictions, results, return_all
 
     def base_model_infer(self, eval_dataloader):
         raise NotImplementedError(

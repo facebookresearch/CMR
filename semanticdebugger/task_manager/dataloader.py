@@ -24,7 +24,7 @@ class GeneralDataset(object):
                 # d = line.strip().split("\t")
                 # self.data.append((d[0], d[1:]))
                 d = json.loads(line)
-                self.data.append((d["input"], d["output"]))
+                self.data.append((d["input"], d["output"], d["id"]))
 
         self.is_training = is_training
         self.load = not args.debug if hasattr(args, "debug") else True
@@ -80,12 +80,13 @@ class GeneralDataset(object):
 
             inputs = []
             outputs = []
-
+            uuids = []
             for dp in self.data:
                 # Add the task name to the input
                 # inputs.append(" [{}] {}".format(self.task_name, dp[0]))
                 inputs.append(dp[0])
                 outputs.append(dp[1])  # is a list
+                uuids.append(dp[2])
 
             if not quiet:
                 self.logger.info("Printing 3 examples")
@@ -139,10 +140,14 @@ class GeneralDataset(object):
         # self.logger.info("len(attention_mask): {}".format(len(attention_mask)))
         # self.logger.info("len(decoder_attention_mask): {}".format(len(decoder_attention_mask)))
 
+
+
+        assert len(uuids) == len(input_ids) # make sure
+
         self.dataset = MyQADataset(input_ids, attention_mask,
                                    decoder_input_ids, decoder_attention_mask,
                                    in_metadata=None, out_metadata=metadata,
-                                   is_training=self.is_training)
+                                   is_training=self.is_training, uuids=uuids)
         if not quiet:
             self.logger.info("Loaded {} examples from {} data".format(
                 len(self.dataset), self.data_type))

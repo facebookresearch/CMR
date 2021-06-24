@@ -68,11 +68,10 @@ def run():
     debugging_alg.load_data(data_args)
     debugging_alg.load_base_model(base_model_args)
     debugging_alg.debugger_setup(debugger_args)
-    res_on_bugs, res_on_passes = debugging_alg.online_debug()
+    online_debug_results = debugging_alg.online_debug()
 
     with open(result_file, "w") as f:
-        results = {"results_on_bugs":res_on_bugs, "results_on_passes": res_on_passes}
-        json.dump(results, f)
+        json.dump(online_debug_results, f)
 
     with open(sampled_passcases_file, "w") as f:
         f.write("\n".join([json.dumps(item) for item in debugging_alg.sampled_passes]))

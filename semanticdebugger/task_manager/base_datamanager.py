@@ -8,7 +8,8 @@ class MyQADataset(Dataset):
                  input_ids, attention_mask,
                  decoder_input_ids, decoder_attention_mask,
                  in_metadata=None, out_metadata=None,
-                 is_training=False):
+                 is_training=False, uuids=None):
+        self.uuids = uuids
         self.input_ids = torch.LongTensor(input_ids)
         self.attention_mask = torch.LongTensor(attention_mask)
         self.decoder_input_ids = torch.LongTensor(decoder_input_ids)
@@ -34,6 +35,7 @@ class MyQADataset(Dataset):
 
         in_idx = np.random.choice(range(*self.in_metadata[idx]))
         out_idx = np.random.choice(range(*self.out_metadata[idx]))
+        # TODO: can we pass the self.uuids[in_idx] ?
         return self.input_ids[in_idx], self.attention_mask[in_idx], \
             self.decoder_input_ids[out_idx], self.decoder_attention_mask[out_idx]
 

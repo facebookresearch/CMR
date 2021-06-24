@@ -59,7 +59,7 @@ def evaluate_func(predictions, data, metric, return_all=False):
             for (prediction, dp) in zip(predictions, data):
                 ems.append(get_exact_match_over_list(prediction, dp[1]))
             results[m] = np.mean(ems)
-            results_all[m] = ems
+            results_all[m] = [bool(_i) for _i in ems]
         elif m == "ACC":
             accs = []
             for (prediction, dp) in zip(predictions, data):
@@ -71,7 +71,8 @@ def evaluate_func(predictions, data, metric, return_all=False):
             for (prediction, dp) in zip(predictions, data):
                 f1s.append(get_f1_over_list(prediction, dp[1]))
             results[m] = np.mean(f1s)
-            results_all[m] = f1s
+            # results_all[m] = f1s
+            results_all[m] = [float(_i) for _i in f1s]
         elif m == "Classification-F1":
             results[m] = f1_score([dp[1][0]
                                   for dp in data], predictions, average="macro")

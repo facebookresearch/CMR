@@ -55,10 +55,13 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         # The continual fine-tuning method only uses the correct answers for fixing bugs.
         formatted_bug_batch = []
         for bug in bug_batch:
+            # if "id" not in bug:
+            #     _id = len(formatted_bug_batch)
+            _id = bug["id"]
             _input = bug["input"]
             # _mistake = bug["mistake"]
             _truth = bug["truth"]   # a list of answers
-            formatted_bug_batch.append((_input, _truth))
+            formatted_bug_batch.append((_input, _truth, _id))
         return formatted_bug_batch
 
     def get_dataloader(self, bug_data_args, formatted_bug_batch, mode="both"):
@@ -120,6 +123,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
             for batch in tqdm(bug_loader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}", disable=True):
                 # here the batch is a mini batch of the current bug batch
                 if self.use_cuda:
+                    # print(type(batch[0]), batch[0])
                     batch = [b.to(torch.device("cuda")) for b in batch]
                 pad_token_id = self.tokenizer.pad_token_id
                 batch[0], batch[1] = trim_batch(

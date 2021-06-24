@@ -24,6 +24,7 @@ def generate_bugs(predictions, truth_data, results_all):
         item = dict()
         item["input"] = t[0]
         item["truth"] = t[1]
+        item["id"] =  t[2]
         item["mistake"] = p.strip()
         item["score"] = {"EM": int(em == True), "QA-F1": float(f1)}
         if em == False and f1 < 0.5:  # decide later about the threshold of f1 score
@@ -73,7 +74,7 @@ def main():
         # d = line.strip().split("\t")
         # truth_data.append((d[0], d[1:]))
         d = json.loads(line)
-        truth_data.append((d["input"], d["output"]))
+        truth_data.append((d["input"], d["output"], d["id"]))
     # get the predictions of a model via its API and config file.
 
     predictions = bart_api.inference_api(
