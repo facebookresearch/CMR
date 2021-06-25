@@ -23,6 +23,8 @@ class OnlineDebuggingMethod():
         self.bug_stream = []
         self.bug_train_loaders = []
         self.bug_eval_loaders = []
+        self.bug_all_train_loader = None
+        self.bug_all_eval_loader = None
         self.num_bug_batches = None
         self.bug_batch_size = None
         self.sampled_passes = []
@@ -61,22 +63,33 @@ class OnlineDebuggingMethod():
         self.bug_stream = bug_stream
         self.num_bug_batches = len(bug_stream)
         self.bug_batch_size = len(bug_stream[0])
-        # Create data loaders
+        # Create data loaders for each error batch.
+        all_formatted_bugs = []
         for bug_batch in tqdm(self.bug_stream, desc="Creating the bug data loaders."):
             formatted_bug_batch = self.data_formatter(bug_batch)
+            all_formatted_bugs += formatted_bug_batch
             train_bug_dataloader, eval_bug_dataloader = self.get_dataloader(
                 data_args, formatted_bug_batch, mode="both")
             self.bug_train_loaders.append(train_bug_dataloader)
             self.bug_eval_loaders.append(eval_bug_dataloader)
         assert len(self.bug_train_loaders) == self.num_bug_batches
+
+        # Create the all bug loaders.
+        self.bug_all_train_loader, self.bug_all_eval_loader = self.get_dataloader(
+                data_args, all_formatted_bugs, mode="both")
+
         # Create loaders for the sampled pass examples
         with open(data_args.pass_pool_jsonl_path) as f:
             pass_pool = [json.loads(line) for line in set(f.read().splitlines())]
         # TODO: decide how to sample later.
         # random.shuffle(pass_pool)
         # sample the most correct ones.
-        pass_pool.sort(key = lambda x: x["score"]["QA-F1"], reverse=True)
+
+        # pass_pool.sort(key = lambda x: x["score"]["QA-F1"], reverse=True)
+        pass_pool = [item for item in pass_pool if item["score"]["EM"]==1]  # only the EM=1 examples
+        random.shuffle(pass_pool)   # TODO: replace this later.
         sample_examples = pass_pool[:data_args.pass_sample_size]
+
         self.sampled_passes = sample_examples
         sample_examples = self.data_formatter(sample_examples)
         _, self.forget_eval_loader = self.get_dataloader(
@@ -166,7 +179,11 @@ class OnlineDebuggingMethod():
         self.online_debug_results["res_on_passes"].append((pass_after_results, pass_after_results_all))
         self._check_fixing(bug_eval_loader, bug_before_results_all, bug_after_results_all)
         self._check_forgetting(pass_before_results_all, pass_after_results_all)
-       
+
+    def _eval_final(self):
+        all_bug_after_predictions, all_bug_after_results, all_bug_after_results_all  = self.evaluate(self.bug_all_eval_loader)
+        self.online_debug_results["final_all_bug_eval"] = all_bug_after_results
+        self.logger.info(f"Final Bug-fixing Results = {all_bug_after_results}")
 
     def online_debug(self):
         self.logger.info("Start Online Debugging")
@@ -181,6 +198,7 @@ class OnlineDebuggingMethod():
         self.online_debug_results["em_fixed_bugs"] = []
         self.online_debug_results["f1_fixed_bugs"] = []
         self.online_debug_results["forgotten_passes"] = []
+        self.online_debug_results["final_all_bug_eval"] = None
 
         for bug_train_loader in tqdm(self.bug_train_loaders, desc="Online Debugging", total=self.num_bug_batches):
             bug_before_results, bug_before_results_all, pass_before_results, pass_before_results_all = self._eval_before_fixing()
@@ -196,6 +214,7 @@ class OnlineDebuggingMethod():
             # for debug only 
             # if self.timecode == 3:
             #     break 
+        self._eval_final()
         return self.online_debug_results
 
     def evaluate(self, eval_dataloader=None):
