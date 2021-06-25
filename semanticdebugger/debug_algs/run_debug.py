@@ -23,9 +23,10 @@ class TqdmHandler(logging.Handler):
 def run():
     set_seeds(42)
 
-    log_filename = "logs/online_debug.log"
-    result_file = "logs/online_debug_result.json"
-    sampled_passcases_file = "logs/online_debug_sampled_pass.jsonl"
+    prefix = "nq_dev"
+    log_filename = f"logs/{prefix}_online_debug.log"
+    result_file = f"logs/{prefix}_online_debug_result.json"
+    sampled_passcases_file = f"logs/{prefix}_online_debug_sampled_pass.jsonl"
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S',
                         level=logging.INFO,
