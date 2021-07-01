@@ -7,12 +7,6 @@ from numpy.lib.function_base import median
 
 
 
-# Load the json data
-path = "logs/nq_dev_online_debug_result.json"
-assert os.path.exists(path)
-online_debug_result = json.load(open(path))
-
-print(online_debug_result.keys())
 
 def eval_forgetting(online_debug_result):
     pass_forgetting_data = []
@@ -30,7 +24,7 @@ def eval_forgetting(online_debug_result):
     mean = np.mean(em_on_passes)
     # median = np.median(em_on_passes)
     final = em_on_passes[-1]
-    print(f"Forgetting measure (EM): worse={worse}; mean={mean}; final={final}")
+    # print(f"Forgetting measure (EM): worse={worse}; mean={mean}; final={final}")
     return worse, mean, final 
 
 def eval_error_fixing(online_debug_result):
@@ -55,10 +49,24 @@ def eval_error_fixing(online_debug_result):
         inter_respon_efr.append(len(em_fixed)/(bsz-len(em_prefixed)))
     mean_ip_efr = np.mean(inter_prefix_efr)
     mean_ir_efr = np.mean(inter_respon_efr)
-    print(f"Bug-Fixing measure (EM): final_state_bug_fixing_rate={final_state_bug_fixing_rate};")
-    print(f"Bug-Fixing measure (EM): mean_ip_efr={mean_ip_efr}; mean_ir_efr={mean_ir_efr};")
+    # print(f"Bug-Fixing measure (EM): final_state_bug_fixing_rate={final_state_bug_fixing_rate};")
+    # print(f"Bug-Fixing measure (EM): mean_ip_efr={mean_ip_efr}; mean_ir_efr={mean_ir_efr};")
+    return final_state_bug_fixing_rate, mean_ip_efr, mean_ir_efr
 
-eval_forgetting(online_debug_result)
-eval_error_fixing(online_debug_result)
-
-
+def print_eval(path="bug_data/output/nq_dev_0625_1e-5_e3_result.json"):
+    # Load the json data
+    lr = path.split("_")[-3]
+    num_epoch = path.split("_")[-2][1:]
+    assert os.path.exists(path)
+    output_info = json.load(open(path))
+    # print(output_info.keys()) 
+    online_debug_results = output_info["online_debug_results"]
+    worse_kr, mean_kr, final_kr = eval_forgetting(online_debug_results)
+    final_efr, mean_ip_efr, mean_ir_efr = eval_error_fixing(online_debug_results)
+    print(f"{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}")
+    
+print("{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}")
+print_eval("bug_data/output/nq_dev_0625_1e-5_e3_result.json")
+print_eval("bug_data/output/nq_dev_0625_3e-5_e3_result.json")
+print_eval("bug_data/output/nq_dev_0625_1e-5_e5_result.json")
+print_eval("bug_data/output/nq_dev_0625_3e-5_e5_result.json")

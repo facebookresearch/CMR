@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 class OnlineDebuggingMethod():
     def __init__(self, logger=None):
+        self.name = "base_class"
         # logger
         self.logger = logger
         # args
@@ -212,8 +213,8 @@ class OnlineDebuggingMethod():
 
             self.timecode += 1
             # for debug only 
-            # if self.timecode == 3:
-            #     break 
+            # if self.timecode == 2:
+            #     return self.online_debug_results 
         self._eval_final()
         return self.online_debug_results
 
