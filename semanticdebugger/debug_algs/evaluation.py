@@ -1,4 +1,5 @@
 import json
+from altair.vegalite.v4.api import value
 import numpy as np
 import sys 
 import os
@@ -64,9 +65,31 @@ def print_eval(path="bug_data/output/nq_dev_0625_1e-5_e3_result.json"):
     worse_kr, mean_kr, final_kr = eval_forgetting(online_debug_results)
     final_efr, mean_ip_efr, mean_ir_efr = eval_error_fixing(online_debug_results)
     print(f"{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}")
+
+def aggregate_offline_results(path="bug_data/output/nq_dev_0701_v2_offline_eval/"):
+    import glob
+    alltime_results = {}
+    for single_res_path in sorted(glob.glob(f"{path}/thread_*.json")):
+        with open(single_res_path) as f:
+            single_res = json.load(f)
+        for key, values in single_res.items():
+            if key not in alltime_results:
+                alltime_results[key] = []
+            alltime_results[key] += values
+    with open(f"{path}/alltime_result.json", "w") as f:
+        json.dump(alltime_results, f)
     
-print("{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}")
-print_eval("bug_data/output/nq_dev_0625_1e-5_e3_result.json")
-print_eval("bug_data/output/nq_dev_0625_3e-5_e3_result.json")
-print_eval("bug_data/output/nq_dev_0625_1e-5_e5_result.json")
-print_eval("bug_data/output/nq_dev_0625_3e-5_e5_result.json")
+
+
+if __name__ == '__main__':
+    aggregate_offline_results("bug_data/output/nq_dev_0701v3_1e-5_e3_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0701v3_1e-5_e5_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0701v3_3e-5_e3_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0701v3_3e-5_e5_offline_eval")
+
+
+    # print("{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}")
+    # print_eval("bug_data/output/nq_dev_0625_1e-5_e3_result.json")
+    # print_eval("bug_data/output/nq_dev_0625_3e-5_e3_result.json")
+    # print_eval("bug_data/output/nq_dev_0625_1e-5_e5_result.json")
+    # print_eval("bug_data/output/nq_dev_0625_3e-5_e5_result.json")

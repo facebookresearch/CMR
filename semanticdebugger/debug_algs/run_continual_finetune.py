@@ -7,7 +7,7 @@ import logging
 import os
 import json
 from tqdm import tqdm
-
+import numpy as np
 
 class TqdmHandler(logging.Handler):
     def emit(self, record):
@@ -22,17 +22,17 @@ class TqdmHandler(logging.Handler):
 
 
 def run(args):
-    set_seeds(args.seed) 
+    set_seeds(args.seed)
     prefix = args.prefix
     log_filename = f"logs/{prefix}_online_debug.log"
-    
+
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S',
                         level=logging.INFO,
                         handlers=[logging.FileHandler(log_filename),
                                   logging.StreamHandler(), TqdmHandler()])
     logger = logging.getLogger(__name__)
-    
+
     logger.info(args)
 
     debugging_alg = ContinualFinetuning(logger=logger)
@@ -64,41 +64,71 @@ def run(args):
         total_steps=10000,
         num_epochs=args.num_train_epochs,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
-        max_grad_norm=args.max_grad_norm
+        max_grad_norm=args.max_grad_norm,
+        overtime_overall_bug_eval=args.overtime_overall_bug_eval,
+        save_all_ckpts=args.save_all_ckpts,
+        overtime_ckpt_dir=args.overtime_ckpt_dir
     )
 
-    debugging_alg.load_data(data_args)
-    debugging_alg.load_base_model(base_model_args)
-    debugging_alg.debugger_setup(debugger_args)
-    online_debug_results = debugging_alg.online_debug()
+    # The Online Debugging Mode
 
-    output_info = {}
-    output_info["method_class"] = debugging_alg.name
-    output_info["base_model_args"] = str(debugging_alg.base_model_args)
-    output_info["debugger_args"] = str(debugging_alg.debugger_args)
-    output_info["data_args"] = str(debugging_alg.data_args)
-    output_info["online_debug_results"] = online_debug_results
-    output_info["sampled_passes_ids"] = [item["id"] for item in debugging_alg.sampled_passes]
+    if args.num_threads_eval == 0:
+        debugging_alg.load_data(data_args)
+        debugging_alg.load_base_model(base_model_args)
+        debugging_alg.debugger_setup(debugger_args)
+        online_debug_results = debugging_alg.online_debug()
 
-    with open(args.result_file, "w") as f:
-        json.dump(output_info, f)
-    
-    logger.info(f"Finished. Results saved to {args.result_file}")
- 
+        output_info = {}
+        output_info["method_class"] = debugging_alg.name
+        output_info["base_model_args"] = str(debugging_alg.base_model_args)
+        output_info["debugger_args"] = str(debugging_alg.debugger_args)
+        output_info["data_args"] = str(debugging_alg.data_args)
+        output_info["online_debug_results"] = online_debug_results
+        output_info["sampled_passes_ids"] = [item["id"]
+                                            for item in debugging_alg.sampled_passes]
+
+        with open(args.result_file, "w") as f:
+            json.dump(output_info, f)
+
+        logger.info(f"Finished. Results saved to {args.result_file}")
+    else:
+        # Parallel offline evaluation mode 
+        timecodes = np.array_split(range(1, args.max_timecode+1), args.num_threads_eval)[args.current_thread_id]
+        thread_results = {}
+        debugging_alg.load_data(data_args)
+        # debugging_alg.debugger_setup(debugger_args)
+        for timecode in tqdm(timecodes, desc=f"Threads on {args.current_thread_id}"):
+            logger.info(f"Starting the offline evaluation of {timecode}")
+            timecode = int(timecode)
+            base_model_args.base_model_path = os.path.join(args.overtime_ckpt_dir, f"model_ckpt_{timecode:03d}.pt")
+            debugging_alg.load_base_model(base_model_args)            
+            single_result = debugging_alg.single_timecode_eval(timecode)
+            logger.info(f"Results: {json.dumps(single_result)}")
+            for key, values in single_result.items():
+                if key not in thread_results:
+                    thread_results[key] = []
+                thread_results[key].append(values)
+        with open(args.path_to_thread_result, "w") as f:
+            json.dump(thread_results, f)
     return
-    
+
 
 def get_cli_parser():
     parser = argparse.ArgumentParser()
 
-    # base_model_args  
-    parser.add_argument("--base_model_type", default="facebook/bart-base", required=False) 
-    parser.add_argument("--base_model_path", default="out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt", type=str) 
+    # base_model_args
+    parser.add_argument("--base_model_type",
+                        default="facebook/bart-base", required=False)
+    parser.add_argument(
+        "--base_model_path",
+        default="out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt", type=str)
 
     # data_args
 
-    parser.add_argument("--bug_stream_json_path", default="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json")
-    parser.add_argument("--pass_pool_jsonl_path", default="bug_data/mrqa_naturalquestions_dev.pass.jsonl")
+    parser.add_argument("--bug_stream_json_path",
+                        default="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json")
+    parser.add_argument("--pass_pool_jsonl_path",
+                        default="bug_data/mrqa_naturalquestions_dev.pass.jsonl")
 
     parser.add_argument("--task_name", default="mrqa_naturalquestions")
     parser.add_argument('--pass_sample_size', type=int, default=64)
@@ -110,14 +140,14 @@ def get_cli_parser():
     parser.add_argument("--freeze_embeds", action='store_true', default=False)
     parser.add_argument('--max_input_length', type=int, default=888)
     parser.add_argument('--max_output_length', type=int, default=50)
-    
-    parser.add_argument("--append_another_bos", type=int, default=1) # should be true (1)
 
+    parser.add_argument("--append_another_bos", type=int,
+                        default=1)  # should be true (1)
 
-    # debugger_args 
-    
+    # debugger_args
+
     parser.add_argument("--learning_rate", default=1e-5, type=float,
-                        help="The initial learning rate for Adam.") 
+                        help="The initial learning rate for Adam.")
     parser.add_argument("--weight_decay", default=0.01, type=float,
                         help="Weight deay if we apply some.")
     parser.add_argument("--adam_epsilon", default=1e-8, type=float,
@@ -127,16 +157,38 @@ def get_cli_parser():
     parser.add_argument("--gradient_accumulation_steps", default=1, type=int,
                         help="Max gradient norm.")
     parser.add_argument("--num_train_epochs", default=3.0, type=float,
-                        help="Total number of training epochs to perform.") 
+                        help="Total number of training epochs to perform.")
 
-    # I/O parameters 
+    parser.add_argument("--overtime_overall_bug_eval", type=int, default=0,
+                        help="set to 0/False if ignore overtime_overall eval")
+    
+    parser.add_argument("--save_all_ckpts", type=int, default=0,
+                        help="set to 1 if we want all ckpts and eval offline")
+
+    # I/O parameters
     parser.add_argument('--prefix', type=str, default="nq_dev",
-                        help="Prefix for saving predictions") 
+                        help="Prefix for saving predictions")
     parser.add_argument('--seed', type=int, default=42,
                         help="random seed for initialization")
-    parser.add_argument("--result_file", default="bug_data/results.json", type=str) 
+    parser.add_argument(
+        "--result_file", default="bug_data/results.json", type=str)
+    
+    parser.add_argument("--overtime_ckpt_dir", type=str,
+                        help="path to all ckpts for saving")
+
+    # Offline Evaluation Mode in Parallel 
+
+    parser.add_argument("--num_threads_eval", type=int, default=0,
+                        help="0 means nothing; >0 means the number of gpu threads")
+    parser.add_argument("--current_thread_id", type=int,
+                        help="0 to num_threads_eval-1")
+    parser.add_argument("--max_timecode", type=int,
+                        help="the maximum timecode to eval")
+    parser.add_argument("--path_to_thread_result", type=str,
+                        help="the path to save the thread results")
 
     return parser
+
 
 if __name__ == '__main__':
     args = get_cli_parser().parse_args()

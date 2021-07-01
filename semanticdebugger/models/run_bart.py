@@ -200,7 +200,7 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
         quiet = False
     if not quiet:
         logger.info("Starting inference ...")
-    for batch in tqdm(dev_data.dataloader, desc="Infernece on Dev", disable=quiet):
+    for batch in tqdm(dev_data.dataloader, desc="Infernece on Dev", disable=not verbose):
         if torch.cuda.is_available():
             batch = [b.to(torch.device("cuda")) for b in batch]
         pad_token_id = dev_data.tokenizer.pad_token_id

@@ -27,7 +27,8 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                          "total_steps",
                          "num_epochs",
                          "gradient_accumulation_steps",
-                         "max_grad_norm"]
+                         "max_grad_norm",
+                         "overtime_overall_bug_eval"]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
         return
 
@@ -45,10 +46,10 @@ class ContinualFinetuning(OnlineDebuggingMethod):
             if self.n_gpu > 1:
                 self.base_model = torch.nn.DataParallel(self.base_model)
 
-    def base_model_infer(self, eval_dataloader):
+    def base_model_infer(self, eval_dataloader, verbose=False):
         self.base_model.eval()
         model = self.base_model if self.n_gpu == 1 else self.base_model.module
-        predictions = run_bart.inference(model, eval_dataloader, save_predictions=False, verbose=False,
+        predictions = run_bart.inference(model, eval_dataloader, save_predictions=False, verbose=verbose,
                                          logger=self.logger, return_all=False, predictions_only=True, args=Namespace(quiet=True))
         return predictions
 
