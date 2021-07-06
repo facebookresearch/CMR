@@ -39,12 +39,12 @@ bash scripts/run_mrqa.sh
 bash scripts/build_bugs_mrqa.sh
 
 python semanticdebugger/incre_bench/sample_bug_stream.py \
+    --seed 42 \
     --bug_pool_file "bug_data/mrqa_naturalquestions_dev.bugs.jsonl" \
     --batch_size 20 \
     --num_batches 50 \
-    --bug_strema_file "bug_data/mrqa_naturalquestions_dev.static_bug_stream.json"
-
-log_file=logs/tmp/online_debug_0624_v2.log
-python semanticdebugger/debug_algs/run_debug.py > ${log_file} 2>&1 &
-tail -f ${log_file}
+    --bug_strema_file "bug_data/mrqa_naturalquestions_dev.static_bug_stream.json" \
+    --pass_pool_file "bug_data/mrqa_naturalquestions_dev.pass.jsonl" \
+    --sampled_pass_pool_file "bug_data/mrqa_naturalquestions_dev.sampled_pass.json" \
+    --pass_sample_size 300    
 ```

@@ -1,4 +1,5 @@
-declare -a prefixes=("nq_dev_0701v3_3e-5_e5" "nq_dev_0701v3_1e-5_e3"  "nq_dev_0701v3_3e-5_e3"  "nq_dev_0701v3_1e-5_e5"   )
+# declare -a prefixes=("nq_dev_0701v3_3e-5_e5" "nq_dev_0701v3_1e-5_e3"  "nq_dev_0701v3_3e-5_e3"  "nq_dev_0701v3_1e-5_e5")
+declare -a prefixes=("nq_dev_0701v3_3e-5_e5")
 for prefix in "${prefixes[@]}"
 do
     mkdir bug_data/output/${prefix}_offline_eval/

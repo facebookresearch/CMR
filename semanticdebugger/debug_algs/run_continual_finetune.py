@@ -40,7 +40,7 @@ def run(args):
     data_args = Namespace(
         bug_stream_json_path=args.bug_stream_json_path,
         pass_pool_jsonl_path=args.pass_pool_jsonl_path,
-        pass_sample_size=args.pass_sample_size,
+        # pass_sample_size=args.pass_sample_size,
         do_lowercase=args.do_lowercase,
         append_another_bos=args.append_another_bos,
         max_input_length=args.max_input_length,
@@ -104,7 +104,7 @@ def run(args):
             debugging_alg.load_base_model(base_model_args)            
             single_result = debugging_alg.single_timecode_eval(timecode)
             thread_results[timecode] = single_result
-            logger.info(f"Results: {json.dumps(single_result)}")
+            # logger.info(f"Results: {json.dumps(single_result)}")
         with open(args.path_to_thread_result, "w") as f:
             json.dump(thread_results, f)
     return
@@ -124,11 +124,11 @@ def get_cli_parser():
 
     parser.add_argument("--bug_stream_json_path",
                         default="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json")
-    parser.add_argument("--pass_pool_jsonl_path",
+    # this will be used for evaluating forgetting
+    parser.add_argument("--pass_pool_jsonl_path", 
                         default="bug_data/mrqa_naturalquestions_dev.pass.jsonl")
 
     parser.add_argument("--task_name", default="mrqa_naturalquestions")
-    parser.add_argument('--pass_sample_size', type=int, default=64)
     parser.add_argument('--train_batch_size', type=int, default=8)
     parser.add_argument('--predict_batch_size', type=int, default=16)
     parser.add_argument('--num_beams', type=int, default=3)

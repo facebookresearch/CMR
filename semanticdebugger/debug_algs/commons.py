@@ -46,7 +46,6 @@ class OnlineDebuggingMethod():
     def _check_data_args(self):
         required_atts = ["bug_stream_json_path",
                          "pass_pool_jsonl_path",
-                         "pass_sample_size",
                          "do_lowercase",
                          "append_another_bos",
                          "max_input_length",
@@ -82,22 +81,12 @@ class OnlineDebuggingMethod():
 
         # Create loaders for the sampled pass examples
         with open(data_args.pass_pool_jsonl_path) as f:
-            pass_pool = [json.loads(line)
+            pass_examples = [json.loads(line)
                          for line in set(f.read().splitlines())]
-        # TODO: decide how to sample later.
-        # random.shuffle(pass_pool)
-        # sample the most correct ones.
-
-        # pass_pool.sort(key = lambda x: x["score"]["QA-F1"], reverse=True)
-        pass_pool = [item for item in pass_pool if item["score"]
-                     ["EM"] == 1]  # only the EM=1 examples
-        random.shuffle(pass_pool)   # TODO: replace this later.
-        sample_examples = pass_pool[:data_args.pass_sample_size]
-
-        self.sampled_passes = sample_examples
-        sample_examples = self.data_formatter(sample_examples)
+        self.sampled_passes = pass_examples
+        pass_examples = self.data_formatter(pass_examples)
         _, self.forget_eval_loader = self.get_dataloader(
-            data_args, sample_examples, mode="eval")
+            data_args, pass_examples, mode="eval")
         return
 
     # TODO: move to evaluation analysis part.
@@ -245,24 +234,33 @@ class OnlineDebuggingMethod():
         def _pack_as_dict(predictions, results, results_all):
             return {"predictions": predictions, "metric_results": results, "metric_results_detailed": results_all}
 
+        self.logger.info("Start the Overall Error-Fixing Results....")
         # Overall Error-Fixing Results
         eval_results_overall_bug = self.evaluate(self.bug_all_eval_loader, verbose=True)
-        result_dict["eval_results_overall_bug"] = _pack_as_dict(eval_results_overall_bug)
+        result_dict["eval_results_overall_bug"] = _pack_as_dict(*eval_results_overall_bug)
+        self.logger.info("Start the Overall Error-Fixing Results....Done")
         
+        self.logger.info("Start the Overall Forgetting Results (Knowledge Retain Acc)....")
         # Overall Forgetting Results (Knowledge Retain Acc)
         eval_results_overall_forget = self.evaluate(self.forget_eval_loader)
-        result_dict["eval_results_overall_forget"] = _pack_as_dict(eval_results_overall_forget)
+        result_dict["eval_results_overall_forget"] = _pack_as_dict(*eval_results_overall_forget)
+        self.logger.info("Start the Overall Forgetting Results (Knowledge Retain Acc)....Done")
         
+
         # Error-Fixing performance on the current batch of errors.
         if self.timecode > 0:
+            self.logger.info("Start Error-Fixing performance on the Current batch of errors.....")
             bug_eval_loader = self.bug_eval_loaders[self.timecode-1]
             eval_results_current_errors = self.evaluate(bug_eval_loader)
-            result_dict["eval_results_current_errors"] = _pack_as_dict(eval_results_current_errors)
+            result_dict["eval_results_current_errors"] = _pack_as_dict(*eval_results_current_errors)
+            self.logger.info("Start Error-Fixing performance on the Current batch of errors.....Done")
 
+        self.logger.info("Start Error-Fixing performance on the Next batch of errors.....")
         # Error-Fixing performance on the next batch of errors. (for the computation of real responsive efr)
         bug_eval_loader = self.bug_eval_loaders[self.timecode]
         eval_results_next_errors = self.evaluate(bug_eval_loader)
-        result_dict["eval_results_next_errors"] = _pack_as_dict(eval_results_next_errors)        
+        result_dict["eval_results_next_errors"] = _pack_as_dict(*eval_results_next_errors)        
+        self.logger.info("Start Error-Fixing performance on the Next batch of errors.....Done")
         
         return result_dict
 
