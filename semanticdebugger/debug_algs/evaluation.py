@@ -88,8 +88,13 @@ if __name__ == '__main__':
     aggregate_offline_results("bug_data/output/nq_dev_0701v3_3e-5_e5_offline_eval")
 
 
-    # print("{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}")
+    print("{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}")
     # print_eval("bug_data/output/nq_dev_0625_1e-5_e3_result.json")
     # print_eval("bug_data/output/nq_dev_0625_3e-5_e3_result.json")
     # print_eval("bug_data/output/nq_dev_0625_1e-5_e5_result.json")
     # print_eval("bug_data/output/nq_dev_0625_3e-5_e5_result.json")
+    
+    print_eval("bug_data/output/nq_dev_0701v3_1e-5_e3_result.json")
+    print_eval("bug_data/output/nq_dev_0701v3_1e-5_e5_result.json")
+    print_eval("bug_data/output/nq_dev_0701v3_3e-5_e3_result.json")
+    print_eval("bug_data/output/nq_dev_0701v3_3e-5_e5_result.json")

@@ -100,6 +100,7 @@ class OnlineDebuggingMethod():
             data_args, sample_examples, mode="eval")
         return
 
+    # TODO: move to evaluation analysis part.
     def _check_fixing(self, bug_eval_loader, bug_before_results_all, bug_after_results_all):
         # Log the specific fixed bugs and forget examples
         em_prefixed_bugs = []
@@ -132,6 +133,7 @@ class OnlineDebuggingMethod():
         self.logger.info(
             f"Number of em_fixed_bugs = {len(em_fixed_bugs)}; Number of f1_fixed_bugs = {len(f1_fixed_bugs)}")
 
+    # TODO: move to evaluation analysis part.
     def _check_forgetting(self, pass_before_results_all, pass_after_results_all):
         # log the forgotten bugs
         em_forgotten_passes = []
@@ -151,6 +153,7 @@ class OnlineDebuggingMethod():
             f"Number of em_forgotten_passes = {len(em_forgotten_passes)}.")
         # self.logger.info(f"UUIDS of fixed bugs = {em_fixed_bugs}")
 
+    # TODO: remove this as we have the offline evaluation function now.
     def _eval_before_fixing(self):
         # Before Bug-Fixing
         assert self.online_debug_results is not None
@@ -173,6 +176,7 @@ class OnlineDebuggingMethod():
             f"Before Bug-fixing the results on the sampled pass cases = {pass_before_results}")
         return bug_before_results, bug_before_results_all, pass_before_results, pass_before_results_all
 
+    # TODO: remove this as we have the offline evaluation function now.
     def _eval_after_fixing(self, bug_before_results, bug_before_results_all, pass_before_results, pass_before_results_all):
         # After Bug-Fixing
         assert self.online_debug_results is not None
@@ -203,7 +207,7 @@ class OnlineDebuggingMethod():
             self.online_debug_results["overtime_all_bug_eval"].append(
                 all_bug_after_results)
 
-    def _eval_final(self):
+    def _eval_overall_bugs(self):
         all_bug_after_predictions, all_bug_after_results, all_bug_after_results_all = self.evaluate(
             self.bug_all_eval_loader)
         self.online_debug_results["final_all_bug_eval"] = all_bug_after_results
@@ -214,55 +218,53 @@ class OnlineDebuggingMethod():
         self.logger.info("Start Online Debugging")
         self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
         self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
-        self.timecode = 0
-        self.online_debug_results = {}
-        self.online_debug_results["res_on_bugs"] = []
-        self.online_debug_results["res_on_passes"] = []
-        self.online_debug_results["em_prefixed_bugs"] = []
-        self.online_debug_results["f1_prefixed_bugs"] = []
-        self.online_debug_results["em_fixed_bugs"] = []
-        self.online_debug_results["f1_fixed_bugs"] = []
-        self.online_debug_results["forgotten_passes"] = []
-        self.online_debug_results["final_all_bug_eval"] = None
-        self.online_debug_results["overtime_all_bug_eval"] = []
+        self.timecode = 0 
+
+        if self.debugger_args.save_all_ckpts:
+            # save the initial model as the 0-th model.
+            self._save_base_model()
 
         for bug_train_loader in tqdm(self.bug_train_loaders, desc="Online Debugging", total=self.num_bug_batches):
-            bug_before_results, bug_before_results_all, pass_before_results, pass_before_results_all = self._eval_before_fixing()
             ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
             self.logger.info("Start bug-fixing ....")
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
             ############### CORE ###############
-            self._eval_after_fixing(
-                bug_before_results, bug_before_results_all, pass_before_results, pass_before_results_all)
-
             self.timecode += 1
-
-            # TODO: save all checkpoints
             if self.debugger_args.save_all_ckpts:
                 self._save_base_model()
-            # for debug only
-            # if self.timecode == 2:
-            #     return self.online_debug_results
-
-        self._eval_final()
-        return self.online_debug_results
+                # Note that we save the model from the id=1.
+                # So the 0-th checkpoint should be the original base model.
 
     def single_timecode_eval(self, timecode):
-        # only for offline eval
+        """Used only for offline eval of a single checkpoint of a specific timecode."""
         self.timecode = timecode
+        result_dict = {}   # initialize for the given time code
         
-        # Overall Bug-Fixing Results
-        all_bug_after_predictions, all_bug_after_results, all_bug_after_results_all = self.evaluate(
-                self.bug_all_eval_loader, verbose=True)
-        self.logger.info(
-            f"Current Overall Bug-fixing Results = {all_bug_after_results} at Timecode={timecode}")
+        def _pack_as_dict(predictions, results, results_all):
+            return {"predictions": predictions, "metric_results": results, "metric_results_detailed": results_all}
 
-        # TODO: overall forgetting results (w/ a larger set of sampled cases)
-        single_eval_results = dict()
-        single_eval_results["overtime_all_bug_eval"] = dict(timecode=timecode, results=all_bug_after_results)
-        return single_eval_results
+        # Overall Error-Fixing Results
+        eval_results_overall_bug = self.evaluate(self.bug_all_eval_loader, verbose=True)
+        result_dict["eval_results_overall_bug"] = _pack_as_dict(eval_results_overall_bug)
+        
+        # Overall Forgetting Results (Knowledge Retain Acc)
+        eval_results_overall_forget = self.evaluate(self.forget_eval_loader)
+        result_dict["eval_results_overall_forget"] = _pack_as_dict(eval_results_overall_forget)
+        
+        # Error-Fixing performance on the current batch of errors.
+        if self.timecode > 0:
+            bug_eval_loader = self.bug_eval_loaders[self.timecode-1]
+            eval_results_current_errors = self.evaluate(bug_eval_loader)
+            result_dict["eval_results_current_errors"] = _pack_as_dict(eval_results_current_errors)
+
+        # Error-Fixing performance on the next batch of errors. (for the computation of real responsive efr)
+        bug_eval_loader = self.bug_eval_loaders[self.timecode]
+        eval_results_next_errors = self.evaluate(bug_eval_loader)
+        result_dict["eval_results_next_errors"] = _pack_as_dict(eval_results_next_errors)        
+        
+        return result_dict
 
 
     def _save_base_model(self):

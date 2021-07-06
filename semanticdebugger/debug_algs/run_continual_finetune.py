@@ -103,11 +103,8 @@ def run(args):
             base_model_args.base_model_path = os.path.join(args.overtime_ckpt_dir, f"model_ckpt_{timecode:03d}.pt")
             debugging_alg.load_base_model(base_model_args)            
             single_result = debugging_alg.single_timecode_eval(timecode)
+            thread_results[timecode] = single_result
             logger.info(f"Results: {json.dumps(single_result)}")
-            for key, values in single_result.items():
-                if key not in thread_results:
-                    thread_results[key] = []
-                thread_results[key].append(values)
         with open(args.path_to_thread_result, "w") as f:
             json.dump(thread_results, f)
     return
