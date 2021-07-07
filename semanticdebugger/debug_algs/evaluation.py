@@ -49,8 +49,8 @@ def eval_error_fixing(online_debug_result, timecodes):
 
 def print_eval(path="bug_data/output/nq_dev_0625_1e-5_e3_result.json"):
     # Load the json data
-    lr = path.split("_")[-3]
-    num_epoch = path.split("_")[-2][1:]
+    lr = path.split("_")[-5]
+    num_epoch = path.split("_")[-4][1:]
     assert os.path.exists(path)
     all_results = json.load(open(path))
     # print(output_info.keys()) 
@@ -80,19 +80,13 @@ def aggregate_offline_results(path="bug_data/output/nq_dev_0701_v2_offline_eval/
 
 if __name__ == '__main__':    
     aggregate_offline_results("bug_data/output/nq_dev_0706_3e-5_e5_offline_eval")
-    # aggregate_offline_results("bug_data/output/nq_dev_0706_3e-5_e3_offline_eval")
-    # aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e3_offline_eval")
-    # aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e5_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0706_3e-5_e3_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e3_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e5_offline_eval")
     
-    print("{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}")
+    print("{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}") 
+    print_eval("bug_data/output/nq_dev_0706_1e-5_e3_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0706_3e-5_e3_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0706_1e-5_e5_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0706_3e-5_e5_offline_eval/alltime_result.json")
-
-    # print_eval("bug_data/output/nq_dev_0625_1e-5_e3_result.json")
-    # print_eval("bug_data/output/nq_dev_0625_3e-5_e3_result.json")
-    # print_eval("bug_data/output/nq_dev_0625_1e-5_e5_result.json")
-    # print_eval("bug_data/output/nq_dev_0625_3e-5_e5_result.json")
-    
-    # print_eval("bug_data/output/nq_dev_0701v3_1e-5_e3_result.json")
-    # print_eval("bug_data/output/nq_dev_0701v3_1e-5_e5_result.json")
-    # print_eval("bug_data/output/nq_dev_0701v3_3e-5_e3_result.json")
-    # print_eval("bug_data/output/nq_dev_0701v3_3e-5_e5_result.json")
+     
