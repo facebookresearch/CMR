@@ -254,13 +254,14 @@ class OnlineDebuggingMethod():
             eval_results_current_errors = self.evaluate(bug_eval_loader)
             result_dict["eval_results_current_errors"] = _pack_as_dict(*eval_results_current_errors)
             self.logger.info("Start Error-Fixing performance on the Current batch of errors.....Done")
-
-        self.logger.info("Start Error-Fixing performance on the Next batch of errors.....")
+        
         # Error-Fixing performance on the next batch of errors. (for the computation of real responsive efr)
-        bug_eval_loader = self.bug_eval_loaders[self.timecode]
-        eval_results_next_errors = self.evaluate(bug_eval_loader)
-        result_dict["eval_results_next_errors"] = _pack_as_dict(*eval_results_next_errors)        
-        self.logger.info("Start Error-Fixing performance on the Next batch of errors.....Done")
+        if self.timecode < len(self.bug_eval_loaders):
+            self.logger.info("Start Error-Fixing performance on the Next batch of errors.....")
+            bug_eval_loader = self.bug_eval_loaders[self.timecode]
+            eval_results_next_errors = self.evaluate(bug_eval_loader)
+            result_dict["eval_results_next_errors"] = _pack_as_dict(*eval_results_next_errors)        
+            self.logger.info("Start Error-Fixing performance on the Next batch of errors.....Done")
         
         return result_dict
 

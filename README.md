@@ -45,6 +45,6 @@ python semanticdebugger/incre_bench/sample_bug_stream.py \
     --num_batches 50 \
     --bug_strema_file "bug_data/mrqa_naturalquestions_dev.static_bug_stream.json" \
     --pass_pool_file "bug_data/mrqa_naturalquestions_dev.pass.jsonl" \
-    --sampled_pass_pool_file "bug_data/mrqa_naturalquestions_dev.sampled_pass.json" \
+    --sampled_pass_pool_file "bug_data/mrqa_naturalquestions_dev.sampled_pass.jsonl" \
     --pass_sample_size 300    
 ```

@@ -33,7 +33,7 @@ def main():
     parser.add_argument(
         "--bug_strema_file", default="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json", required=False)   # Output
     parser.add_argument(
-        "--sampled_pass_pool_file", default="bug_data/mrqa_naturalquestions_dev.sampled_pass.json", required=False)   # Output
+        "--sampled_pass_pool_file", default="bug_data/mrqa_naturalquestions_dev.sampled_pass.jsonl", required=False)   # Output
     parser.add_argument("--batch_size", type=int, default=50, required=False)
     parser.add_argument("--pass_sample_size", type=int, default=300, required=False)    
     parser.add_argument("--num_batches", type=int, default=40, required=False)

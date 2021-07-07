@@ -93,7 +93,7 @@ def run(args):
         logger.info(f"Finished. Results saved to {args.result_file}")
     else:
         # Parallel offline evaluation mode 
-        timecodes = np.array_split(range(1, args.max_timecode+1), args.num_threads_eval)[args.current_thread_id]
+        timecodes = np.array_split(range(0, args.max_timecode+1), args.num_threads_eval)[args.current_thread_id]
         thread_results = {}
         debugging_alg.load_data(data_args)
         # debugging_alg.debugger_setup(debugger_args)
@@ -126,7 +126,7 @@ def get_cli_parser():
                         default="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json")
     # this will be used for evaluating forgetting
     parser.add_argument("--pass_pool_jsonl_path", 
-                        default="bug_data/mrqa_naturalquestions_dev.pass.jsonl")
+                        default="bug_data/mrqa_naturalquestions_dev.sampled_pass.jsonl")
 
     parser.add_argument("--task_name", default="mrqa_naturalquestions")
     parser.add_argument('--train_batch_size', type=int, default=8)
