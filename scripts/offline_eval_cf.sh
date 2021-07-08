@@ -4,7 +4,7 @@
 # do  
 #     log_file=bug_data/output/${prefix}_offline_eval/${prefix}_${thread}.log
 #     gpu=$(( thread / 2))
-#     CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/run_continual_finetune.py \
+#     CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/run_lifelong_finetune.py \
 #         --prefix ${prefix} \
 #         --num_threads_eval 16 --current_thread_id ${thread} --max_timecode 50 \
 #         --path_to_thread_result bug_data/output/${prefix}_offline_eval/thread_${thread}_result.json \
@@ -21,7 +21,7 @@
 # do  
 #     log_file=bug_data/output/${prefix}_offline_eval/${prefix}_${thread}.log
 #     gpu=$thread
-#     CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/run_continual_finetune.py \
+#     CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/run_lifelong_finetune.py \
 #         --prefix ${prefix} \
 #         --num_threads_eval 8 --current_thread_id ${thread} --max_timecode 50 \
 #         --path_to_thread_result bug_data/output/${prefix}_offline_eval/thread_${thread}_result.json \
@@ -40,7 +40,7 @@ do
     do  
         log_file=bug_data/output/${prefix}_offline_eval/${prefix}_${thread}.log
         gpu=$thread
-        CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/run_continual_finetune.py \
+        CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/run_lifelong_finetune.py \
             --prefix ${prefix} \
             --num_threads_eval 8 --current_thread_id ${thread} --max_timecode 50 \
             --path_to_thread_result bug_data/output/${prefix}_offline_eval/thread_${thread}_result.json \
