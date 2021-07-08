@@ -27,8 +27,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                          "total_steps",
                          "num_epochs",
                          "gradient_accumulation_steps",
-                         "max_grad_norm",
-                         "overtime_overall_bug_eval"]
+                         "max_grad_norm",]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
         return
 
@@ -108,7 +107,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         self.optimizer = AdamW(self.optimizer_grouped_parameters,
                                lr=debugger_args.learning_rate, eps=debugger_args.adam_epsilon)
 
-        # TODO: double check the decision about warup for fine-tuning
+        # TODO: double check the decision about warm up for fine-tuning
         self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
                                                          num_warmup_steps=debugger_args.warmup_steps,
                                                          num_training_steps=debugger_args.total_steps)

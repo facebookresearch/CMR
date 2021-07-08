@@ -65,7 +65,6 @@ def run(args):
         num_epochs=args.num_train_epochs,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         max_grad_norm=args.max_grad_norm,
-        overtime_overall_bug_eval=args.overtime_overall_bug_eval,
         save_all_ckpts=args.save_all_ckpts,
         overtime_ckpt_dir=args.overtime_ckpt_dir
     )
@@ -155,9 +154,6 @@ def get_cli_parser():
                         help="Max gradient norm.")
     parser.add_argument("--num_train_epochs", default=3.0, type=float,
                         help="Total number of training epochs to perform.")
-
-    parser.add_argument("--overtime_overall_bug_eval", type=int, default=0,
-                        help="set to 0/False if ignore overtime_overall eval")
     
     parser.add_argument("--save_all_ckpts", type=int, default=0,
                         help="set to 1 if we want all ckpts and eval offline")
