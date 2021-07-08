@@ -16,7 +16,7 @@ from torch import nn
 import torch
 from torch.nn import functional as F
 import abc
-
+import copy
 
 class OnlineEWC(ContinualFinetuning):
     def __init__(self, logger):
@@ -129,8 +129,10 @@ class OnlineEWC(ContinualFinetuning):
                     self.base_model.zero_grad()
 
         # TODO: build bsz=1 dataloader for update the fisher information matrix
-        fisher_dataloader = None 
-        self.regularizer.estimate_fisher(fisher_dataloader, pad_token_id)
+        fisher_dataloader = copy.deepcopy(bug_loader)
+        fisher_dataloader.args.train_batch_size = 1 
+        fi_dl = fisher_dataloader.load_dataloader(do_return=True)
+        self.regularizer.estimate_fisher(fi_dl, pad_token_id)
         return
 
 

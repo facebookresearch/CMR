@@ -3,6 +3,7 @@ from argparse import Namespace
 import argparse
 from semanticdebugger.models.utils import set_seeds
 from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
+from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 import logging
 import os
 import json
@@ -35,21 +36,30 @@ def run(args):
 
     logger.info(args)
 
-    debugging_alg = ContinualFinetuning(logger=logger)
+    if args.cl_method_name == "simple_cf":
+        debugging_alg = ContinualFinetuning(logger=logger)
+    elif args.cl_method_name == "online_ewc":
+        debugging_alg = OnlineEWC(logger=logger)
 
-    data_args = Namespace(
-        bug_stream_json_path=args.bug_stream_json_path,
-        pass_pool_jsonl_path=args.pass_pool_jsonl_path,
-        # pass_sample_size=args.pass_sample_size,
-        do_lowercase=args.do_lowercase,
-        append_another_bos=args.append_another_bos,
-        max_input_length=args.max_input_length,
-        max_output_length=args.max_output_length,
-        task_name=args.task_name,
-        train_batch_size=args.train_batch_size,
-        predict_batch_size=args.predict_batch_size,
-        num_beams=args.num_beams,
-    )
+    if args.cl_method_name in ["simple_cf", "online_ewc"]:
+        data_args = Namespace(
+            bug_stream_json_path=args.bug_stream_json_path,
+            pass_pool_jsonl_path=args.pass_pool_jsonl_path,
+            # pass_sample_size=args.pass_sample_size,
+            do_lowercase=args.do_lowercase,
+            append_another_bos=args.append_another_bos,
+            max_input_length=args.max_input_length,
+            max_output_length=args.max_output_length,
+            task_name=args.task_name,
+            train_batch_size=args.train_batch_size,
+            predict_batch_size=args.predict_batch_size,
+            num_beams=args.num_beams,
+        )
+        if args.cl_method_name == "online_ewc":
+            setattr(data_args, "ewc_lambda", args.ewc_lambda)
+            setattr(data_args, "ewc_gamma", args.ewc_gamma)
+
+
 
     base_model_args = Namespace(
         model_type=args.base_model_type,
@@ -112,6 +122,8 @@ def run(args):
 def get_cli_parser():
     parser = argparse.ArgumentParser()
 
+    
+
     # base_model_args
     parser.add_argument("--base_model_type",
                         default="facebook/bart-base", required=False)
@@ -142,6 +154,10 @@ def get_cli_parser():
 
     # debugger_args
 
+    parser.add_argument('--cl_method_name', type=str, default="simple_cf",
+                        help="the method name of the continual learning method")
+    
+    ### The HPs for Simple Continual Fine-tuning Method. ###
     parser.add_argument("--learning_rate", default=1e-5, type=float,
                         help="The initial learning rate for Adam.")
     parser.add_argument("--weight_decay", default=0.01, type=float,
@@ -154,6 +170,16 @@ def get_cli_parser():
                         help="Max gradient norm.")
     parser.add_argument("--num_train_epochs", default=3.0, type=float,
                         help="Total number of training epochs to perform.")
+                        
+
+    ### The HPs for Online EWC Method. ###
+    parser.add_argument("--ewc_lambda", default=0.5, type=float,
+                        help="Max gradient norm.")
+    parser.add_argument("--ewc_gamma", default=1, type=float,
+                        help="Max gradient norm.")                        
+    
+
+    # To save all ckpts.
     
     parser.add_argument("--save_all_ckpts", type=int, default=0,
                         help="set to 1 if we want all ckpts and eval offline")
