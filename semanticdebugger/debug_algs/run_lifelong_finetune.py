@@ -3,6 +3,7 @@ import argparse
 from semanticdebugger.models.utils import set_seeds
 from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
+from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
 import logging
 import os
 import json
@@ -39,6 +40,8 @@ def run(args):
         debugging_alg = ContinualFinetuning(logger=logger)
     elif args.cl_method_name == "online_ewc":
         debugging_alg = OnlineEWC(logger=logger)
+    elif args.cl_method_name == "offline_debug":
+        debugging_alg = OfflineDebugger(logger=logger)
 
     
     data_args = Namespace(
@@ -59,7 +62,7 @@ def run(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["simple_cf", "online_ewc"]:
+    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -77,23 +80,28 @@ def run(args):
             setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
             setattr(debugger_args, "ewc_gamma", args.ewc_gamma)
 
-    # The Online Debugging Mode
-
-    if args.num_threads_eval == 0:
+    if args.num_threads_eval <= 0:
+        # The Online Debugging Mode + Computing offline debugging bounds.
         debugging_alg.load_data(data_args)
         debugging_alg.load_base_model(base_model_args)
         debugging_alg.debugger_setup(debugger_args)
-        online_debug_results = debugging_alg.online_debug()
+        
+        if args.cl_method_name in ["offline_debug"]:
+            debugging_alg.offline_debug()
+            offline_bound_results = debugging_alg.single_timecode_eval(timecode=-1)
+        else:
+            debugging_alg.online_debug()
 
         output_info = {}
         output_info["method_class"] = debugging_alg.name
         output_info["base_model_args"] = str(debugging_alg.base_model_args)
         output_info["debugger_args"] = str(debugging_alg.debugger_args)
         output_info["data_args"] = str(debugging_alg.data_args)
-        output_info["online_debug_results"] = online_debug_results
-        output_info["sampled_passes_ids"] = [item["id"]
-                                            for item in debugging_alg.sampled_passes]
-
+        
+        if args.cl_method_name in ["offline_debug"]:
+            output_info["offline_bound_results"] = offline_bound_results
+            logger.info(f"eval_results_overall_bug: {offline_bound_results['eval_results_overall_bug']['metric_results']}")
+            logger.info(f"eval_results_overall_forget: {offline_bound_results['eval_results_overall_forget']['metric_results']}")
         with open(args.result_file, "w") as f:
             json.dump(output_info, f)
 

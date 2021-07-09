@@ -39,7 +39,7 @@ def main():
 
     # Basic parameters
     parser.add_argument(
-        "--data_file", default="data/mrqa_naturalquestions/mrqa_naturalquestions_dev.100.tsv", required=False)
+        "--data_file", default="data/mrqa_naturalquestions/mrqa_naturalquestions_dev.100.jsonl", required=False)
     parser.add_argument(
         "--bug_file", default="bug_data/mrqa_naturalquestions_dev.bugs.jsonl", required=False)
     parser.add_argument(

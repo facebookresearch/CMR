@@ -128,10 +128,13 @@ class OnlineDebuggingMethod():
         
         self.logger.info("Start the Overall Forgetting Results (Knowledge Retain Acc)....")
         # Overall Forgetting Results (Knowledge Retain Acc)
-        eval_results_overall_forget = self.evaluate(self.forget_eval_loader)
+        eval_results_overall_forget = self.evaluate(self.forget_eval_loader, verbose=True)
         result_dict["eval_results_overall_forget"] = _pack_as_dict(*eval_results_overall_forget)
         self.logger.info("Start the Overall Forgetting Results (Knowledge Retain Acc)....Done")
         
+        if self.name == "offline_debug":
+            # only overall evaluation for the offline debugging.
+            return result_dict
 
         # Error-Fixing performance on the current batch of errors.
         if self.timecode > 0:
@@ -152,13 +155,16 @@ class OnlineDebuggingMethod():
         return result_dict
 
 
-    def _save_base_model(self):
+    def _save_base_model(self, ckpt_name=None):
         output_dir = self.debugger_args.overtime_ckpt_dir
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
         model_state_dict = {k: v.cpu() for (
             k, v) in self.base_model.state_dict().items()}
-        model_path = os.path.join(output_dir, f"model_ckpt_{self.timecode:03d}.pt")
+        if ckpt_name:
+            model_path = os.path.join(output_dir, f"model_ckpt_{ckpt_name}.pt")
+        else:
+            model_path = os.path.join(output_dir, f"model_ckpt_{self.timecode:03d}.pt")
         torch.save(model_state_dict, model_path)
         self.logger.info(f"Model saved to {model_path}.")
 
@@ -198,6 +204,6 @@ class OnlineDebuggingMethod():
         raise NotImplementedError(
             "Please Implement the `debugger_setup` method in your class.")
 
-    def fix_bugs(self, bug_batch):
+    def fix_bugs(self, bug_loader, quiet=True):
         raise NotImplementedError(
             "Please Implement the `fix_bugs` method in your class.")
