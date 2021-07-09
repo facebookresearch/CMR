@@ -7,7 +7,8 @@
 #     --result_file bug_data/output/${prefix}_result.json > ${log_file} 2>&1 & 
 # tail -f ${log_file}
 
-declare -a lambdas=(50 500)
+# declare -a lambdas=(50 500)
+declare -a lambdas=(5000 50000)
 declare -a gpus=("0,1" "2,3")
 index=0
 for lambda in "${lambdas[@]}"

@@ -88,6 +88,8 @@ if __name__ == '__main__':
     aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l5_g1_3e-5_e5_offline_eval")
     aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l50_g1_3e-5_e5_offline_eval")
     aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l500_g1_3e-5_e5_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l5000_g1_3e-5_e5_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l50000_g1_3e-5_e5_offline_eval")
     
     print("{prefix}, {worse_kr}, {mean_kr}, {final_kr}, {final_efr}") 
     print_eval("bug_data/output/nq_dev_0706_1e-5_e3_offline_eval/alltime_result.json")
@@ -99,5 +101,7 @@ if __name__ == '__main__':
     print_eval("bug_data/output/nq_dev_0708_ewc_l5_g1_3e-5_e5_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0708_ewc_l50_g1_3e-5_e5_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0708_ewc_l500_g1_3e-5_e5_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0708_ewc_l5000_g1_3e-5_e5_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0708_ewc_l50000_g1_3e-5_e5_offline_eval/alltime_result.json")
 
     
