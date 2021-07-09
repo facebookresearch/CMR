@@ -24,20 +24,16 @@ class OnlineEWC(ContinualFinetuning):
         self.name = "online_ewc"
 
     def _check_debugger_args(self):
+        super()._check_debugger_args()
         required_atts = [
-            # base model parameters and optimizers.
-            "weight_decay",
-            "learning_rate",
-            "adam_epsilon",
-            "warmup_steps",
-            "total_steps",
-            "num_epochs",
-            "gradient_accumulation_steps",
-            "max_grad_norm",
             # ewc-related hyper parameters
             "ewc_lambda",
-            "ewc_gamma", ]
+            "ewc_gamma", 
+            "use_sampled_upstream"
+            ]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
+        
+
         return
 
     ### The same logic with the Simple Continual Fine-tuning Mehtod. ###
@@ -95,13 +91,24 @@ class OnlineEWC(ContinualFinetuning):
         self.base_model.train()
         train_losses = []
         global_step = 0
+        pad_token_id = self.tokenizer.pad_token_id
+
+        #### For the first update ###
+        if self.debugger_args.use_sampled_upstream and self.timecode==0:
+            self.logger.info("Start the initial fisher info matrix computation....")
+            upstream_dl, _ = self.get_dataloader(self.data_args, self.sampled_upstream_examples, mode="train")
+            upstream_dl.args.train_batch_size = 1 
+            upstream_fi_dl = upstream_dl.load_dataloader(do_return=True)
+            self.regularizer.estimate_fisher(upstream_fi_dl, pad_token_id)
+            self.logger.info("Start the initial fisher info matrix computation....Done!")
+
+
         for epoch_id in range(int(self.debugger_args.num_epochs)):
             for batch in tqdm(bug_loader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}", disable=quiet):
                 # here the batch is a mini batch of the current bug batch
                 if self.use_cuda:
                     # print(type(batch[0]), batch[0])
                     batch = [b.to(torch.device("cuda")) for b in batch]
-                pad_token_id = self.tokenizer.pad_token_id
                 batch[0], batch[1] = trim_batch(
                     batch[0], pad_token_id, batch[1])
                 batch[2], batch[3] = trim_batch(

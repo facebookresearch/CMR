@@ -22,15 +22,20 @@ class OnlineDebuggingMethod():
         self.base_model = None
         self.debugger = None
         # data
+        self.num_bug_batches = None
+        self.bug_batch_size = None
         self.bug_stream = []
         self.bug_train_loaders = []
         self.bug_eval_loaders = []
         self.bug_all_train_loader = None
-        self.bug_all_eval_loader = None
-        self.num_bug_batches = None
-        self.bug_batch_size = None
+        self.bug_all_eval_loader = None        
+        
         self.sampled_passes = []
         self.forget_eval_loader = None
+
+        self.all_bug_examples = []
+        self.sampled_upstream_examples = []
+
         # utils
         self.use_cuda = torch.cuda.is_available()
         self.tokenizer = BartTokenizer.from_pretrained("bart-large")
@@ -46,6 +51,7 @@ class OnlineDebuggingMethod():
     def _check_data_args(self):
         required_atts = ["bug_stream_json_path",
                          "pass_pool_jsonl_path",
+                         "sampled_upstream_json_path",
                          "do_lowercase",
                          "append_another_bos",
                          "max_input_length",
@@ -74,26 +80,37 @@ class OnlineDebuggingMethod():
             self.bug_train_loaders.append(train_bug_dataloader)
             self.bug_eval_loaders.append(eval_bug_dataloader)
         assert len(self.bug_train_loaders) == self.num_bug_batches
-
+        self.all_bug_examples = all_formatted_bugs
         # Create the all bug loaders.
         self.bug_all_train_loader, self.bug_all_eval_loader = self.get_dataloader(
             data_args, all_formatted_bugs, mode="both")
 
-        # Create loaders for the sampled pass examples
-        with open(data_args.pass_pool_jsonl_path) as f:
-            pass_examples = [json.loads(line)
-                         for line in set(f.read().splitlines())]
-        self.sampled_passes = pass_examples
-        pass_examples = self.data_formatter(pass_examples)
-        _, self.forget_eval_loader = self.get_dataloader(
-            data_args, pass_examples, mode="eval")
+        if data_args.pass_pool_jsonl_path:
+            # Create loaders for the sampled pass examples
+            with open(data_args.pass_pool_jsonl_path) as f:
+                pass_examples = [json.loads(line)
+                                 for line in set(f.read().splitlines())]
+            self.sampled_passes = pass_examples
+            pass_examples = self.data_formatter(pass_examples)
+            _, self.forget_eval_loader = self.get_dataloader(
+                data_args, pass_examples, mode="eval")
+
+        if data_args.sampled_upstream_json_path:
+            # Create loaders for the sampled pass examples
+            with open(data_args.sampled_upstream_json_path) as f:
+                sampled_upstream_examples = [json.loads(line)
+                                          for line in set(f.read().splitlines())]
+            self.sampled_upstream_examples = self.upstream_data_formatter(sampled_upstream_examples)
+            # self.sampled_upstream_trainloader, self.sampled_upstream_evalloader = self.get_dataloader(
+            #     data_args, sampled_upstream_examples, mode="eval")
+
         return
 
     def online_debug(self):
         self.logger.info("Start Online Debugging")
         self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
         self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
-        self.timecode = 0 
+        self.timecode = 0
 
         if self.debugger_args.save_all_ckpts:
             # save the initial model as the 0-th model.
@@ -116,44 +133,55 @@ class OnlineDebuggingMethod():
         """Used only for offline eval of a single checkpoint of a specific timecode."""
         self.timecode = timecode
         result_dict = {}   # initialize for the given time code
-        
+
         def _pack_as_dict(predictions, results, results_all):
             return {"predictions": predictions, "metric_results": results, "metric_results_detailed": results_all}
 
         self.logger.info("Start the Overall Error-Fixing Results....")
         # Overall Error-Fixing Results
-        eval_results_overall_bug = self.evaluate(self.bug_all_eval_loader, verbose=True)
-        result_dict["eval_results_overall_bug"] = _pack_as_dict(*eval_results_overall_bug)
+        eval_results_overall_bug = self.evaluate(
+            self.bug_all_eval_loader, verbose=True)
+        result_dict["eval_results_overall_bug"] = _pack_as_dict(
+            *eval_results_overall_bug)
         self.logger.info("Start the Overall Error-Fixing Results....Done")
-        
-        self.logger.info("Start the Overall Forgetting Results (Knowledge Retain Acc)....")
+
+        self.logger.info(
+            "Start the Overall Forgetting Results (Knowledge Retain Acc)....")
         # Overall Forgetting Results (Knowledge Retain Acc)
-        eval_results_overall_forget = self.evaluate(self.forget_eval_loader, verbose=True)
-        result_dict["eval_results_overall_forget"] = _pack_as_dict(*eval_results_overall_forget)
-        self.logger.info("Start the Overall Forgetting Results (Knowledge Retain Acc)....Done")
-        
+        eval_results_overall_forget = self.evaluate(
+            self.forget_eval_loader, verbose=True)
+        result_dict["eval_results_overall_forget"] = _pack_as_dict(
+            *eval_results_overall_forget)
+        self.logger.info(
+            "Start the Overall Forgetting Results (Knowledge Retain Acc)....Done")
+
         if self.name == "offline_debug":
             # only overall evaluation for the offline debugging.
             return result_dict
 
         # Error-Fixing performance on the current batch of errors.
         if self.timecode > 0:
-            self.logger.info("Start Error-Fixing performance on the Current batch of errors.....")
+            self.logger.info(
+                "Start Error-Fixing performance on the Current batch of errors.....")
             bug_eval_loader = self.bug_eval_loaders[self.timecode-1]
             eval_results_current_errors = self.evaluate(bug_eval_loader)
-            result_dict["eval_results_current_errors"] = _pack_as_dict(*eval_results_current_errors)
-            self.logger.info("Start Error-Fixing performance on the Current batch of errors.....Done")
-        
+            result_dict["eval_results_current_errors"] = _pack_as_dict(
+                *eval_results_current_errors)
+            self.logger.info(
+                "Start Error-Fixing performance on the Current batch of errors.....Done")
+
         # Error-Fixing performance on the next batch of errors. (for the computation of real responsive efr)
         if self.timecode < len(self.bug_eval_loaders):
-            self.logger.info("Start Error-Fixing performance on the Next batch of errors.....")
+            self.logger.info(
+                "Start Error-Fixing performance on the Next batch of errors.....")
             bug_eval_loader = self.bug_eval_loaders[self.timecode]
             eval_results_next_errors = self.evaluate(bug_eval_loader)
-            result_dict["eval_results_next_errors"] = _pack_as_dict(*eval_results_next_errors)        
-            self.logger.info("Start Error-Fixing performance on the Next batch of errors.....Done")
-        
-        return result_dict
+            result_dict["eval_results_next_errors"] = _pack_as_dict(
+                *eval_results_next_errors)
+            self.logger.info(
+                "Start Error-Fixing performance on the Next batch of errors.....Done")
 
+        return result_dict
 
     def _save_base_model(self, ckpt_name=None):
         output_dir = self.debugger_args.overtime_ckpt_dir
@@ -164,7 +192,8 @@ class OnlineDebuggingMethod():
         if ckpt_name:
             model_path = os.path.join(output_dir, f"model_ckpt_{ckpt_name}.pt")
         else:
-            model_path = os.path.join(output_dir, f"model_ckpt_{self.timecode:03d}.pt")
+            model_path = os.path.join(
+                output_dir, f"model_ckpt_{self.timecode:03d}.pt")
         torch.save(model_state_dict, model_path)
         self.logger.info(f"Model saved to {model_path}.")
 
@@ -207,3 +236,13 @@ class OnlineDebuggingMethod():
     def fix_bugs(self, bug_loader, quiet=True):
         raise NotImplementedError(
             "Please Implement the `fix_bugs` method in your class.")
+
+    def upstream_data_formatter(self, examples):
+        # The continual fine-tuning method only uses the correct answers for fixing bugs.
+        formatted_examples = []
+        for example in examples: 
+            _id = example["id"]
+            _input = example["input"] 
+            _truth = example["output"]   # a list of answers
+            formatted_examples.append((_input, _truth, _id))
+        return formatted_examples

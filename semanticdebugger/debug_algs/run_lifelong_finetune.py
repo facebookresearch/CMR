@@ -47,6 +47,7 @@ def run(args):
     data_args = Namespace(
         bug_stream_json_path=args.bug_stream_json_path,
         pass_pool_jsonl_path=args.pass_pool_jsonl_path,
+        sampled_upstream_json_path=args.sampled_upstream_json_path,
         # pass_sample_size=args.pass_sample_size,
         do_lowercase=args.do_lowercase,
         append_another_bos=args.append_another_bos,
@@ -79,6 +80,9 @@ def run(args):
         if args.cl_method_name == "online_ewc":
             setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
             setattr(debugger_args, "ewc_gamma", args.ewc_gamma)
+            setattr(debugger_args, "use_sampled_upstream", args.use_sampled_upstream)
+        elif args.cl_method_name == "offline_debug":
+            setattr(debugger_args, "use_sampled_upstream", args.use_sampled_upstream)
 
     if args.num_threads_eval <= 0:
         # The Online Debugging Mode + Computing offline debugging bounds.
@@ -144,6 +148,8 @@ def get_cli_parser():
     # this will be used for evaluating forgetting
     parser.add_argument("--pass_pool_jsonl_path", 
                         default="bug_data/mrqa_naturalquestions_dev.sampled_pass.jsonl")
+    parser.add_argument("--sampled_upstream_json_path",
+                        default="bug_data/mrqa_naturalquestions.sampled_upstream.jsonl")
 
     parser.add_argument("--task_name", default="mrqa_naturalquestions")
     parser.add_argument('--train_batch_size', type=int, default=8)
@@ -184,6 +190,9 @@ def get_cli_parser():
     parser.add_argument("--ewc_gamma", default=1, type=float,
                         help="Max gradient norm.")                        
     
+    ### Offline Debug Bounds 
+    parser.add_argument("--use_sampled_upstream", action='store_true', default=False)
+
 
     # To save all ckpts.
     
