@@ -10,13 +10,13 @@ from semanticdebugger.task_manager.dataloader import GeneralDataset
 from transformers import (AdamW, BartConfig, BartTokenizer,
                           get_linear_schedule_with_warmup)
 
-from semanticdebugger.debug_algs.commons import OnlineDebuggingMethod, ContinualFinetuning
+from semanticdebugger.debug_algs.commons import OnlineDebuggingMethod
+from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
 from tqdm import tqdm
 from torch import nn
 import torch
 from torch.nn import functional as F
 import abc
-import copy
 
 class OnlineEWC(ContinualFinetuning):
     def __init__(self, logger):
@@ -84,7 +84,7 @@ class OnlineEWC(ContinualFinetuning):
         self.regularizer.online = True 
         self.regularizer.ewc_lambda = self.debugger_args.ewc_lambda
         self.regularizer.gamma = self.debugger_args.ewc_gamma
-        self.regularizer.emp_FI = False # TODO: check later.
+        self.regularizer.emp_FI = True # TODO: check later.
         self.regularizer.base_model = self.base_model
 
         return
@@ -129,7 +129,7 @@ class OnlineEWC(ContinualFinetuning):
                     self.base_model.zero_grad()
 
         # TODO: build bsz=1 dataloader for update the fisher information matrix
-        fisher_dataloader = copy.deepcopy(bug_loader)
+        fisher_dataloader = bug_loader  # can we copy this object?
         fisher_dataloader.args.train_batch_size = 1 
         fi_dl = fisher_dataloader.load_dataloader(do_return=True)
         self.regularizer.estimate_fisher(fi_dl, pad_token_id)
@@ -260,4 +260,4 @@ class EWCRegularizer(nn.Module, metaclass=abc.ABCMeta):
             return (1./2)*sum(losses)
         else:
             # EWC-loss is 0 if there are no stored mode and precision yet
-            return torch.tensor(0., device=self.base_model._device())
+            return torch.tensor(0., device=torch.device("cuda"))

@@ -1,4 +1,3 @@
-
 from argparse import Namespace
 import argparse
 from semanticdebugger.models.utils import set_seeds
@@ -41,43 +40,42 @@ def run(args):
     elif args.cl_method_name == "online_ewc":
         debugging_alg = OnlineEWC(logger=logger)
 
-    if args.cl_method_name in ["simple_cf", "online_ewc"]:
-        data_args = Namespace(
-            bug_stream_json_path=args.bug_stream_json_path,
-            pass_pool_jsonl_path=args.pass_pool_jsonl_path,
-            # pass_sample_size=args.pass_sample_size,
-            do_lowercase=args.do_lowercase,
-            append_another_bos=args.append_another_bos,
-            max_input_length=args.max_input_length,
-            max_output_length=args.max_output_length,
-            task_name=args.task_name,
-            train_batch_size=args.train_batch_size,
-            predict_batch_size=args.predict_batch_size,
-            num_beams=args.num_beams,
-        )
-        if args.cl_method_name == "online_ewc":
-            setattr(data_args, "ewc_lambda", args.ewc_lambda)
-            setattr(data_args, "ewc_gamma", args.ewc_gamma)
-
-
+    
+    data_args = Namespace(
+        bug_stream_json_path=args.bug_stream_json_path,
+        pass_pool_jsonl_path=args.pass_pool_jsonl_path,
+        # pass_sample_size=args.pass_sample_size,
+        do_lowercase=args.do_lowercase,
+        append_another_bos=args.append_another_bos,
+        max_input_length=args.max_input_length,
+        max_output_length=args.max_output_length,
+        task_name=args.task_name,
+        train_batch_size=args.train_batch_size,
+        predict_batch_size=args.predict_batch_size,
+        num_beams=args.num_beams,
+    )
 
     base_model_args = Namespace(
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
+    if args.cl_method_name in ["simple_cf", "online_ewc"]:
+        debugger_args = Namespace(
+            weight_decay=args.weight_decay,
+            learning_rate=args.learning_rate,
+            adam_epsilon=args.adam_epsilon,
+            warmup_steps=0,
+            total_steps=10000,
+            num_epochs=args.num_train_epochs,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
+            max_grad_norm=args.max_grad_norm,
+            save_all_ckpts=args.save_all_ckpts,
+            overtime_ckpt_dir=args.overtime_ckpt_dir
+        )
 
-    debugger_args = Namespace(
-        weight_decay=args.weight_decay,
-        learning_rate=args.learning_rate,
-        adam_epsilon=args.adam_epsilon,
-        warmup_steps=0,
-        total_steps=10000,
-        num_epochs=args.num_train_epochs,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
-        max_grad_norm=args.max_grad_norm,
-        save_all_ckpts=args.save_all_ckpts,
-        overtime_ckpt_dir=args.overtime_ckpt_dir
-    )
+        if args.cl_method_name == "online_ewc":
+            setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
+            setattr(debugger_args, "ewc_gamma", args.ewc_gamma)
 
     # The Online Debugging Mode
 

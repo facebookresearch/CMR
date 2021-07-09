@@ -51,6 +51,7 @@ def print_eval(path="bug_data/output/nq_dev_0625_1e-5_e3_result.json"):
     # Load the json data
     lr = path.split("_")[-5]
     num_epoch = path.split("_")[-4][1:]
+    prefix = path.split("/")[-2]
     assert os.path.exists(path)
     all_results = json.load(open(path))
     # print(output_info.keys()) 
@@ -59,7 +60,7 @@ def print_eval(path="bug_data/output/nq_dev_0625_1e-5_e3_result.json"):
     timecodes = sorted(timecodes, reverse=False)
     worse_kr, mean_kr, final_kr = eval_forgetting(all_results, timecodes)
     final_efr, mean_ip_efr, mean_ir_efr = eval_error_fixing(all_results, timecodes)
-    print(f"{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}")
+    print(f"{prefix}, {worse_kr}, {mean_kr}, {final_kr}, {final_efr}")
 
 def aggregate_offline_results(path="bug_data/output/nq_dev_0701_v2_offline_eval/"):
     import glob
@@ -83,10 +84,20 @@ if __name__ == '__main__':
     aggregate_offline_results("bug_data/output/nq_dev_0706_3e-5_e3_offline_eval")
     aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e3_offline_eval")
     aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e5_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l0.5_g1_3e-5_e5_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l5_g1_3e-5_e5_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l50_g1_3e-5_e5_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l500_g1_3e-5_e5_offline_eval")
     
-    print("{lr}, {num_epoch}, {worse_kr}, {mean_kr}, {final_kr}, {mean_ip_efr}, {mean_ir_efr}, {final_efr}") 
+    print("{prefix}, {worse_kr}, {mean_kr}, {final_kr}, {final_efr}") 
     print_eval("bug_data/output/nq_dev_0706_1e-5_e3_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0706_3e-5_e3_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0706_1e-5_e5_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0706_3e-5_e5_offline_eval/alltime_result.json")
-     
+    print("-"*50)
+    print_eval("bug_data/output/nq_dev_0708_ewc_l0.5_g1_3e-5_e5_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0708_ewc_l5_g1_3e-5_e5_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0708_ewc_l50_g1_3e-5_e5_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0708_ewc_l500_g1_3e-5_e5_offline_eval/alltime_result.json")
+
+    
