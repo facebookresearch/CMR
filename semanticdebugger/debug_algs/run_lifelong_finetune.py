@@ -4,6 +4,7 @@ from semanticdebugger.models.utils import set_seeds
 from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
+from semanticdebugger.debug_algs.cl_simple_replay_alg import SimpleReplay
 import logging
 import os
 import json
@@ -42,6 +43,9 @@ def run(args):
         debugging_alg = OnlineEWC(logger=logger)
     elif args.cl_method_name == "offline_debug":
         debugging_alg = OfflineDebugger(logger=logger)
+    elif args.cl_method_name == "simple_replay":
+        debugging_alg = SimpleReplay(logger=logger)
+
 
     
     data_args = Namespace(
@@ -63,7 +67,7 @@ def run(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug"]:
+    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug", "simple_replay"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -83,6 +87,9 @@ def run(args):
             setattr(debugger_args, "use_sampled_upstream", args.use_sampled_upstream)
         elif args.cl_method_name == "offline_debug":
             setattr(debugger_args, "use_sampled_upstream", args.use_sampled_upstream)
+        elif args.cl_method_name == "simple_replay":
+            setattr(debugger_args, "replay_size", args.replay_size)
+        
 
     if args.num_threads_eval <= 0:
         # The Online Debugging Mode + Computing offline debugging bounds.
@@ -190,9 +197,9 @@ def get_cli_parser():
     parser.add_argument("--ewc_gamma", default=1, type=float,
                         help="Max gradient norm.")                        
     
-    ### Offline Debug Bounds 
     parser.add_argument("--use_sampled_upstream", action='store_true', default=False)
-
+ 
+    parser.add_argument('--replay_size', type=int, default=8)
 
     # To save all ckpts.
     

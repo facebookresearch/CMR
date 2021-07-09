@@ -6,7 +6,8 @@ import os
 
 from numpy.lib.function_base import median
 
-
+def get_prefix(filepath):
+    return filepath.split("/")[2].replace("_offline_eval","").replace("nq_dev_", "")[5:]
 
 
 def eval_forgetting(online_debug_result, timecodes):
@@ -28,6 +29,7 @@ def eval_forgetting(online_debug_result, timecodes):
 
 def eval_error_fixing(online_debug_result, timecodes):
     final_state_bug_fixing_rate = online_debug_result[str(timecodes[-1])]["eval_results_overall_bug"]["metric_results"]["EM"]
+    bug_fixing_rates = [online_debug_result[str(t)]["eval_results_overall_bug"]["metric_results"]["EM"] for t in timecodes]
 
     inter_prefix_efr = []
     inter_respon_efr = []
@@ -45,13 +47,15 @@ def eval_error_fixing(online_debug_result, timecodes):
     # print(f"Bug-Fixing measure (EM): final_state_bug_fixing_rate={final_state_bug_fixing_rate};")
     # print(f"Bug-Fixing measure (EM): mean_ip_efr={mean_ip_efr}; mean_ir_efr={mean_ir_efr};")
     mean_ip_efr, mean_ir_efr = 0, 0
-    return final_state_bug_fixing_rate, mean_ip_efr, mean_ir_efr
+    best_efr = np.max(bug_fixing_rates)
+    mean_efr = np.mean(bug_fixing_rates)
+    return final_state_bug_fixing_rate, best_efr, mean_efr
 
 def print_eval(path="bug_data/output/nq_dev_0625_1e-5_e3_result.json"):
     # Load the json data
     lr = path.split("_")[-5]
     num_epoch = path.split("_")[-4][1:]
-    prefix = path.split("/")[-2]
+    prefix = get_prefix(path)
     assert os.path.exists(path)
     all_results = json.load(open(path))
     # print(output_info.keys()) 
@@ -59,8 +63,10 @@ def print_eval(path="bug_data/output/nq_dev_0625_1e-5_e3_result.json"):
     timecodes = [int(t) for t in list(all_results.keys())]
     timecodes = sorted(timecodes, reverse=False)
     worse_kr, mean_kr, final_kr = eval_forgetting(all_results, timecodes)
-    final_efr, mean_ip_efr, mean_ir_efr = eval_error_fixing(all_results, timecodes)
-    print(f"{prefix}, {worse_kr}, {mean_kr}, {final_kr}, {final_efr}")
+    final_efr, best_efr, mean_efr = eval_error_fixing(all_results, timecodes)
+    final_f1 = 2*(final_kr*final_efr)/(final_kr+final_efr)
+    mean_f1 = 2*(mean_kr*mean_efr)/(mean_kr+mean_efr)
+    print(f"{prefix}, {worse_kr}, {mean_kr}, {final_kr}, {best_efr}, {mean_efr}, {final_efr}, {mean_f1} , {final_f1}")
 
 def aggregate_offline_results(path="bug_data/output/nq_dev_0701_v2_offline_eval/"):
     import glob
@@ -80,28 +86,48 @@ def aggregate_offline_results(path="bug_data/output/nq_dev_0701_v2_offline_eval/
 
 
 if __name__ == '__main__':    
-    aggregate_offline_results("bug_data/output/nq_dev_0706_3e-5_e5_offline_eval")
-    aggregate_offline_results("bug_data/output/nq_dev_0706_3e-5_e3_offline_eval")
-    aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e3_offline_eval")
-    aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e5_offline_eval")
-    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l0.5_g1_3e-5_e5_offline_eval")
-    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l5_g1_3e-5_e5_offline_eval")
-    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l50_g1_3e-5_e5_offline_eval")
-    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l500_g1_3e-5_e5_offline_eval")
-    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l5000_g1_3e-5_e5_offline_eval")
-    aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l50000_g1_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0706_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0706_3e-5_e3_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e3_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0706_1e-5_e5_offline_eval")
+
+    # aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l0.5_g1_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l5_g1_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l50_g1_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l500_g1_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l5000_g1_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_l50000_g1_3e-5_e5_offline_eval")
     
-    print("{prefix}, {worse_kr}, {mean_kr}, {final_kr}, {final_efr}") 
+    # aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_withup_l500_g1_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0708_ewc_withup_l5000_g1_3e-5_e5_offline_eval")
+
+    # aggregate_offline_results("bug_data/output/nq_dev_0709_simplereplay_rsz30_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0709_simplereplay_rsz10_3e-5_e5_offline_eval")
+    # aggregate_offline_results("bug_data/output/nq_dev_0709_simplereplay_rsz100_3e-5_e5_offline_eval")
+
+
+    
+    print("{prefix}, {worse_kr}, {mean_kr}, {final_kr}, {best_efr}, {mean_efr}, {final_efr}, {mean_f1}, {final_f1}") 
     print_eval("bug_data/output/nq_dev_0706_1e-5_e3_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0706_3e-5_e3_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0706_1e-5_e5_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0706_3e-5_e5_offline_eval/alltime_result.json")
     print("-"*50)
+    
+    
     print_eval("bug_data/output/nq_dev_0708_ewc_l0.5_g1_3e-5_e5_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0708_ewc_l5_g1_3e-5_e5_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0708_ewc_l50_g1_3e-5_e5_offline_eval/alltime_result.json")
-    print_eval("bug_data/output/nq_dev_0708_ewc_l500_g1_3e-5_e5_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0708_ewc_l500_g1_3e-5_e5_offline_eval/alltime_result.json")  # the best
     print_eval("bug_data/output/nq_dev_0708_ewc_l5000_g1_3e-5_e5_offline_eval/alltime_result.json")
     print_eval("bug_data/output/nq_dev_0708_ewc_l50000_g1_3e-5_e5_offline_eval/alltime_result.json")
+
+
+    print_eval("bug_data/output/nq_dev_0708_ewc_withup_l500_g1_3e-5_e5_offline_eval/alltime_result.json") 
+    print_eval("bug_data/output/nq_dev_0708_ewc_withup_l5000_g1_3e-5_e5_offline_eval/alltime_result.json")
+    
+    print_eval("bug_data/output/nq_dev_0709_simplereplay_rsz10_3e-5_e5_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0709_simplereplay_rsz30_3e-5_e5_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0709_simplereplay_rsz100_3e-5_e5_offline_eval/alltime_result.json")
 
     
