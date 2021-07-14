@@ -18,6 +18,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
     def __init__(self, logger):
         super().__init__(logger=logger)
         self.name = "continual_finetuning"
+        
 
     def _check_debugger_args(self):
         required_atts = ["weight_decay",
@@ -138,6 +139,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                     loss = loss.mean()  # mean() to average on multi-gpu.
                 train_losses.append(loss.detach().cpu())
                 loss.backward()
+                self.model_update_steps += 1
 
                 if global_step % self.debugger_args.gradient_accumulation_steps == 0:
                     torch.nn.utils.clip_grad_norm_(

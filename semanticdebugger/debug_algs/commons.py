@@ -46,6 +46,8 @@ class OnlineDebuggingMethod():
             self.n_gpu = torch.cuda.device_count()
         else:
             self.n_gpu = 0
+
+        self.model_update_steps = 0 # number of updates over the base model.
         return
 
     def _check_data_args(self):
