@@ -6,12 +6,18 @@ import torch
 import transformers
 from semanticdebugger.task_manager.eval_metrics import evaluate_func
 import copy, pickle, os
+from semanticdebugger.models.mybart import MyBart
+from semanticdebugger.models import run_bart
+from semanticdebugger.models.utils import (convert_model_to_single_gpu,
+                                           freeze_embeds, trim_batch)
+from argparse import Namespace
 
 class KeyValueMemoryModule(object): 
     
     def __init__(self, logger, buffer=None):
         self.logger = logger        
         self.memory = {}
+        self.keys_over_time = {}
         
     def load_key_encoder(self, memory_key_encoder='facebook/bart-base'):
         # https://huggingface.co/transformers/model_doc/bart.html#bartmodel
@@ -51,7 +57,7 @@ class KeyValueMemoryModule(object):
             key_vectors = last_hidden_states[:, 0, :]
         return key_vectors.cpu().numpy()
 
-    def store_examples(self, keys, examples):
+    def store_examples(self, keys, examples, timecode=0):
         """
         Add the examples as key-value pairs to the memory dictionary with content,attention_mask,label tuple as value
         and key determined by key network
@@ -60,23 +66,34 @@ class KeyValueMemoryModule(object):
         # update the memory dictionary
         for i, key in enumerate(keys):
             # numpy array cannot be used as key since it is non-hashable, hence convert it to bytes to use as key.
-            self.memory.update({key.tobytes(): examples[i]})
+            values = list(examples[i])
+            values.append(timecode)
+            self.memory.update({key.tobytes(): tuple(values)})
 
 
-    def query_examples(self, keys, k=32):
+    def query_examples(self, keys, k=32, timecode=0):
         """
         Returns samples from buffer using K-nearest neighbour approach
         """
         retrieved_examples = []
         # Iterate over all the input keys
         # to find neigbours for each of them
+        
+        # Only allow retrieving from the past memory. (due to offline evaluation)
+        past_memory_keys = []
+        for key, values in self.memory.items():
+            if values[3]-1 <= timecode:
+                past_memory_keys.append(key)
+        past_memory_keys = np.frombuffer(np.asarray(past_memory_keys), dtype=np.float32).reshape(len(past_memory_keys), -1)       
+        k = min(k, len(past_memory_keys))
         for key in keys:
             # compute similarity scores based on Euclidean distance metric
-            similarity_scores = np.dot(self.all_keys, key.T)
-            K_neighbour_keys = self.all_keys[np.argpartition(similarity_scores, -k)[-k:]]
+            similarity_scores = np.dot(past_memory_keys, key.T)
+            K_neighbour_keys = past_memory_keys[np.argpartition(similarity_scores, -k)[-k:]]
             neighbours = [self.memory[nkey.tobytes()] for nkey in K_neighbour_keys]
             # converts experiences into batch 
-            retrieved_examples.append(neighbours)
+            # retrieved_examples.append(neighbours)
+            retrieved_examples += neighbours
 
         return retrieved_examples
 
@@ -85,6 +102,7 @@ class KeyValueMemoryModule(object):
         _inputs = [self.memory[k][0] for k in keys]
         _outputs = [self.memory[k][1] for k in keys]
         _ids = [self.memory[k][2] for k in keys]
+        # _timecodes = [self.memory[k][3] for k in keys]
         examples = list(zip(_inputs, _outputs, _ids))
         return examples
 
@@ -119,6 +137,7 @@ class MBPAPlusPlus(ContinualFinetuning):
             "memory_key_encoder", # 'bert-base-uncased' by default
             "memory_store_rate", # 0, 0.1, 1 etc.
             "memory_path", # to save/load the memory module from disk
+            "num_adapt_epochs"
             ]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
 
@@ -173,40 +192,149 @@ class MBPAPlusPlus(ContinualFinetuning):
             if flag_store_examples:
                 self.logger.info("Saving examples to the memory.")
                 key_vectors = self.memroy_module.encode_examples(bug_train_loader.data)
-                self.memroy_module.store_examples(key_vectors, bug_train_loader.data)
+                self.memroy_module.store_examples(key_vectors, bug_train_loader.data, timecode=self.timecode)
                 self.logger.info("Finished.")
             
 
         self.memroy_module.save_memory_to_path(self.debugger_args.memory_path)
  
 
+    def get_adapt_dataloaders(self, eval_dataloader=None, verbose=False):
+        """Get the adapt_dataloader."""
+        adapt_dataloaders = []
+        num_batches = len(eval_dataloader.dataloader)
+        example_batches = np.array_split(eval_dataloader.data, num_batches)
+        for example_batch in tqdm(example_batches, desc="Retrieving Data from Memory", disable=not verbose):
+            # self.logger.info("Memory Retrieving ...")
+            # local adaptation for self.base_model of retrieved examples from memory.
+            keys = self.memroy_module.encode_examples(example_batch)
+            retrieved_examples = self.memroy_module.query_examples(keys, k=self.debugger_args.replay_size, timecode=self.timecode)
+            replay_data_loader, _ = self.get_dataloader(self.data_args, retrieved_examples, mode="train")
+            adapt_dataloaders.append(replay_data_loader) 
+            # self.logger.info("Memory Retrieving Done ...")
+        
+        return adapt_dataloaders
+
+
+    def base_model_infer(self, eval_dataloader, adapt_dataloaders, verbose=False):
+        self.base_model.eval()
+        model = self.base_model if self.n_gpu == 1 else self.base_model.module
+        predictions = self.inference_with_adaptation(model, eval_dataloader, adapt_dataloaders, save_predictions=False, verbose=verbose, logger=self.logger, return_all=False, predictions_only=True, args=Namespace(quiet=True))
+        return predictions
+
+
     def evaluate(self, eval_dataloader=None, verbose=False):
         """Evaluates the performance"""
-
-        # backup the base model.
-        self.logger.info("Backing up the base model ...")
-        base_model_backup = copy.deepcopy(self.base_model)
-        self.logger.info("Backking up the base model ... Done!")
+        if not eval_dataloader:
+            eval_dataloader = self.bug_eval_loaders[self.timecode]
         
-        
-        self.logger.info("Memory Retrieving ...")
-        # local adaptation for self.base_model of retrieved examples from memory.
-        keys = self.memroy_module.encode_examples(eval_dataloader.data)
-        retrieved_examples = self.memroy_module.query_examples(keys, k=self.debugger_args.replay_size)
-        replay_data_loader, _ = self.get_dataloader(self.data_args, retrieved_examples, mode="train")
-        self.logger.info("Memory Retrieving Done ...")
-        
-        self.logger.info("Temp local adaptation ...")
-        self.fix_bugs(replay_data_loader)  # local adaptation
-        self.logger.info("Temp local adaptation ... Done")
+        # prepare adapt_dataloaders
+        adapt_dataloaders = self.get_adapt_dataloaders(eval_dataloader) 
 
-
-        # get inference as usual.
-
-        predictions, results, return_all = super().evaluate(eval_dataloader=None, verbose=False)
-
-        del self.base_model
-        
-        self.base_model = base_model_backup # restore to the original base_model
+        predictions = self.base_model_infer(eval_dataloader, adapt_dataloaders, verbose)
+        assert len(predictions) == len(eval_dataloader)
+        predictions = [p.strip() for p in predictions]
+        results, return_all = evaluate_func(
+            predictions, eval_dataloader.data, self.metric, return_all=True)
 
         return predictions, results, return_all
+
+    def local_adaptation(self, model, adapt_dataloader):
+        pad_token_id = self.tokenizer.pad_token_id
+        base_weights = list(model.parameters())
+        curr_weights = list(model.parameters())
+        train_losses = []
+        global_step = 0
+        pad_token_id = self.tokenizer.pad_token_id
+        super().debugger_setup(self.debugger_args)  # reset the optimizier and schduler
+        model.train()
+        model.zero_grad()
+        for epoch_id in range(int(self.debugger_args.num_adapt_epochs)):
+            for batch in tqdm(adapt_dataloader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}", disable=True):
+                if self.use_cuda:
+                    # print(type(batch[0]), batch[0])
+                    batch = [b.to(torch.device("cuda")) for b in batch]
+                batch[0], batch[1] = trim_batch(
+                    batch[0], pad_token_id, batch[1])
+                batch[2], batch[3] = trim_batch(
+                    batch[2], pad_token_id, batch[3])
+                # this is the task loss w/o any regularization
+                loss = model(input_ids=batch[0], attention_mask=batch[1],
+                                       decoder_input_ids=batch[2], decoder_attention_mask=batch[3],
+                                       is_training=True)
+                if self.n_gpu > 1:
+                    loss = loss.mean()  # mean() to average on multi-gpu.
+
+                diff_loss = torch.Tensor([0]).to("cuda" if torch.cuda.is_available() else "cpu")
+                # Iterate over base_weights and curr_weights and accumulate the euclidean norm
+                # of their differences
+                for base_param, curr_param in zip(base_weights, curr_weights):
+                    diff_loss += (curr_param - base_param).pow(2).sum()
+                loss = loss + 1e-3 * diff_loss
+
+                train_losses.append(loss.detach().cpu())
+                loss.backward()
+
+                if global_step % self.debugger_args.gradient_accumulation_steps == 0:
+                    torch.nn.utils.clip_grad_norm_(
+                        model.parameters(), self.debugger_args.max_grad_norm)
+                    self.optimizer.step()    # We have accumulated enough gradients
+                    self.scheduler.step()
+                    model.zero_grad()
+        return model
+
+    def inference_with_adaptation(self, model, dev_data, adapt_dataloaders, save_predictions=False, verbose=False, args=None, logger=None, return_all=False, predictions_only=False):
+        # model.eval()
+        predictions = []
+        bos_token_id = dev_data.tokenizer.bos_token_id
+        loss = []   # if needed
+        if args:
+            quiet = args.quiet
+        else:
+            quiet = False
+        if not quiet:
+            logger.info("Starting inference ...")
+        current_index = 0
+        for batch in tqdm(dev_data.dataloader, desc="Infernece", disable=not verbose):
+            ### Local Adaptation: Start ###
+            _model = copy.deepcopy(model)
+            adapt_dataloader = adapt_dataloaders[current_index]
+            _model = self.local_adaptation(_model, adapt_dataloader)
+            ### Local Adaptation: End ###
+
+            _model.eval()
+
+            ### Inference: Start ###
+            if torch.cuda.is_available():
+                batch = [b.to(torch.device("cuda")) for b in batch]
+            pad_token_id = dev_data.tokenizer.pad_token_id
+            batch[0], batch[1] = trim_batch(batch[0], pad_token_id, batch[1])
+            if return_all:
+                pass
+            outputs = _model.generate(input_ids=batch[0],
+                                    attention_mask=batch[1],
+                                    num_beams=dev_data.args.num_beams,
+                                    max_length=dev_data.args.max_output_length,
+                                    decoder_start_token_id=_model.config.bos_token_id,
+                                    early_stopping=dev_data.gen_early_stop,)
+            for input_, output in zip(batch[0], outputs):
+                pred = dev_data.decode(output)
+                predictions.append(pred)
+
+            ### Inference: End ###
+            current_index += 1
+
+
+        if not quiet:
+            logger.info("Starting inference ... Done")
+
+        if predictions_only:
+            return predictions
+        if save_predictions:
+            dev_data.save_predictions(predictions, )
+        # logger.info("Starting evaluation metric ...")
+        result = dev_data.evaluate(predictions, verbose=verbose)
+        # logger.info("Starting evaluation metric ... Done!")
+        if return_all:
+            return predictions, result, loss
+        return result

@@ -12,6 +12,7 @@ from .utils import freeze_embeds, trim_batch, convert_model_to_single_gpu
 import json
 
 from tqdm import tqdm
+import copy
 
 
 def run(args, logger):
@@ -229,3 +230,6 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
     if return_all:
         return predictions, result, loss
     return result
+
+
+

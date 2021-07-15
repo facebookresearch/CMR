@@ -95,6 +95,7 @@ def run(args):
                 setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
                 setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
                 setattr(debugger_args, "memory_store_rate", args.memory_store_rate)
+                setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
         
 
     if args.num_threads_eval <= 0:
@@ -214,6 +215,8 @@ def get_cli_parser():
     parser.add_argument('--memory_key_encoder', type=str, default="facebook/bart-base")
     parser.add_argument('--memory_path', type=str, default="facebook/bart-base")    
     parser.add_argument('--memory_store_rate', type=float, default=1.0)   # 1= always store all examples to the memory. 
+    parser.add_argument('--num_adapt_epochs', type=int, default=1) # 
+    
     # To save all ckpts.
     
     parser.add_argument("--save_all_ckpts", type=int, default=0,

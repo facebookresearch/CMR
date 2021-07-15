@@ -115,3 +115,35 @@ def _check_forgetting(self, pass_before_results_all, pass_after_results_all):
     self.logger.info(
         f"Number of em_forgotten_passes = {len(em_forgotten_passes)}.")
     # self.logger.info(f"UUIDS of fixed bugs = {em_fixed_bugs}")
+
+
+def evaluate_v1(self, eval_dataloader=None, verbose=False):
+    """Evaluates the performance"""
+
+    # backup the base model.
+    self.logger.info("Backing up the base model ...")
+    base_model_backup = copy.deepcopy(self.base_model)
+    self.logger.info("Backking up the base model ... Done!")
+    
+    
+    self.logger.info("Memory Retrieving ...")
+    # local adaptation for self.base_model of retrieved examples from memory.
+    keys = self.memroy_module.encode_examples(eval_dataloader.data)
+    retrieved_examples = self.memroy_module.query_examples(keys, k=self.debugger_args.replay_size)
+    replay_data_loader, _ = self.get_dataloader(self.data_args, retrieved_examples, mode="train")
+    self.logger.info("Memory Retrieving Done ...")
+    
+    self.logger.info("Temp local adaptation ...")
+    self.fix_bugs(replay_data_loader)  # local adaptation
+    self.logger.info("Temp local adaptation ... Done")
+
+
+    # get inference as usual.
+
+    predictions, results, return_all = super().evaluate(eval_dataloader=None, verbose=False)
+
+    del self.base_model
+    
+    self.base_model = base_model_backup # restore to the original base_model
+
+    return predictions, results, return_all
