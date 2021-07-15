@@ -121,7 +121,7 @@ class OnlineDebuggingMethod():
         for bug_train_loader in tqdm(self.bug_train_loaders, desc="Online Debugging", total=self.num_bug_batches):
             ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
-            self.logger.info("Start bug-fixing ....")
+            self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
             ############### CORE ###############

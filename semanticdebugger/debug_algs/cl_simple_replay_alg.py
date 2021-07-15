@@ -39,7 +39,7 @@ class SimpleReplay(ContinualFinetuning):
             
             ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
-            self.logger.info("Start bug-fixing ....")
+            self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
             ############### CORE ###############

@@ -5,6 +5,7 @@ from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuni
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
 from semanticdebugger.debug_algs.cl_simple_replay_alg import SimpleReplay
+from semanticdebugger.debug_algs.cl_mbpapp_alg import MBPAPlusPlus
 import logging
 import os
 import json
@@ -45,8 +46,9 @@ def run(args):
         debugging_alg = OfflineDebugger(logger=logger)
     elif args.cl_method_name == "simple_replay":
         debugging_alg = SimpleReplay(logger=logger)
-
-
+    elif args.cl_method_name == "mbpa++":
+        debugging_alg = MBPAPlusPlus(logger=logger)
+    
     
     data_args = Namespace(
         bug_stream_json_path=args.bug_stream_json_path,
@@ -67,7 +69,7 @@ def run(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug", "simple_replay"]:
+    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug", "simple_replay", "mbpa++"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -81,14 +83,18 @@ def run(args):
             overtime_ckpt_dir=args.overtime_ckpt_dir
         )
 
+        setattr(debugger_args, "use_sampled_upstream", args.use_sampled_upstream)
         if args.cl_method_name == "online_ewc":
             setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
-            setattr(debugger_args, "ewc_gamma", args.ewc_gamma)
-            setattr(debugger_args, "use_sampled_upstream", args.use_sampled_upstream)
-        elif args.cl_method_name == "offline_debug":
-            setattr(debugger_args, "use_sampled_upstream", args.use_sampled_upstream)
-        elif args.cl_method_name == "simple_replay":
+            setattr(debugger_args, "ewc_gamma", args.ewc_gamma)       
+        elif args.cl_method_name in ["simple_replay", "mbpa++"]:
             setattr(debugger_args, "replay_size", args.replay_size)
+            setattr(debugger_args, "replay_frequency", args.replay_frequency)
+            if args.cl_method_name == "mbpa++":
+                setattr(debugger_args, "memory_path", args.memory_path)
+                setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
+                setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
+                setattr(debugger_args, "memory_store_rate", args.memory_store_rate)
         
 
     if args.num_threads_eval <= 0:
@@ -104,6 +110,7 @@ def run(args):
             debugging_alg.online_debug()
 
         output_info = {}
+        output_info["model_update_steps"] = debugging_alg.model_update_steps
         output_info["method_class"] = debugging_alg.name
         output_info["base_model_args"] = str(debugging_alg.base_model_args)
         output_info["debugger_args"] = str(debugging_alg.debugger_args)
@@ -127,7 +134,9 @@ def run(args):
             logger.info(f"Starting the offline evaluation of {timecode}")
             timecode = int(timecode)
             base_model_args.base_model_path = os.path.join(args.overtime_ckpt_dir, f"model_ckpt_{timecode:03d}.pt")
-            debugging_alg.load_base_model(base_model_args)            
+            debugging_alg.load_base_model(base_model_args)
+            if args.cl_method_name in ["mbpa++"]:
+                debugging_alg.debugger_setup(debugger_args) # because there are local adaptation.
             single_result = debugging_alg.single_timecode_eval(timecode)
             thread_results[timecode] = single_result
             # logger.info(f"Results: {json.dumps(single_result)}")
@@ -199,8 +208,12 @@ def get_cli_parser():
     
     parser.add_argument("--use_sampled_upstream", action='store_true', default=False)
  
+    ### The HPs for replay-based methods and memory-based.
     parser.add_argument('--replay_size', type=int, default=8)
-
+    parser.add_argument('--replay_frequency', type=int, default=1) # 1 means always replay for every steps, set to 10 means sample after 10 model updates.
+    parser.add_argument('--memory_key_encoder', type=str, default="facebook/bart-base")
+    parser.add_argument('--memory_path', type=str, default="facebook/bart-base")    
+    parser.add_argument('--memory_store_rate', type=float, default=1.0)   # 1= always store all examples to the memory. 
     # To save all ckpts.
     
     parser.add_argument("--save_all_ckpts", type=int, default=0,
