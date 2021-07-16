@@ -123,6 +123,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         global_step = 0
         for epoch_id in range(int(self.debugger_args.num_epochs)):
             for batch in tqdm(bug_loader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}", disable=quiet):
+                global_step += 1
                 # here the batch is a mini batch of the current bug batch
                 if self.use_cuda:
                     # print(type(batch[0]), batch[0])

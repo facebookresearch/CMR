@@ -315,9 +315,9 @@ class MBPAPlusPlus(ContinualFinetuning):
         pad_token_id = self.tokenizer.pad_token_id
         super().debugger_setup(self.debugger_args)  # reset the optimizier and schduler
         model.train()
-        model.zero_grad()
         for epoch_id in range(int(self.debugger_args.num_adapt_epochs)):
-            for batch in tqdm(adapt_dataloader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}", disable=True):
+            for batch in tqdm(adapt_dataloader.dataloader, desc=f"Local Adaptation Epoch {epoch_id}", disable=False):
+                global_step += 1
                 if self.use_cuda:
                     # print(type(batch[0]), batch[0])
                     batch = [b.to(torch.device("cuda")) for b in batch]
@@ -373,8 +373,6 @@ class MBPAPlusPlus(ContinualFinetuning):
                 batch = [b.to(torch.device("cuda")) for b in batch]
             pad_token_id = dev_data.tokenizer.pad_token_id
             batch[0], batch[1] = trim_batch(batch[0], pad_token_id, batch[1])
-            if return_all:
-                pass
             outputs = _model.generate(input_ids=batch[0],
                                     attention_mask=batch[1],
                                     num_beams=dev_data.args.num_beams,

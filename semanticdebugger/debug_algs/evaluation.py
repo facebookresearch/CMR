@@ -106,6 +106,7 @@ if __name__ == '__main__':
     # aggregate_offline_results("bug_data/output/nq_dev_0709_simplereplay_rsz100_3e-5_e5_offline_eval")
 
     aggregate_offline_results("bug_data/output/nq_dev_0716_mbpapp_rsz32_rf30_3e-5_e5_offline_eval")
+    aggregate_offline_results("bug_data/output/nq_dev_0716_mbpapp_rsz32_rf30_3e-5_e5_woadapt_offline_eval")
 
 
     
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     print_eval("bug_data/output/nq_dev_0709_simplereplay_rsz100_3e-5_e5_offline_eval/alltime_result.json")
 
     print("-"*50)
-    
-    print_eval("bug_data/output/nq_dev_0716_mbpapp_rsz32_rf30_3e-5_e5_offline_eval/alltime_result.json")
 
+    print_eval("bug_data/output/nq_dev_0716_mbpapp_rsz32_rf30_3e-5_e5_offline_eval/alltime_result.json")
+    print_eval("bug_data/output/nq_dev_0716_mbpapp_rsz32_rf30_3e-5_e5_woadapt_offline_eval/alltime_result.json")
     

@@ -138,7 +138,10 @@ def run(args):
             base_model_args.base_model_path = os.path.join(args.overtime_ckpt_dir, f"model_ckpt_{timecode:03d}.pt")
             debugging_alg.load_base_model(base_model_args)
             if args.cl_method_name in ["mbpa++"]:
-                debugging_alg.debugger_setup(debugger_args) # because there are local adaptation.
+                if args.num_adapt_epochs > 0:
+                    debugging_alg.debugger_setup(debugger_args) # because there are local adaptation.
+                else:
+                    debugging_alg.debugger_args = debugger_args
             single_result = debugging_alg.single_timecode_eval(timecode)
             thread_results[timecode] = single_result
             # logger.info(f"Results: {json.dumps(single_result)}")
