@@ -92,9 +92,10 @@ def run(args):
             setattr(debugger_args, "replay_frequency", args.replay_frequency)
             if args.cl_method_name == "mbpa++":
                 setattr(debugger_args, "memory_path", args.memory_path)
+                setattr(debugger_args, "memory_key_cache_path", args.memory_key_cache_path)
                 setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
                 setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
-                setattr(debugger_args, "memory_store_rate", args.memory_store_rate)
+                setattr(debugger_args, "memory_store_rate", args.memory_store_rate)                
                 setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
         
 
@@ -213,7 +214,8 @@ def get_cli_parser():
     parser.add_argument('--replay_size', type=int, default=8)
     parser.add_argument('--replay_frequency', type=int, default=1) # 1 means always replay for every steps, set to 10 means sample after 10 model updates.
     parser.add_argument('--memory_key_encoder', type=str, default="facebook/bart-base")
-    parser.add_argument('--memory_path', type=str, default="facebook/bart-base")    
+    parser.add_argument('--memory_path', type=str, default="")    
+    parser.add_argument('--memory_key_cache_path', type=str, default="bug_data/memory_key_cache.pkl")
     parser.add_argument('--memory_store_rate', type=float, default=1.0)   # 1= always store all examples to the memory. 
     parser.add_argument('--num_adapt_epochs', type=int, default=1) # 
     

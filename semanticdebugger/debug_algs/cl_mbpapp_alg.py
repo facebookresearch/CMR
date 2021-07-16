@@ -11,6 +11,7 @@ from semanticdebugger.models import run_bart
 from semanticdebugger.models.utils import (convert_model_to_single_gpu,
                                            freeze_embeds, trim_batch)
 from argparse import Namespace
+import more_itertools
 
 class KeyValueMemoryModule(object): 
     
@@ -18,18 +19,26 @@ class KeyValueMemoryModule(object):
         self.logger = logger        
         self.memory = {}
         self.keys_over_time = {}
+        self.memory_key_cache = {}
+        self.memory_key_encoder = ""
         
     def load_key_encoder(self, memory_key_encoder='facebook/bart-base'):
         # https://huggingface.co/transformers/model_doc/bart.html#bartmodel
         # TODO: consider the SentenceBERT-like sentence encoders.
-
+        self.memory_key_encoder = memory_key_encoder
         self.logger.info(f"Starting to load the key encoder ({memory_key_encoder}) for the memory module.")
         if "bart" in memory_key_encoder.lower():
             self.tokenizer = transformers.BartTokenizer.from_pretrained(memory_key_encoder)
             self.key_encoder = transformers.BartModel.from_pretrained(memory_key_encoder)
+        elif "distilbert" in memory_key_encoder.lower():
+            self.tokenizer = transformers.DistilBertTokenizer.from_pretrained(memory_key_encoder)
+            self.key_encoder = transformers.DistilBertModel.from_pretrained(memory_key_encoder)
         elif "bert" in memory_key_encoder.lower():
             self.key_encoder = transformers.BertModel.from_pretrained(memory_key_encoder)
+
+        self.key_encoder.cuda()
         self.logger.info(f"Finished.")
+        
 
     def get_key_content(self, inputs):
         key_texts = []
@@ -39,7 +48,17 @@ class KeyValueMemoryModule(object):
             key_texts.append(_input[start_ind:])
         return key_texts
 
-    def encode_examples(self, examples):
+
+    def load_memory_key_cache(self, memory_key_cache_path):
+        if os.path.exists(memory_key_cache_path):
+            self.logger.info(f"Loading memory_key_cache_path from {memory_key_cache_path}")
+            with open(memory_key_cache_path, "rb") as f:
+                self.memory_key_cache = pickle.load(f)[self.memory_key_encoder]
+        else:
+            self.memory_key_cache = None
+
+    
+    def encode_examples_for_caching(self, all_examples, batch_size=1):
         """
         Return key representation of the documents
         """
@@ -49,13 +68,50 @@ class KeyValueMemoryModule(object):
         #     last_hidden_states, _ = self.key_encoder(contents, attention_mask=attn_masks)
         # Obtain key representation of every text content by selecting the its [CLS] hidden representation
         # keys = last_hidden_states[:, 0, :]
+        all_vectors = {}
+        batches = list(more_itertools.chunked(all_examples, batch_size))
+        for examples in tqdm(batches, desc="Caching the examples"):
+            inputs = [d[0] for d in examples]
+            with torch.no_grad():
+                key_texts = self.get_key_content(inputs)    # only use the questions as the key text for encoding.
+                inputs = self.tokenizer.batch_encode_plus(key_texts, return_tensors="pt", pad_to_max_length=True)
+                input_ids = inputs["input_ids"].to(torch.device("cuda"))
+                attention_mask = inputs["attention_mask"].to(torch.device("cuda"))
+                # last_hidden_states, _ = self.key_encoder(**inputs) 
+                results = self.key_encoder(input_ids, attention_mask)
+                last_hidden_states = results[0]
+                key_vectors = last_hidden_states[:, 0, :]
+                key_vectors = key_vectors.cpu().numpy()
+            for key_text, key_vector in zip(key_texts, key_vectors):
+                all_vectors[key_text] = key_vector
+        return all_vectors
+
+
+    def encode_examples(self, examples):
+        """
+        Return key representation of the documents
+        """
+        
         inputs = [d[0] for d in examples]
-        with torch.no_grad():
-            key_texts = self.get_key_content(inputs)    # only use the questions as the key text for encoding.
-            inputs = self.tokenizer.batch_encode_plus(key_texts, return_tensors="pt", pad_to_max_length=True)
-            last_hidden_states, _ = self.key_encoder(**inputs) 
-            key_vectors = last_hidden_states[:, 0, :]
-        return key_vectors.cpu().numpy()
+        key_texts = self.get_key_content(inputs)    # only use the questions as the key text for encoding.
+        key_vectors = None 
+        if self.memory_key_cache:
+            # self.logger.info("Using the cache.")
+            key_vectors = []
+            for key_text in key_texts:
+                assert key_text in self.memory_key_cache, key_text
+                key_vectors.append(self.memory_key_cache[key_text])
+        else:            
+            with torch.no_grad():
+                inputs = self.tokenizer.batch_encode_plus(key_texts, return_tensors="pt", pad_to_max_length=True)
+                input_ids = inputs["input_ids"].to(torch.device("cuda"))
+                attention_mask = inputs["attention_mask"].to(torch.device("cuda"))
+                # last_hidden_states, _ = self.key_encoder(**inputs) 
+                results = self.key_encoder(input_ids, attention_mask)
+                last_hidden_states = results[0]
+                key_vectors = last_hidden_states[:, 0, :]
+                key_vectors = key_vectors.cpu().numpy()
+        return key_vectors
 
     def store_examples(self, keys, examples, timecode=0):
         """
@@ -71,7 +127,7 @@ class KeyValueMemoryModule(object):
             self.memory.update({key.tobytes(): tuple(values)})
 
 
-    def query_examples(self, keys, k=32, timecode=0):
+    def query_examples(self, keys, past_memory_keys, k=32):
         """
         Returns samples from buffer using K-nearest neighbour approach
         """
@@ -79,12 +135,7 @@ class KeyValueMemoryModule(object):
         # Iterate over all the input keys
         # to find neigbours for each of them
         
-        # Only allow retrieving from the past memory. (due to offline evaluation)
-        past_memory_keys = []
-        for key, values in self.memory.items():
-            if values[3]-1 <= timecode:
-                past_memory_keys.append(key)
-        past_memory_keys = np.frombuffer(np.asarray(past_memory_keys), dtype=np.float32).reshape(len(past_memory_keys), -1)       
+        
         k = min(k, len(past_memory_keys))
         for key in keys:
             # compute similarity scores based on Euclidean distance metric
@@ -94,7 +145,7 @@ class KeyValueMemoryModule(object):
             # converts experiences into batch 
             # retrieved_examples.append(neighbours)
             retrieved_examples += neighbours
-
+        # self.logger.info(f"Retrieved {len(retrieved_examples)} examples from memory; {len(retrieved_examples)/len(keys)} examples per key.")
         return retrieved_examples
 
     def random_sample(self, sample_size):
@@ -137,6 +188,7 @@ class MBPAPlusPlus(ContinualFinetuning):
             "memory_key_encoder", # 'bert-base-uncased' by default
             "memory_store_rate", # 0, 0.1, 1 etc.
             "memory_path", # to save/load the memory module from disk
+            "memory_key_cache_path",
             "num_adapt_epochs"
             ]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
@@ -148,6 +200,7 @@ class MBPAPlusPlus(ContinualFinetuning):
         self.memroy_module = KeyValueMemoryModule(self.logger)
         self.memroy_module.load_key_encoder(debugger_args.memory_key_encoder)
         self.memroy_module.load_memory_from_path(debugger_args.memory_path)
+        self.memroy_module.load_memory_key_cache(debugger_args.memory_key_cache_path)
         return
 
     def online_debug(self):
@@ -204,11 +257,21 @@ class MBPAPlusPlus(ContinualFinetuning):
         adapt_dataloaders = []
         num_batches = len(eval_dataloader.dataloader)
         example_batches = np.array_split(eval_dataloader.data, num_batches)
+        
+        # Only allow retrieving from the past memory. (due to offline evaluation)
+        past_memory_keys = []
+        for key, values in self.memroy_module.memory.items():
+            if values[3]-1 <= self.timecode:
+                past_memory_keys.append(key)
+        past_memory_keys = np.frombuffer(np.asarray(past_memory_keys), dtype=np.float32).reshape(len(past_memory_keys), -1)       
+    
         for example_batch in tqdm(example_batches, desc="Retrieving Data from Memory", disable=not verbose):
             # self.logger.info("Memory Retrieving ...")
             # local adaptation for self.base_model of retrieved examples from memory.
+            # self.logger.info("Encoding the examples to evaluate...")
             keys = self.memroy_module.encode_examples(example_batch)
-            retrieved_examples = self.memroy_module.query_examples(keys, k=self.debugger_args.replay_size, timecode=self.timecode)
+            # self.logger.info("Reading memory to get the KNN examples for local adaptation...")
+            retrieved_examples = self.memroy_module.query_examples(keys, past_memory_keys, k=self.debugger_args.replay_size)
             replay_data_loader, _ = self.get_dataloader(self.data_args, retrieved_examples, mode="train")
             adapt_dataloaders.append(replay_data_loader) 
             # self.logger.info("Memory Retrieving Done ...")
@@ -229,7 +292,7 @@ class MBPAPlusPlus(ContinualFinetuning):
             eval_dataloader = self.bug_eval_loaders[self.timecode]
         
         # prepare adapt_dataloaders
-        adapt_dataloaders = self.get_adapt_dataloaders(eval_dataloader) 
+        adapt_dataloaders = self.get_adapt_dataloaders(eval_dataloader, verbose=True) 
 
         predictions = self.base_model_infer(eval_dataloader, adapt_dataloaders, verbose)
         assert len(predictions) == len(eval_dataloader)
@@ -242,8 +305,7 @@ class MBPAPlusPlus(ContinualFinetuning):
     def local_adaptation(self, model, adapt_dataloader):
         pad_token_id = self.tokenizer.pad_token_id
         base_weights = list(model.parameters())
-        curr_weights = list(model.parameters())
-        train_losses = []
+        curr_weights = list(model.parameters()) 
         global_step = 0
         pad_token_id = self.tokenizer.pad_token_id
         super().debugger_setup(self.debugger_args)  # reset the optimizier and schduler
@@ -270,14 +332,11 @@ class MBPAPlusPlus(ContinualFinetuning):
                 # of their differences
                 for base_param, curr_param in zip(base_weights, curr_weights):
                     diff_loss += (curr_param - base_param).pow(2).sum()
-                loss = loss + 1e-3 * diff_loss
-
-                train_losses.append(loss.detach().cpu())
+                loss = loss + 1e-3 * diff_loss 
                 loss.backward()
 
                 if global_step % self.debugger_args.gradient_accumulation_steps == 0:
-                    torch.nn.utils.clip_grad_norm_(
-                        model.parameters(), self.debugger_args.max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), self.debugger_args.max_grad_norm)
                     self.optimizer.step()    # We have accumulated enough gradients
                     self.scheduler.step()
                     model.zero_grad()
@@ -295,7 +354,7 @@ class MBPAPlusPlus(ContinualFinetuning):
         if not quiet:
             logger.info("Starting inference ...")
         current_index = 0
-        for batch in tqdm(dev_data.dataloader, desc="Infernece", disable=not verbose):
+        for batch in tqdm(dev_data.dataloader, desc="Inference", disable=not verbose):
             ### Local Adaptation: Start ###
             _model = copy.deepcopy(model)
             adapt_dataloader = adapt_dataloaders[current_index]
@@ -323,6 +382,7 @@ class MBPAPlusPlus(ContinualFinetuning):
 
             ### Inference: End ###
             current_index += 1
+            del _model
 
 
         if not quiet:
@@ -338,3 +398,67 @@ class MBPAPlusPlus(ContinualFinetuning):
         if return_all:
             return predictions, result, loss
         return result
+
+
+ 
+if __name__ == '__main__':
+    import argparse, json, logging
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--memory_key_encoder', type=str, default="facebook/bart-base")
+    parser.add_argument('--memory_key_cache_path', type=str, default="bug_data/memory_key_cache.pkl")
+    parser.add_argument('--batch_size', type=int, default=32)
+
+    parser.add_argument("--bug_stream_json_path",
+                        default="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json")
+    parser.add_argument("--pass_pool_jsonl_path", 
+                        default="bug_data/mrqa_naturalquestions_dev.sampled_pass.jsonl")
+    parser.add_argument("--sampled_upstream_json_path",
+                        default="bug_data/mrqa_naturalquestions.sampled_upstream.jsonl")
+    
+    args = parser.parse_args()
+
+
+    log_filename = f'logs/memory_cache_building_{args.memory_key_encoder.replace("/", "_")}.log'
+
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+                        datefmt='%m/%d/%Y %H:%M:%S',
+                        level=logging.INFO,
+                        handlers=[logging.FileHandler(log_filename),
+                                  logging.StreamHandler()])
+    logger = logging.getLogger(__name__)
+    logger.info(args)
+
+
+    cl_trainer = ContinualFinetuning(logger)
+
+    # Load bugs
+    with open(args.bug_stream_json_path) as f:
+        bug_stream = json.load(f)
+        all_examples = []
+        for bug_batch in tqdm(bug_stream, desc="Creating the bug data loaders."):
+            formatted_bug_batch = cl_trainer.data_formatter(bug_batch)
+            all_examples += formatted_bug_batch
+    
+    # Load pass cases
+    with open(args.pass_pool_jsonl_path) as f:
+        pass_examples = [json.loads(line) for line in set(f.read().splitlines())]
+        all_examples += cl_trainer.data_formatter(pass_examples)
+    memory_module = KeyValueMemoryModule(logger)
+    
+    logger.info(f"All examples: {len(all_examples)}")
+    memory_module.load_key_encoder(memory_key_encoder=args.memory_key_encoder)
+    all_key_vectors = memory_module.encode_examples_for_caching(all_examples, batch_size=args.batch_size)
+    
+    logger.info(f"all_key_vectors.shape: {len(all_key_vectors)} x {len(all_key_vectors[list(all_key_vectors.keys())[0]])}")
+
+    if os.path.exists(args.memory_key_cache_path):
+        with open(args.memory_key_cache_path, "rb") as f:
+            memory_key_cache = pickle.load(f)
+    else:
+        memory_key_cache = {}
+    memory_key_cache[args.memory_key_encoder] = all_key_vectors
+
+    with open(args.memory_key_cache_path, "wb") as f:
+        pickle.dump(memory_key_cache, f)
+        logger.info(f"Saved the cache to {f.name}")
