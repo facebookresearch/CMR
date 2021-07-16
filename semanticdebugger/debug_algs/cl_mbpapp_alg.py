@@ -279,7 +279,7 @@ class MBPAPlusPlus(ContinualFinetuning):
         return adapt_dataloaders
 
 
-    def base_model_infer(self, eval_dataloader, adapt_dataloaders, verbose=False):
+    def base_model_infer_with_adaptation(self, eval_dataloader, adapt_dataloaders, verbose=False):
         self.base_model.eval()
         model = self.base_model if self.n_gpu == 1 else self.base_model.module
         predictions = self.inference_with_adaptation(model, eval_dataloader, adapt_dataloaders, save_predictions=False, verbose=verbose, logger=self.logger, return_all=False, predictions_only=True, args=Namespace(quiet=True))
@@ -288,13 +288,18 @@ class MBPAPlusPlus(ContinualFinetuning):
 
     def evaluate(self, eval_dataloader=None, verbose=False):
         """Evaluates the performance"""
+
+        if self.debugger_args.num_adapt_epochs <= 0:
+            # This is for the equvilent version of the replay as the baseline (MbPA++ w/o local adaptation when inference.)
+            return super().evaluate(eval_dataloader, verbose)
+
         if not eval_dataloader:
             eval_dataloader = self.bug_eval_loaders[self.timecode]
         
         # prepare adapt_dataloaders
         adapt_dataloaders = self.get_adapt_dataloaders(eval_dataloader, verbose=True) 
 
-        predictions = self.base_model_infer(eval_dataloader, adapt_dataloaders, verbose)
+        predictions = self.base_model_infer_with_adaptation(eval_dataloader, adapt_dataloaders, verbose)
         assert len(predictions) == len(eval_dataloader)
         predictions = [p.strip() for p in predictions]
         results, return_all = evaluate_func(
