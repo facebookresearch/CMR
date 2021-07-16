@@ -1,4 +1,4 @@
-from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
+from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from tqdm import tqdm
 import random
 import numpy as np
@@ -309,7 +309,7 @@ class MBPAPlusPlus(ContinualFinetuning):
 
     def local_adaptation(self, model, adapt_dataloader):
         pad_token_id = self.tokenizer.pad_token_id
-        base_weights = list(model.parameters())
+        base_weights = list(self.base_model.parameters())
         curr_weights = list(model.parameters()) 
         global_step = 0
         pad_token_id = self.tokenizer.pad_token_id

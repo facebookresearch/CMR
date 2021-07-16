@@ -1,4 +1,4 @@
-from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
+from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 
 class OfflineDebugger(ContinualFinetuning):
     def __init__(self, logger):

@@ -11,7 +11,7 @@ from transformers import (AdamW, BartConfig, BartTokenizer,
                           get_linear_schedule_with_warmup)
 
 from semanticdebugger.debug_algs.commons import OnlineDebuggingMethod
-from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
+from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from tqdm import tqdm
 from torch import nn
 import torch

@@ -1,7 +1,7 @@
 from argparse import Namespace
 import argparse
 from semanticdebugger.models.utils import set_seeds
-from semanticdebugger.debug_algs.continual_finetune_alg import ContinualFinetuning
+from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
 from semanticdebugger.debug_algs.cl_simple_replay_alg import SimpleReplay
