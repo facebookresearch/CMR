@@ -6,6 +6,7 @@ from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
 from semanticdebugger.debug_algs.cl_simple_replay_alg import SimpleReplay
 from semanticdebugger.debug_algs.cl_mbpapp_alg import MBPAPlusPlus
+from semanticdebugger.debug_algs.cl_hypernet_alg import HyperCL
 import logging
 import os
 import json
@@ -48,6 +49,8 @@ def run(args):
         debugging_alg = SimpleReplay(logger=logger)
     elif args.cl_method_name == "mbpa++":
         debugging_alg = MBPAPlusPlus(logger=logger)
+    elif args.cl_method_name == "hyper_cl":
+        debugging_alg = HyperCL(logger=logger)
     
     
     data_args = Namespace(
@@ -69,7 +72,7 @@ def run(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug", "simple_replay", "mbpa++"]:
+    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug", "simple_replay", "mbpa++", "hyper_cl"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -97,7 +100,11 @@ def run(args):
                 setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
                 setattr(debugger_args, "memory_store_rate", args.memory_store_rate)                
                 setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
-        
+        elif args.cl_method_name in ["hyper_cl"]:
+            setattr(debugger_args, "adapter_dim", args.adapter_dim)
+            setattr(debugger_args, "example_encoder_name", args.example_encoder_name)
+            setattr(debugger_args, "task_emb_dim", args.task_emb_dim)
+
 
     if args.num_threads_eval <= 0:
         # The Online Debugging Mode + Computing offline debugging bounds.
@@ -136,7 +143,9 @@ def run(args):
             logger.info(f"Starting the offline evaluation of {timecode}")
             timecode = int(timecode)
             base_model_args.base_model_path = os.path.join(args.overtime_ckpt_dir, f"model_ckpt_{timecode:03d}.pt")
-            debugging_alg.load_base_model(base_model_args)
+            debugging_alg.debugger_args = debugger_args
+            debugging_alg.load_base_model(base_model_args, mode="offline_eval")
+
             if args.cl_method_name in ["mbpa++"]:
                 if args.num_adapt_epochs > 0:
                     debugging_alg.debugger_setup(debugger_args) # because there are local adaptation.
@@ -222,6 +231,13 @@ def get_cli_parser():
     parser.add_argument('--memory_store_rate', type=float, default=1.0)   # 1= always store all examples to the memory. 
     parser.add_argument('--num_adapt_epochs', type=int, default=1) # 
     
+
+    ### The HPs for HyperCL
+    parser.add_argument('--adapter_dim', type=int, default=32) # 1 means always replay for every steps, set to 10 means sample after 10 model updates.
+    parser.add_argument('--example_encoder_name', type=str, default="roberta-base")
+    parser.add_argument('--task_emb_dim', type=int, default=768)
+
+
     # To save all ckpts.
     
     parser.add_argument("--save_all_ckpts", type=int, default=0,

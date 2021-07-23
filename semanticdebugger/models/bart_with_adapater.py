@@ -94,9 +94,9 @@ class BartWithAdapterConfig(BartConfig):
 
         # Adapter
         self.adapter_dim = adapter_dim
-        self.generator_hdim = int(self.d_model * 0.25)
+        self.generator_hdim = int(self.d_model * 0.25)  # TODO: make it a tunable hp.
         self.adapt_layer_norm = adapt_layer_norm
-        self.unfreeze_hyper_encoder = unfreeze_hyper_encoder
+        self.unfreeze_hyper_encoder = unfreeze_hyper_encoder    # TODO: should be 
 
 def Linear(in_features, out_features, bias=True):
     m = nn.Linear(in_features, out_features, bias)
@@ -329,9 +329,3 @@ class MyBartWithAdapter(BartForConditionalGenerationWithAdapter):
             encoder.self_attn_layer_norm = copy.deepcopy(encoder.self_attn_layer_norm_bc)
         for decoder in self.decoders():
             decoder.self_attn_layer_norm = copy.deepcopy(decoder.self_attn_layer_norm_bc)
-
-def _make_linear_from_emb(emb):
-    vocab_size, emb_size = emb.weight.shape
-    lin_layer = nn.Linear(vocab_size, emb_size, bias=False)
-    lin_layer.weight.data = emb.weight.data
-    return lin_layer

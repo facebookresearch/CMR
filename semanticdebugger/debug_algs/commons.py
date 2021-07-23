@@ -227,7 +227,7 @@ class OnlineDebuggingMethod():
         raise NotImplementedError(
             "Please Implement the `get_dataloader` method in your class.")
 
-    def load_base_model(self, base_model_args):
+    def load_base_model(self, base_model_args, mode="online_debug"):
         raise NotImplementedError(
             "Please Implement the `load_base_model` method in your class.")
 

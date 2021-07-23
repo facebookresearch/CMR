@@ -32,7 +32,9 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
         return
 
-    def load_base_model(self, base_model_args):
+    def load_base_model(self, base_model_args, mode="online_debug"):
+        self.base_model_args = base_model_args
+        
         model_type, base_model_path = base_model_args.model_type, base_model_args.base_model_path
         self.logger.info(
             f"Loading checkpoint from {base_model_path} for {model_type} .....")

@@ -15,7 +15,7 @@ import more_itertools
 
 class KeyValueMemoryModule(object): 
     
-    def __init__(self, logger, buffer=None):
+    def __init__(self, logger):
         self.logger = logger        
         self.memory = {}
         self.keys_over_time = {}
@@ -33,11 +33,16 @@ class KeyValueMemoryModule(object):
         elif "distilbert" in memory_key_encoder.lower():
             self.tokenizer = transformers.DistilBertTokenizer.from_pretrained(memory_key_encoder)
             self.key_encoder = transformers.DistilBertModel.from_pretrained(memory_key_encoder)
+        elif "roberta" in memory_key_encoder.lower():
+            self.key_encoder = transformers.RobertaModel.from_pretrained(memory_key_encoder)
+            self.tokenizer = transformers.RobertaTokenizer.from_pretrained(memory_key_encoder)
         elif "bert" in memory_key_encoder.lower():
             self.key_encoder = transformers.BertModel.from_pretrained(memory_key_encoder)
+            self.tokenizer = transformers.BertTokenizer.from_pretrained(memory_key_encoder)
 
         self.key_encoder.cuda()
         self.logger.info(f"Finished.")
+        return self.key_encoder, self.tokenizer
         
 
     def get_key_content(self, inputs):
@@ -58,17 +63,19 @@ class KeyValueMemoryModule(object):
             self.memory_key_cache = None
 
     
-    def encode_examples_for_caching(self, all_examples, batch_size=1):
+    def encode_examples_for_caching(self, all_examples, batch_size=1, return_tensors=False):
         """
         Return key representation of the documents
         """
         # Freeze the weights of the key network to prevent key
         # representations from drifting as data distribution changes
         # with torch.no_grad():
-        #     last_hidden_states, _ = self.key_encoder(contents, attention_mask=attn_masks)
+        #     last_hidden_states, _ 
+        # = self.key_encoder(contents, attention_mask=attn_masks)
         # Obtain key representation of every text content by selecting the its [CLS] hidden representation
         # keys = last_hidden_states[:, 0, :]
         all_vectors = {}
+        all_tensors = []
         batches = list(more_itertools.chunked(all_examples, batch_size))
         for examples in tqdm(batches, desc="Caching the examples"):
             inputs = [d[0] for d in examples]
@@ -81,9 +88,12 @@ class KeyValueMemoryModule(object):
                 results = self.key_encoder(input_ids, attention_mask)
                 last_hidden_states = results[0]
                 key_vectors = last_hidden_states[:, 0, :]
-                key_vectors = key_vectors.cpu().numpy()
-            for key_text, key_vector in zip(key_texts, key_vectors):
+                key_vectors_npy = key_vectors.cpu().numpy()
+                all_tensors += list(key_vectors)
+            for key_text, key_vector in zip(key_texts, key_vectors_npy):
                 all_vectors[key_text] = key_vector
+        if return_tensors:
+            return all_tensors
         return all_vectors
 
 
