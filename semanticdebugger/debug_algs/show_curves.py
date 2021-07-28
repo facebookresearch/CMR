@@ -41,7 +41,7 @@ def get_forgetting_data(path, add_upperbound=False):
     return forgetting_data
 
 
-def get_overall_error_fixing_rate_overtime(filepath, add_upper_bound=False):
+def get_overall_data_overtime(filepath, add_upper_bound=False):
     data = json.load(open(filepath))
     overall_alltime_error_fixing_rate = []
     # lr = filepath.split("_")[-5]

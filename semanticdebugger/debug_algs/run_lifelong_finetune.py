@@ -1,5 +1,7 @@
 from argparse import Namespace
 import argparse
+
+from torch import detach
 from semanticdebugger.models.utils import set_seeds
 from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
@@ -52,6 +54,7 @@ def run(args):
     elif args.cl_method_name == "hyper_cl":
         debugging_alg = HyperCL(logger=logger)
     
+    debugging_alg.stream_mode = args.stream_mode
     
     data_args = Namespace(
         bug_stream_json_path=args.bug_stream_json_path,
@@ -66,6 +69,8 @@ def run(args):
         train_batch_size=args.train_batch_size,
         predict_batch_size=args.predict_batch_size,
         num_beams=args.num_beams,
+        max_timecode=args.max_timecode,
+        accumulate_eval_freq=5,
     )
 
     base_model_args = Namespace(
@@ -108,7 +113,12 @@ def run(args):
 
     if args.num_threads_eval <= 0:
         # The Online Debugging Mode + Computing offline debugging bounds.
-        debugging_alg.load_data(data_args)
+        if args.stream_mode == "dynamic":
+            setattr(data_args, "data_stream_json_path", args.data_stream_json_path)
+            debugging_alg.load_data_dynamic(data_args)
+        else:
+            debugging_alg.load_data(data_args)
+
         debugging_alg.load_base_model(base_model_args)
         debugging_alg.debugger_setup(debugger_args)
         
@@ -116,7 +126,10 @@ def run(args):
             debugging_alg.offline_debug()
             offline_bound_results = debugging_alg.single_timecode_eval(timecode=-1)
         else:
-            debugging_alg.online_debug()
+            if args.stream_mode == "dynamic":
+                debugging_alg.online_debug_dynamic()
+            else:
+                debugging_alg.online_debug()
 
         output_info = {}
         output_info["model_update_steps"] = debugging_alg.model_update_steps
@@ -124,6 +137,9 @@ def run(args):
         output_info["base_model_args"] = str(debugging_alg.base_model_args)
         output_info["debugger_args"] = str(debugging_alg.debugger_args)
         output_info["data_args"] = str(debugging_alg.data_args)
+        if args.stream_mode == "dynamic":
+            output_info["online_eval_results"] = debugging_alg.online_eval_results
+ 
         
         if args.cl_method_name in ["offline_debug"]:
             output_info["offline_bound_results"] = offline_bound_results
@@ -172,6 +188,13 @@ def get_cli_parser():
         default="out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt", type=str)
 
     # data_args
+
+    parser.add_argument("--stream_mode",
+                        default="dynamic")
+
+    parser.add_argument("--data_stream_json_path",
+                        default="bug_data/mrqa_naturalquestions_dev.data_stream.test.json")
+
 
     parser.add_argument("--bug_stream_json_path",
                         default="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json")
@@ -260,7 +283,7 @@ def get_cli_parser():
                         help="0 means nothing; >0 means the number of gpu threads")
     parser.add_argument("--current_thread_id", type=int,
                         help="0 to num_threads_eval-1")
-    parser.add_argument("--max_timecode", type=int,
+    parser.add_argument("--max_timecode", default=-1, type=int,
                         help="the maximum timecode to eval")
     parser.add_argument("--path_to_thread_result", type=str,
                         help="the path to save the thread results")
