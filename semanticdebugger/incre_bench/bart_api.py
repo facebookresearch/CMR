@@ -13,7 +13,7 @@ from tqdm import tqdm
 from transformers import BartConfig, BartTokenizer
 
 
-def inference_api(config_file, test_file, logger):
+def inference_api(config_file, test_file, logger, data_dist, num_shards, local_id):
 
     with open(config_file) as f:
         config_args = eval(f.read())  # an Namespace object in python language
@@ -22,9 +22,9 @@ def inference_api(config_file, test_file, logger):
     # load config from json
 
     test_data = GeneralDataset(
-        logger, args, test_file, data_type="dev", is_training=False, task_name=args.dataset)
+        logger, args, test_file, data_type="dev", is_training=False, task_name=args.dataset, data_dist=data_dist, num_shards=num_shards, local_id=local_id)
     tokenizer = BartTokenizer.from_pretrained("bart-large")
-    test_data.load_dataset(tokenizer)
+    test_data.load_dataset(tokenizer, skip_cache=data_dist)
     test_data.load_dataloader()
 
     checkpoint = os.path.join(args.predict_checkpoint)
@@ -41,3 +41,4 @@ def inference_api(config_file, test_file, logger):
         model, test_data, save_predictions=False, verbose=True, args=args, logger=logger, return_all=False, predictions_only=True)
     return predictions
     # logger.info("%s on %s data: %.s" % (test_data.metric, test_data.data_type, str(result)))
+

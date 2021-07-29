@@ -8,7 +8,8 @@ class MyQADataset(Dataset):
                  input_ids, attention_mask,
                  decoder_input_ids, decoder_attention_mask,
                  in_metadata=None, out_metadata=None,
-                 is_training=False, uuids=None):
+                 is_training=False, uuids=None): 
+
         self.uuids = uuids
         self.input_ids = torch.LongTensor(input_ids)
         self.attention_mask = torch.LongTensor(attention_mask)

@@ -2,11 +2,12 @@ import os
 import json
 from .base_datamanager import MyQADataset, MyDataLoader
 from .eval_metrics import METRICS, evaluate_func
-
+import torch
+import numpy as np 
 
 class GeneralDataset(object):
 
-    def __init__(self, logger, args, data_path, data_type, is_training, task_name, given_data=None):
+    def __init__(self, logger, args, data_path, data_type, is_training, task_name, given_data=None, data_dist=False, num_shards=-1, local_id=-1):
         # should give the tasks used in this split in the var "tasks"
         self.data_path = data_path
         self.data_type = data_type
@@ -40,6 +41,24 @@ class GeneralDataset(object):
 
         self.gen_early_stop = False
 
+        if data_dist and local_id >= 0 and num_shards > 0:
+            # num_shards = torch.distributed.get_world_size() # the number of gpus
+            # local_shard_id = torch.distributed.get_rank()   # the current process id
+            self.logger.info(f'dataset_size={len(self.data)}, num_shards={num_shards}, local_shard_id={local_id}')
+            self.data = np.array_split(self.data, num_shards)[local_id]
+
+            # # make it evenly divisible
+            # indices = indices[:shard_size * num_shards]
+            # assert len(indices) == shard_size * num_shards
+
+            # # subsample
+            # indices = indices[local_shard_id:len(indices):num_shards]
+            # assert len(indices) == shard_size
+
+            # indices = set(indices)
+
+
+
     def __len__(self):
         return len(self.data)
 
@@ -60,6 +79,17 @@ class GeneralDataset(object):
         self.tokenizer = tokenizer
         postfix = "prepro" + tokenizer.__class__.__name__.replace("zer", "zed")
 
+
+        inputs = []
+        outputs = []
+        uuids = []
+        for dp in self.data:
+            # Add the task name to the input
+            # inputs.append(" [{}] {}".format(self.task_name, dp[0]))
+            inputs.append(dp[0])
+            outputs.append(dp[1])  # is a list
+            uuids.append(dp[2])
+
         if not skip_cache:
             preprocessed_path = os.path.join(
                 "/".join(self.data_path.split("/")[:-1]),
@@ -77,16 +107,6 @@ class GeneralDataset(object):
             if not quiet:
                 self.logger.info(
                     "Start tokenizing ... {} instances".format(len(self.data)))
-
-            inputs = []
-            outputs = []
-            uuids = []
-            for dp in self.data:
-                # Add the task name to the input
-                # inputs.append(" [{}] {}".format(self.task_name, dp[0]))
-                inputs.append(dp[0])
-                outputs.append(dp[1])  # is a list
-                uuids.append(dp[2])
 
             if not quiet:
                 self.logger.info("Printing 3 examples")
