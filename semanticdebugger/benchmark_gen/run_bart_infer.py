@@ -10,7 +10,7 @@ import sys
 
 import numpy as np
 import torch
-from semanticdebugger.incre_bench import bart_api
+from semanticdebugger.benchmark_gen import bart_api
 from semanticdebugger.task_manager.eval_metrics import (evaluate_func,
                                                         normalize_answer)
 

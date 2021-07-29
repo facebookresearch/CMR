@@ -58,17 +58,14 @@ def main():
         "--data_file", default="data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl", required=False)
     parser.add_argument(
         "--prediction_file", default="bug_data/mrqa_naturalquestions_train.predictions.jsonl", required=False)  # Input
-    # parser.add_argument(
-    #     "--bug_pool_file", default="bug_data/mrqa_naturalquestions_dev.bugs.jsonl", required=False)  # Input
-    # parser.add_argument(
-    #     "--pass_pool_file", default="bug_data/mrqa_naturalquestions_dev.pass.jsonl", required=False)  # Input
     parser.add_argument(
         "--data_strema_file", default="bug_data/mrqa_naturalquestions_dev.data_stream.train.json", required=False)   # Output
-    # parser.add_argument(
-    #     "--sampled_pass_pool_file", default="bug_data/mrqa_naturalquestions_dev.sampled_pass.jsonl", required=False)   # Output
+    parser.add_argument(
+        "--hidden_example_file", default="bug_data/mrqa_naturalquestions.hidden.jsonl", required=False)   # Output
     parser.add_argument("--batch_size", type=int, default=32, required=False)
     parser.add_argument("--bug_sample_size", type=int, default=1000, required=False)
     parser.add_argument("--pass_sample_size", type=int, default=2200, required=False)
+    parser.add_argument("--hidden_sample_size", type=int, default=-1, required=False)
     parser.add_argument("--num_batches", type=int, default=100, required=False)
     parser.add_argument("--seed", type=int, default=42, required=False)
     parser.add_argument("--metric", default="EM|QA-F1", required=False)
@@ -114,6 +111,11 @@ def main():
     random.shuffle(bug_pool)
     sampled_bug_pool = bug_pool[:args.bug_sample_size]
     sampled_pass_pool = pass_pool[:args.pass_sample_size]
+    if args.hidden_sample_size > 0 and args.hidden_sample_size + args.pass_sample_size <= len(pass_pool):
+        hidden_examples = pass_pool[-args.hidden_sample_size:]
+        with open(args.hidden_example_file, "w") as f:
+            for item in hidden_examples:
+                f.write(json.dumps(item) + "\n")
 
     print(len(sampled_bug_pool), len(sampled_pass_pool))
  
@@ -125,9 +127,7 @@ def main():
         json.dump(data_stream, f)
 
  
-    # with open(args.sampled_pass_pool_file, "w") as f:
-    #     for item in sample_examples:
-    #         f.write(json.dumps(item) + "\n")
+   
        
         
 if __name__ == '__main__':
@@ -136,17 +136,19 @@ if __name__ == '__main__':
 
 
 """
-python semanticdebugger/incre_bench/sample_stream_data.py \
+python semanticdebugger/benchmark_gen/sample_stream_data.py \
     --data_file data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl \
     --prediction_file bug_data/mrqa_naturalquestions_train.predictions.jsonl \
     --data_strema_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.train.json \
+    --hidden_example_file exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --batch_size 32 --num_batches 500 \
-    --bug_sample_size 4688 --pass_sample_size 11312    
+    --bug_sample_size 4688 --pass_sample_size 11312 \
+    --hidden_sample_size 500
 
 500*32 - 4688 = 11312
 
 
-python semanticdebugger/incre_bench/sample_stream_data.py \
+python semanticdebugger/benchmark_gen/sample_stream_data.py \
     --data_file data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl \
     --prediction_file bug_data/mrqa_naturalquestions_dev.predictions.jsonl \
     --data_strema_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.dev.json \

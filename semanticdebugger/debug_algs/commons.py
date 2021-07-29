@@ -255,8 +255,6 @@ class OnlineDebuggingMethod():
 
             
 
-            
-
             self.logger.info("-"*50)            
             # Start the logging.
             
