@@ -151,7 +151,7 @@ python semanticdebugger/benchmark_gen/sample_stream_data.py \
 python semanticdebugger/benchmark_gen/sample_stream_data.py \
     --data_file data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl \
     --prediction_file bug_data/mrqa_naturalquestions_dev.predictions.jsonl \
-    --data_strema_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.dev.json \
+    --data_strema_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.test.json \
     --batch_size 32 --num_batches 100 \
     --bug_sample_size 1091 --pass_sample_size 2109
 

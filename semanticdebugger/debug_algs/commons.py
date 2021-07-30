@@ -34,8 +34,8 @@ class OnlineDebuggingMethod():
         self.bug_train_loaders = []
         self.bug_eval_loaders = []
         self.bug_all_train_loader = None
-        self.bug_all_eval_loader = None        
-        
+        self.bug_all_eval_loader = None
+
         self.sampled_passes = []
         self.forget_eval_loader = None
 
@@ -48,7 +48,7 @@ class OnlineDebuggingMethod():
         self.timecode = None
         self.metric = "EM|QA-F1"
 
-        # for dynamic stream mode 
+        # for dynamic stream mode
         self.data_eval_loaders = []
         self.online_eval_results = []
 
@@ -57,7 +57,7 @@ class OnlineDebuggingMethod():
         else:
             self.n_gpu = 0
 
-        self.model_update_steps = 0 # number of updates over the base model.
+        self.model_update_steps = 0  # number of updates over the base model.
         return
 
     def _check_data_args(self, additional_args=[]):
@@ -68,7 +68,7 @@ class OnlineDebuggingMethod():
                          "append_another_bos",
                          "max_input_length",
                          "max_output_length",
-                         "task_name", 
+                         "task_name",
                          "num_beams",
                          "max_timecode"] + additional_args
         assert all([hasattr(self.data_args, att) for att in required_atts])
@@ -112,18 +112,19 @@ class OnlineDebuggingMethod():
             # Create loaders for the sampled pass examples
             with open(data_args.sampled_upstream_json_path) as f:
                 sampled_upstream_examples = [json.loads(line)
-                                          for line in set(f.read().splitlines())]
-            self.sampled_upstream_examples = self.upstream_data_formatter(sampled_upstream_examples)
+                                             for line in set(f.read().splitlines())]
+            self.sampled_upstream_examples = self.upstream_data_formatter(
+                sampled_upstream_examples)
             # self.sampled_upstream_trainloader, self.sampled_upstream_evalloader = self.get_dataloader(
             #     data_args, sampled_upstream_examples, mode="eval")
 
         return
 
-    
     def load_data_dynamic(self, data_args):
         """"For loading the data stream for dynamic building the errors."""
         self.data_args = data_args
-        self._check_data_args(additional_args=["data_stream_json_path", "accumulate_eval_freq"])
+        self._check_data_args(
+            additional_args=["data_stream_json_path", "accumulate_eval_freq"])
         # Load bug stream
         with open(data_args.data_stream_json_path) as f:
             data_stream = json.load(f)
@@ -141,24 +142,34 @@ class OnlineDebuggingMethod():
                 break
             formatted_data_batch = self.data_formatter(data_batch)
             all_formatted_data += formatted_data_batch
-            _, eval_data_dataloader = self.get_dataloader(data_args, formatted_data_batch, mode="eval")
+            _, eval_data_dataloader = self.get_dataloader(
+                data_args, formatted_data_batch, mode="eval")
             self.data_eval_loaders.append(eval_data_dataloader)
-            #  
-            doing_nothing_EM = float(np.mean([item["score"]["EM"] for item in data_batch]))
+            #
+            doing_nothing_EM = float(
+                np.mean([item["score"]["EM"] for item in data_batch]))
             instant_doing_nothing_EM.append(doing_nothing_EM)
-            accumulate_doing_nothing_EM.append(float(np.mean(instant_doing_nothing_EM))) 
+            accumulate_doing_nothing_EM.append(
+                float(np.mean(instant_doing_nothing_EM)))
             for item in data_batch:
                 if item["init_status"] == "pass":
                     self.all_initial_pass_ids.add(item["id"])
                 else:
                     self.all_initial_error_ids.add(item["id"])
-        
+
         self.instant_doing_nothing_EM = instant_doing_nothing_EM
         self.accumulate_doing_nothing_EM = accumulate_doing_nothing_EM
-
-        
-
         self.all_formatted_data = all_formatted_data
+
+        if data_args.pass_pool_jsonl_path:
+            # Create loaders for the sampled pass examples
+            with open(data_args.pass_pool_jsonl_path) as f:
+                pass_examples = [json.loads(line)
+                                 for line in set(f.read().splitlines())]
+            self.sampled_passes = pass_examples
+            pass_examples = self.data_formatter(pass_examples)
+            _, self.forget_eval_loader = self.get_dataloader(
+                data_args, pass_examples, mode="eval")
 
 
     def get_accumulative_results(self):
@@ -176,8 +187,8 @@ class OnlineDebuggingMethod():
                     forgotten_ids.append(_id)
                 total_len += 1
         return float(np.mean(EMs)), forgotten_ids, fixed_ids, total_len
-        
-    # new 
+
+    # The new evaluation pipeline.
     def online_debug_dynamic(self):
         self.logger.info("Start Online Debugging with Dynamic Error Mode")
         self.logger.info(f"Number of Batches of Data: {self.num_data_batches}")
@@ -187,52 +198,59 @@ class OnlineDebuggingMethod():
         if self.debugger_args.save_all_ckpts:
             # save the initial model as the 0-th model.
             self._save_base_model()
-        
-        for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):
-            result_dict = {"timecode": self.timecode}
+
+        self.overall_errors = []
+        self.seen_stream_data = []
+        for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):            
 
             ############### Get the errors dynamically. ###############
-            self.logger.info(f"Evaluating to get errors .... Timecode: {self.timecode}")
+            self.logger.info(
+                f"Evaluating to get errors .... Timecode: {self.timecode}")
             predictions, results, results_all = self.evaluate(data_eval_loader)
-            
-            self.logger.info(f"Before Error Fixing: {results['EM']}")
-            self.logger.info(f"Doing-Nothing Instant EM: {self.instant_doing_nothing_EM[self.timecode]}")
 
-            if (self.timecode + 1) % self.data_args.accumulate_eval_freq == 0 or self.timecode + 1 == len(self.data_eval_loaders):
+            self.logger.info(f"Before Error Fixing: {results['EM']}")
+            self.logger.info(
+                f"Doing-Nothing Instant EM: {self.instant_doing_nothing_EM[self.timecode]}")
+
+            ### Check the accumulative results. ###
+            if (self.data_args.accumulate_eval_freq > 0 and (self.timecode + 1) % self.data_args.accumulate_eval_freq == 0):
                 accumu_EM, forgotten_ids, fixed_ids, total_len = self.get_accumulative_results()
                 result_dict["accumulative_EM"] = accumu_EM
                 result_dict["accumulative_forgotten_ids"] = forgotten_ids
                 result_dict["accumulative_fixed_ids"] = fixed_ids
                 result_dict["accumulative_forgotten_rate"] = len(forgotten_ids) / total_len
                 result_dict["accumulative_fixed_rate"] = len(fixed_ids) / total_len
-                
-                self.logger.info(" ")
-                self.logger.info(f"Doing-Nothing Accumulative EM: {self.accumulate_doing_nothing_EM[self.timecode]}")
-                self.logger.info(f"My Accumulative EM: {accumu_EM}")
-                self.logger.info(f"accumulative_forgotten_rate: {result_dict['accumulative_forgotten_rate']}")
-                self.logger.info(f"accumulative_fixed_rate: {result_dict['accumulative_fixed_rate']}")
 
-            # pack the error examples
+                self.logger.info(" ")
+                self.logger.info(
+                    f"Doing-Nothing Accumulative EM: {self.accumulate_doing_nothing_EM[self.timecode]}")
+                self.logger.info(f"My Accumulative EM: {accumu_EM}")
+                self.logger.info(
+                    f"accumulative_forgotten_rate: {result_dict['accumulative_forgotten_rate']}")
+                self.logger.info(
+                    f"accumulative_fixed_rate: {result_dict['accumulative_fixed_rate']}")
+
+            ### Pack the error examples for training. ###
             errors = []
             error_ids = []
             for (_input, _truth, _id), prediction, em in zip(data_eval_loader.data, predictions, results_all["EM"]):
                 # self.logger.info(f"{example}")
                 # self.logger.info(f"{prediction}")
                 # self.logger.info(f"{em}")
-                if em == 0: # TODO: this is the condition to judge if it is a bug.
+                if em == 0:  # TODO: this is the condition to judge if it is a bug.
                     bug = {}
                     bug["id"] = _id
                     bug["input"] = _input
                     bug["truth"] = _truth
-                    bug["mistake"] = prediction 
+                    bug["mistake"] = prediction
                     errors.append(bug)
                     error_ids.append(_id)
+                    self.overall_errors.append(bug)
             formatted_bug_batch = self.data_formatter(errors)
-            bug_train_loader, _ = self.get_dataloader(self.data_args, formatted_bug_batch, mode="train")
+            bug_train_loader, _ = self.get_dataloader(
+                self.data_args, formatted_bug_batch, mode="train")
 
             self.logger.info(f"Found {len(errors)} errors.")
-
-            
 
             ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
@@ -240,45 +258,98 @@ class OnlineDebuggingMethod():
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
             ############### CORE ###############
-            
-            
-            self.logger.info(f"Evaluating again to analyze the performance .... Timecode: {self.timecode}")
-            after_predictions, after_results, after_results_all = self.evaluate(data_eval_loader)
+
+            self.logger.info(
+                f"Evaluating again to analyze the performance .... Timecode: {self.timecode}")
+            after_predictions, after_results, after_results_all = self.evaluate(
+                data_eval_loader)
             self.logger.info(f"After Error Fixing: {after_results['EM']}")
-            
 
-            forgotten_ids, retained_ids, fixed_ids, unfixed_ids = self.eval_forget_and_fix(data_eval_loader.data, results_all, after_results_all)
-            instant_fixing_rate = len(fixed_ids)/(len(fixed_ids) + len(unfixed_ids))
-            instant_retention_rate = len(retained_ids)/(len(retained_ids) + len(forgotten_ids))
+            forgotten_ids, retained_ids, fixed_ids, unfixed_ids = self.eval_forget_and_fix(
+                data_eval_loader.data, results_all, after_results_all)
+            instant_fixing_rate = len(fixed_ids) / \
+                (len(fixed_ids) + len(unfixed_ids))
+            instant_retention_rate = len(
+                retained_ids)/(len(retained_ids) + len(forgotten_ids))
             self.logger.info(f"Instant Fixing Rate: {instant_fixing_rate}")
-            self.logger.info(f"Instant Retention Rate: {instant_retention_rate}")
+            self.logger.info(
+                f"Instant Retention Rate: {instant_retention_rate}")
 
-            
-
-            self.logger.info("-"*50)            
+            self.logger.info("-"*50)
             # Start the logging.
             
-            result_dict["before_eval"] = _pack_as_dict(predictions, results, results_all)
-            result_dict["after_eval"] = _pack_as_dict(after_predictions, after_results, after_results_all)
-            result_dict["forgotten_ids"] = forgotten_ids 
-            result_dict["retained_ids"] = retained_ids 
-            result_dict["fixed_ids"] = fixed_ids 
-            result_dict["unfixed_ids"] = unfixed_ids            
+            
+            self.timecode += 1
+
+            result_dict = {"timecode": self.timecode}   # start with 1
+            result_dict["before_eval"] = _pack_as_dict(
+                predictions, results, results_all)
+            result_dict["after_eval"] = _pack_as_dict(
+                after_predictions, after_results, after_results_all)
+            result_dict["forgotten_ids"] = forgotten_ids
+            result_dict["retained_ids"] = retained_ids
+            result_dict["fixed_ids"] = fixed_ids
+            result_dict["unfixed_ids"] = unfixed_ids
             result_dict["error_ids"] = error_ids
             result_dict["instant_fixing_rate"] = instant_fixing_rate
             result_dict["instant_retention_rate"] = instant_retention_rate
-            result_dict["doing-nothing_instant_EM"] = self.instant_doing_nothing_EM[self.timecode]
-            result_dict["doing-nothing_accmulative_EM"] = self.accumulate_doing_nothing_EM[self.timecode]
-            
+            result_dict["model0_instant_EM"] = self.instant_doing_nothing_EM[self.timecode-1]
+            self.seen_stream_data += data_eval_loader.data
+            # result_dict["doing-nothing_accmulative_EM"] = self.accumulate_doing_nothing_EM[self.timecode]
 
             self.online_eval_results.append(result_dict)
 
-            self.timecode += 1
             if self.debugger_args.save_all_ckpts:
                 self._save_base_model()
                 # Note that we save the model from the id=1.
                 # So the 0-th checkpoint should be the original base model.
-            
+
+        #### Final evaluation ####
+        self.logger.info("Start the final evaluation.")
+        self.final_evaluation()
+        self.logger.info("Finish the final evaluation.")
+
+    def final_evaluation(self):
+        
+ 
+        self.overall_eval_results = {}
+        self.overall_eval_results["overall_oncoming_test"] = {key:
+                                                              float(np.mean([r["before_eval"]["metric_results"][key]
+                                                                             for r in self.online_eval_results]))
+                                                              for key in self.metric.split("|")}
+        
+        self.overall_eval_results["overall_error_number"] = len(self.overall_errors)
+        self.overall_eval_results["overall_instant_fixing_rate"] = float(
+            np.mean([r["instant_fixing_rate"] for r in self.online_eval_results]))
+        
+        # Re-test the past errors.
+        self.logger.info("Re-test the past errors.")
+        _, overall_error_eval_dataloader = self.get_dataloader(
+            self.data_args, self.data_formatter(self.overall_errors), mode="eval")
+        oev_predictions, oev_results, oev_results_all = self.evaluate(
+            eval_dataloader=overall_error_eval_dataloader, verbose=True)
+        self.overall_eval_results["final_fixing_rate"] = oev_results
+
+        # Test the in-stream examples overall.
+        self.logger.info("Test the in-stream examples overall.")
+        _, overall_instream_eval_dataloader = self.get_dataloader(
+            self.data_args, self.seen_stream_data, mode="eval")
+        oie_predictions, oie_results, oie_results_all = self.evaluate(
+            eval_dataloader=overall_error_eval_dataloader, verbose=True)
+        self.overall_eval_results["final_instream_test"] = oie_results
+        self.overall_eval_results["model0_instream_test"] = {"EM": float(np.mean([r["model0_instant_EM"] for r in self.online_eval_results]))}
+
+        # Test the upstream forgetting eval.
+        self.logger.info("Test the upstream forgetting eval.")
+        # _, overall_upstream_eval_dataloader = self.get_dataloader(
+        #     self.data_args, self.sampled_passes, mode="eval")
+        oue_predictions, oue_results, oue_results_all = self.evaluate(
+            eval_dataloader=self.forget_eval_loader, verbose=True)
+        self.overall_eval_results["final_upstream_test"] = oue_results
+        
+
+        
+
     def eval_forget_and_fix(self, examples, before_results_all, after_results_all):
         forgotten_ids = []
         retained_ids = []
@@ -297,9 +368,9 @@ class OnlineDebuggingMethod():
                 else:
                     unfixed_ids.append(_id)
         return forgotten_ids, retained_ids, fixed_ids, unfixed_ids
-        
 
     def online_debug(self):
+        """For the static error stream."""
         self.logger.info("Start Online Debugging with Static Error Mode")
         self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
         self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
@@ -322,12 +393,10 @@ class OnlineDebuggingMethod():
                 # Note that we save the model from the id=1.
                 # So the 0-th checkpoint should be the original base model.
 
-
-
     def single_timecode_eval(self, timecode):
         """Used only for offline eval of a single checkpoint of a specific timecode."""
         self.timecode = timecode
-        result_dict = {}   # initialize for the given time code        
+        result_dict = {}   # initialize for the given time code
 
         self.logger.info("Start the Overall Error-Fixing Results....")
         # Overall Error-Fixing Results
@@ -432,9 +501,9 @@ class OnlineDebuggingMethod():
     def upstream_data_formatter(self, examples):
         # The continual fine-tuning method only uses the correct answers for fixing bugs.
         formatted_examples = []
-        for example in examples: 
+        for example in examples:
             _id = example["id"]
-            _input = example["input"] 
+            _input = example["input"]
             _truth = example["output"]   # a list of answers
             formatted_examples.append((_input, _truth, _id))
         return formatted_examples

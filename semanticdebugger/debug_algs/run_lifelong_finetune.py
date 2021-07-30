@@ -70,7 +70,7 @@ def run(args):
         predict_batch_size=args.predict_batch_size,
         num_beams=args.num_beams,
         max_timecode=args.max_timecode,
-        accumulate_eval_freq=5,
+        accumulate_eval_freq=-1,
     )
 
     base_model_args = Namespace(
@@ -139,6 +139,7 @@ def run(args):
         output_info["data_args"] = str(debugging_alg.data_args)
         if args.stream_mode == "dynamic":
             output_info["online_eval_results"] = debugging_alg.online_eval_results
+            output_info["final_eval_results"] = debugging_alg.overall_eval_results
  
         
         if args.cl_method_name in ["offline_debug"]:
