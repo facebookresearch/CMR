@@ -23,10 +23,10 @@ def generate_bugs(predictions, truth_data, results_all):
         item["mistake"] = p.strip()
         item["score"] = {"EM": int(em == True), "QA-F1": float(f1)}
         if em == False and f1 < 0.5:  # decide later about the threshold of f1 score
-            bug_lines.append(json.dumps(item))
+            bug_lines.append(item)
             item["init_status"] = "error"
         if em == True: 
-            pass_lines.append(json.dumps(item))
+            pass_lines.append(item)
             item["init_status"] = "pass"
     return bug_lines, pass_lines
 
@@ -145,7 +145,7 @@ python semanticdebugger/benchmark_gen/sample_stream_data.py \
     --bug_sample_size 4688 --pass_sample_size 11312 \
     --hidden_sample_size 500
 
-500*32 - 4688 = 11312
+# 500*32 - 4688 = 11312
 
 
 python semanticdebugger/benchmark_gen/sample_stream_data.py \
