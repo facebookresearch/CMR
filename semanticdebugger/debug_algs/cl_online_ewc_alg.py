@@ -234,7 +234,7 @@ class OnlineEWC(ContinualFinetuning):
 
                 train_losses.append(loss.detach().cpu())
                 loss.backward()
-
+                self.model_update_steps += 1
                 if global_step % self.debugger_args.gradient_accumulation_steps == 0:
                     torch.nn.utils.clip_grad_norm_(
                         self.base_model.parameters(), self.debugger_args.max_grad_norm)

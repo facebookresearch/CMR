@@ -147,3 +147,23 @@ def evaluate_v1(self, eval_dataloader=None, verbose=False):
     self.base_model = base_model_backup # restore to the original base_model
 
     return predictions, results, return_all
+
+
+
+### Check the accumulative results. ###
+if (self.data_args.accumulate_eval_freq > 0 and (self.timecode + 1) % self.data_args.accumulate_eval_freq == 0):
+    accumu_EM, forgotten_ids, fixed_ids, total_len = self.get_accumulative_results()
+    result_dict["accumulative_EM"] = accumu_EM
+    result_dict["accumulative_forgotten_ids"] = forgotten_ids
+    result_dict["accumulative_fixed_ids"] = fixed_ids
+    result_dict["accumulative_forgotten_rate"] = len(forgotten_ids) / total_len
+    result_dict["accumulative_fixed_rate"] = len(fixed_ids) / total_len
+
+    self.logger.info(" ")
+    self.logger.info(
+        f"Doing-Nothing Accumulative EM: {self.accumulate_doing_nothing_EM[self.timecode]}")
+    self.logger.info(f"My Accumulative EM: {accumu_EM}")
+    self.logger.info(
+        f"accumulative_forgotten_rate: {result_dict['accumulative_forgotten_rate']}")
+    self.logger.info(
+        f"accumulative_fixed_rate: {result_dict['accumulative_fixed_rate']}")

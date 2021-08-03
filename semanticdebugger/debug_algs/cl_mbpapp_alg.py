@@ -162,6 +162,7 @@ class KeyValueMemoryModule(object):
         return retrieved_examples
 
     def random_sample(self, sample_size):
+        sample_size = min(len(self.memory), sample_size)
         keys = random.sample(list(self.memory), sample_size)
         _inputs = [self.memory[k][0] for k in keys]
         _outputs = [self.memory[k][1] for k in keys]
@@ -203,7 +204,8 @@ class MBPAPlusPlus(ContinualFinetuning):
             "memory_store_rate",  # 0, 0.1, 1 etc.
             "memory_path",  # to save/load the memory module from disk
             "memory_key_cache_path",
-            "num_adapt_epochs"
+            "num_adapt_epochs",
+            "inference_query_size"
         ]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
 
@@ -217,7 +219,70 @@ class MBPAPlusPlus(ContinualFinetuning):
         self.memroy_module.load_memory_key_cache(debugger_args.memory_key_cache_path)
         return
 
+
+    # The new evaluation pipeline.
     def online_debug(self):
+        self.logger.info("Start Online Debugging with Dynamic Error Mode")
+        self.logger.info(f"Number of Batches of Data: {self.num_data_batches}")
+        self.logger.info(f"Data Batch Size: {self.data_batch_size};")
+        self.timecode = 0
+
+        if self.debugger_args.save_all_ckpts:
+            # save the initial model as the 0-th model.
+            self._save_base_model()
+
+        self.overall_errors = []
+        self.seen_stream_data = []
+        last_steps = 0
+        for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):            
+
+            error_ids, bug_train_loader, predictions, results, results_all  = self._get_dynamic_errors(data_eval_loader)
+
+            if (self.model_update_steps - last_steps) >= self.debugger_args.replay_frequency \
+                    and self.debugger_args.replay_frequency > 0 and self.debugger_args.replay_size > 0 \
+                    and self.timecode > 0 :
+                # sparse experience replay
+                self.logger.info("Triggering Sampling from Memory and starting to replay.")
+                retrieved_examples = self.memroy_module.random_sample(
+                    sample_size=self.debugger_args.replay_size)
+                
+                replay_data_loader, _ = self.get_dataloader(
+                    self.data_args, retrieved_examples, mode="train")
+                self.fix_bugs(replay_data_loader)  # sparse replay
+                self.logger.info("Replay-Training done.")
+
+            last_steps = self.model_update_steps
+
+            ############### CORE ###############
+            # Fix the bugs by mini-batch based "training"
+            self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
+            self.fix_bugs(bug_train_loader)   # for debugging
+            self.logger.info("Start bug-fixing .... Done!")
+            ############### CORE ###############
+            self.timecode += 1
+            self._log_episode_result(data_eval_loader, predictions, results, results_all, error_ids)
+
+            if self.debugger_args.save_all_ckpts:
+                self._save_base_model() 
+
+            ## Store to memory 
+            _max = 1000000
+            flag_store_examples = bool(random.randrange(0, _max)/_max >=
+                                       1 - self.debugger_args.memory_store_rate)
+            if flag_store_examples:
+                self.logger.info("Saving examples to the memory.")
+                key_vectors = self.memroy_module.encode_examples(bug_train_loader.data)
+                self.memroy_module.store_examples(
+                    key_vectors, bug_train_loader.data, timecode=self.timecode)
+                self.logger.info("Finished.")
+
+        #### Final evaluation ####
+        self.final_evaluation()
+
+        #### Save to path
+        self.memroy_module.save_memory_to_path(self.debugger_args.memory_path)
+
+    def online_debug_static(self):
         self.logger.info("Start Online Debugging")
         self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
         self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
@@ -269,6 +334,7 @@ class MBPAPlusPlus(ContinualFinetuning):
 
         self.memroy_module.save_memory_to_path(self.debugger_args.memory_path)
 
+
     def get_adapt_dataloaders(self, eval_dataloader=None, verbose=False):
         """Get the adapt_dataloader."""
         adapt_dataloaders = []
@@ -294,7 +360,7 @@ class MBPAPlusPlus(ContinualFinetuning):
             keys = self.memroy_module.encode_examples(example_batch)
             # self.logger.info("Reading memory to get the KNN examples for local adaptation...")
             retrieved_examples = self.memroy_module.query_examples(
-                keys, past_memory_keys, k=self.debugger_args.replay_size)
+                keys, past_memory_keys, k=self.debugger_args.inference_query_size)
             replay_data_loader, _ = self.get_dataloader(
                 self.data_args, retrieved_examples, mode="train")
             adapt_dataloaders.append(replay_data_loader)
