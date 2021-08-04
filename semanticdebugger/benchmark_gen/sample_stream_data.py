@@ -1,10 +1,7 @@
-import argparse
-from enum import IntFlag
-import logging
+import argparse 
 import json
 import random
-
-from torch import log
+ 
 from semanticdebugger.task_manager.eval_metrics import evaluate_func
 import numpy as np
 
@@ -51,7 +48,7 @@ def get_data_stream(data_pool, batch_size, num_batches, use_score=False):
 
 
 
-def get_replayed_stream(data_stream, replay_eval_size, window_size=5):
+def get_replay_stream(data_stream, replay_eval_size, window_size=10):
     past_error_pool = {} # errror in terms of the initial model 
     
     replay_stream = []
@@ -59,27 +56,36 @@ def get_replayed_stream(data_stream, replay_eval_size, window_size=5):
         # add the errors to the pool
         past_error_pool[timecode] = []
         for item in data_batch:
-            if item["init_status"] == "error":
-                past_error_pool[timecode].append(item)
-            
-        
-        for item in data_batch:
-            if len(past_error_pool[timecode]) >= replay_eval_size:
-                break
-            if item["init_status"] == "pass":
-                past_error_pool[timecode].append(item)
-    
+            if True or item["init_status"] == "error":
+                past_error_pool[timecode].append(item)  
         
         # build the pool
         start_ind = max(0, timecode-window_size)
-        end_ind = min(timecode, len(past_error_pool)) + 1
+        end_ind = min(timecode, len(past_error_pool))
         candidate_replay_instances = []
+        
+        if end_ind == 0:
+            continue # do not add for the first episode because there is no history for it
+
         for ind in range(start_ind, end_ind): # not including itself
             candidate_replay_instances += past_error_pool[ind]
+
+        for _db in data_stream[-5:]:
+            if len(candidate_replay_instances) >= replay_eval_size:
+                break
+            for item in _db:
+                if len(candidate_replay_instances) >= replay_eval_size:
+                    break
+                if item["init_status"] == "pass":
+                    candidate_replay_instances.append(item)
+                                
+
         # print(start_ind, end_ind, len(candidate_replay_instances))
         assert len(candidate_replay_instances) >= replay_eval_size
         sampled_replay = random.sample(candidate_replay_instances, replay_eval_size)
         replay_stream.append(sampled_replay)
+    
+    assert len(replay_stream) == len(data_stream) - 1
     return replay_stream
 
 
@@ -97,7 +103,7 @@ def main():
     parser.add_argument(
         "--hidden_example_file", default="bug_data/mrqa_naturalquestions.hidden.jsonl", required=False)   # Output
     parser.add_argument("--batch_size", type=int, default=32, required=False)
-    parser.add_argument("--replay_eval_size", type=int, default=8, required=False)
+    parser.add_argument("--replay_eval_size", type=int, default=32, required=False)
     parser.add_argument("--bug_sample_size", type=int, default=1000, required=False)
     parser.add_argument("--pass_sample_size", type=int, default=2200, required=False)
     parser.add_argument("--hidden_sample_size", type=int, default=-1, required=False)
@@ -159,8 +165,12 @@ def main():
     data_stream = get_data_stream(
         sampled_data_pool, args.batch_size, args.num_batches, use_score=False)   # randomly sorted bugs
 
-    replay_stream = get_replayed_stream(data_stream, args.replay_eval_size)
     
+    replay_stream = get_replay_stream(data_stream, args.replay_eval_size)
+    
+    # replay_stream.insert(0, random.sample(sampled_bug_pool, args.replay_eval_size))
+    replay_stream.insert(0, random.sample(sampled_data_pool, args.replay_eval_size))
+
     with open(args.data_stream_file, "w") as f:
         json.dump(data_stream, f)
     
@@ -182,7 +192,7 @@ python semanticdebugger/benchmark_gen/sample_stream_data.py \
     --prediction_file bug_data/mrqa_naturalquestions_train.predictions.jsonl \
     --data_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.train.json \
     --hidden_example_file exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
-    --replay_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.replay_stream.train.jsonl \
+    --replay_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.replay_stream.train.json \
     --batch_size 32 --num_batches 500 \
     --bug_sample_size 4688 --pass_sample_size 11312 \
     --hidden_sample_size 500
@@ -194,7 +204,7 @@ python semanticdebugger/benchmark_gen/sample_stream_data.py \
     --data_file data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl \
     --prediction_file bug_data/mrqa_naturalquestions_dev.predictions.jsonl \
     --data_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.test.json \
-    --replay_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.replay_stream.test.jsonl \
+    --replay_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.replay_stream.test.json \
     --batch_size 32 --num_batches 100 \
     --bug_sample_size 1091 --pass_sample_size 2109
 

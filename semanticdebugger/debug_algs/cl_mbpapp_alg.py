@@ -236,7 +236,10 @@ class MBPAPlusPlus(ContinualFinetuning):
         last_steps = 0
         for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):            
 
-            error_ids, bug_train_loader, predictions, results, results_all  = self._get_dynamic_errors(data_eval_loader)
+            result_dict = {"timecode": self.timecode}   # start with 0
+
+            self._replay_based_eval(result_dict)
+            bug_train_loader = self._get_dynamic_errors(data_eval_loader, result_dict)
 
             if (self.model_update_steps - last_steps) >= self.debugger_args.replay_frequency \
                     and self.debugger_args.replay_frequency > 0 and self.debugger_args.replay_size > 0 \
@@ -259,8 +262,8 @@ class MBPAPlusPlus(ContinualFinetuning):
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
             ############### CORE ###############
+            self._log_episode_result(result_dict, data_eval_loader)
             self.timecode += 1
-            self._log_episode_result(data_eval_loader, predictions, results, results_all, error_ids)
 
             if self.debugger_args.save_all_ckpts:
                 self._save_base_model() 

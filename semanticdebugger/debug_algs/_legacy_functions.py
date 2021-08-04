@@ -167,3 +167,147 @@ if (self.data_args.accumulate_eval_freq > 0 and (self.timecode + 1) % self.data_
         f"accumulative_forgotten_rate: {result_dict['accumulative_forgotten_rate']}")
     self.logger.info(
         f"accumulative_fixed_rate: {result_dict['accumulative_fixed_rate']}")
+
+
+def get_accumulative_results(self):
+    EMs = []
+    forgotten_ids = []
+    fixed_ids = []
+    total_len = 0
+    for data_eval_loader in tqdm(self.data_eval_loaders[:self.timecode], desc="Evaluate Accumulative Results"):
+        predictions, results, results_all = self.evaluate(data_eval_loader)
+        EMs.append(results["EM"])
+        for (_, _, _id), em in zip(data_eval_loader.data, results_all["EM"]):
+            if _id in self.all_initial_error_ids and em == 1:
+                fixed_ids.append(_id)
+            if _id in self.all_initial_pass_ids and em == 0:
+                forgotten_ids.append(_id)
+            total_len += 1
+    return float(np.mean(EMs)), forgotten_ids, fixed_ids, total_len
+
+
+def single_timecode_eval(self, timecode):
+    """Used only for offline eval of a single checkpoint of a specific timecode."""
+    self.timecode = timecode
+    result_dict = {}   # initialize for the given time code
+
+    self.logger.info("Start the Overall Error-Fixing Results....")
+    # Overall Error-Fixing Results
+    eval_results_overall_bug = self.evaluate(
+        self.bug_all_eval_loader, verbose=True)
+    result_dict["eval_results_overall_bug"] = _pack_as_dict(
+        *eval_results_overall_bug)
+    self.logger.info("Start the Overall Error-Fixing Results....Done")
+
+    self.logger.info(
+        "Start the Overall Forgetting Results (Knowledge Retain Acc)....")
+    # Overall Forgetting Results (Knowledge Retain Acc)
+    eval_results_overall_forget = self.evaluate(
+        self.forget_eval_loader, verbose=True)
+    result_dict["eval_results_overall_forget"] = _pack_as_dict(
+        *eval_results_overall_forget)
+    self.logger.info(
+        "Start the Overall Forgetting Results (Knowledge Retain Acc)....Done")
+
+    if self.name == "offline_debug":
+        # only overall evaluation for the offline debugging.
+        return result_dict
+
+    # Error-Fixing performance on the current batch of errors.
+    if self.timecode > 0:
+        self.logger.info(
+            "Start Error-Fixing performance on the Current batch of errors.....")
+        bug_eval_loader = self.bug_eval_loaders[self.timecode-1]
+        eval_results_current_errors = self.evaluate(bug_eval_loader)
+        result_dict["eval_results_current_errors"] = _pack_as_dict(
+            *eval_results_current_errors)
+        self.logger.info(
+            "Start Error-Fixing performance on the Current batch of errors.....Done")
+
+    # Error-Fixing performance on the next batch of errors. (for the computation of real responsive efr)
+    if self.timecode < len(self.bug_eval_loaders):
+        self.logger.info(
+            "Start Error-Fixing performance on the Next batch of errors.....")
+        bug_eval_loader = self.bug_eval_loaders[self.timecode]
+        eval_results_next_errors = self.evaluate(bug_eval_loader)
+        result_dict["eval_results_next_errors"] = _pack_as_dict(
+            *eval_results_next_errors)
+        self.logger.info(
+            "Start Error-Fixing performance on the Next batch of errors.....Done")
+
+    return result_dict
+
+
+
+def load_data_static(self, data_args):
+    self.data_args = data_args
+    self._check_data_args()
+    # Load bug stream
+    with open(data_args.bug_stream_json_path) as f:
+        bug_stream = json.load(f)
+    self.bug_stream = bug_stream
+    self.num_bug_batches = len(bug_stream)
+    self.bug_batch_size = len(bug_stream[0])
+    # Create data loaders for each error batch.
+    all_formatted_bugs = []
+    for bug_batch in tqdm(self.bug_stream, desc="Creating the bug data loaders."):
+        formatted_bug_batch = self.data_formatter(bug_batch)
+        all_formatted_bugs += formatted_bug_batch
+        train_bug_dataloader, eval_bug_dataloader = self.get_dataloader(
+            data_args, formatted_bug_batch, mode="both")
+        self.bug_train_loaders.append(train_bug_dataloader)
+        self.bug_eval_loaders.append(eval_bug_dataloader)
+    assert len(self.bug_train_loaders) == self.num_bug_batches
+    self.all_bug_examples = all_formatted_bugs
+    # Create the all bug loaders.
+    self.bug_all_train_loader, self.bug_all_eval_loader = self.get_dataloader(
+        data_args, all_formatted_bugs, mode="both")
+
+    # Create the pass pool evaluation loader for the final forgetting issue.
+
+    if data_args.pass_pool_jsonl_path:
+        # Create loaders for the sampled pass examples
+        with open(data_args.pass_pool_jsonl_path) as f:
+            pass_examples = [json.loads(line)
+                                for line in set(f.read().splitlines())]
+        self.sampled_passes = pass_examples
+        pass_examples = self.data_formatter(pass_examples)
+        _, self.forget_eval_loader = self.get_dataloader(
+            data_args, pass_examples, mode="eval")
+
+    if data_args.sampled_upstream_json_path:
+        # Create loaders for the sampled pass examples
+        with open(data_args.sampled_upstream_json_path) as f:
+            sampled_upstream_examples = [json.loads(line)
+                                            for line in set(f.read().splitlines())]
+        self.sampled_upstream_examples = self.upstream_data_formatter(
+            sampled_upstream_examples)
+        # self.sampled_upstream_trainloader, self.sampled_upstream_evalloader = self.get_dataloader(
+        #     data_args, sampled_upstream_examples, mode="eval")
+
+    return
+
+
+def online_debug_static(self):
+    """For the static error stream."""
+    self.logger.info("Start Online Debugging with Static Error Mode")
+    self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
+    self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
+    self.timecode = 0
+
+    if self.debugger_args.save_all_ckpts:
+        # save the initial model as the 0-th model.
+        self._save_base_model()
+
+    for bug_train_loader in tqdm(self.bug_train_loaders, desc="Online Debugging (Static)", total=self.num_bug_batches):
+        ############### CORE ###############
+        # Fix the bugs by mini-batch based "training"
+        self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
+        self.fix_bugs(bug_train_loader)   # for debugging
+        self.logger.info("Start bug-fixing .... Done!")
+        ############### CORE ###############
+        self.timecode += 1
+        if self.debugger_args.save_all_ckpts:
+            self._save_base_model()
+            # Note that we save the model from the id=1.
+        

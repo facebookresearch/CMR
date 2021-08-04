@@ -115,11 +115,11 @@ def run(args):
 
     if args.num_threads_eval <= 0:
         # The Online Debugging Mode + Computing offline debugging bounds.
-        if args.stream_mode == "dynamic":
-            setattr(data_args, "data_stream_json_path", args.data_stream_json_path)
-            debugging_alg.load_data_dynamic(data_args)
-        else:
-            debugging_alg.load_data(data_args)
+        
+        setattr(data_args, "data_stream_json_path", args.data_stream_json_path)
+        setattr(data_args, "replay_stream_json_path", args.replay_stream_json_path)
+        debugging_alg.load_data(data_args)
+    
 
         debugging_alg.load_base_model(base_model_args)
         debugging_alg.debugger_setup(debugger_args)
@@ -127,11 +127,8 @@ def run(args):
         if args.cl_method_name in ["offline_debug"]:
             debugging_alg.offline_debug()
             offline_bound_results = debugging_alg.single_timecode_eval(timecode=-1)
-        else:
-            if args.stream_mode == "dynamic":
-                debugging_alg.online_debug()
-            else:
-                debugging_alg.online_debug_static()
+        else: 
+            debugging_alg.online_debug() 
 
         output_info = {}
         output_info["model_update_steps"] = debugging_alg.model_update_steps
@@ -139,9 +136,8 @@ def run(args):
         output_info["base_model_args"] = str(debugging_alg.base_model_args)
         output_info["debugger_args"] = str(debugging_alg.debugger_args)
         output_info["data_args"] = str(debugging_alg.data_args)
-        if args.stream_mode == "dynamic":
-            output_info["online_eval_results"] = debugging_alg.online_eval_results
-            output_info["final_eval_results"] = debugging_alg.overall_eval_results
+        output_info["online_eval_results"] = debugging_alg.online_eval_results
+        output_info["final_eval_results"] = debugging_alg.overall_eval_results
  
         
         if args.cl_method_name in ["offline_debug"]:
@@ -197,6 +193,9 @@ def get_cli_parser():
 
     parser.add_argument("--data_stream_json_path",
                         default="bug_data/mrqa_naturalquestions_dev.data_stream.test.json")
+    
+    parser.add_argument("--replay_stream_json_path",
+                        default="bug_data/mrqa_naturalquestions_dev.replay_stream.test.json")
 
 
     parser.add_argument("--bug_stream_json_path",

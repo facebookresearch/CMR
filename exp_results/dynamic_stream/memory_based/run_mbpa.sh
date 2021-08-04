@@ -16,6 +16,7 @@ CUDA_VISIBLE_DEVICES=2,3 python semanticdebugger/debug_algs/run_lifelong_finetun
     --prefix ${prefix} \
     --stream_mode dynamic \
     --data_stream_json_path exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.test.json \
+    --replay_stream_json_path exp_results/data_streams/mrqa_naturalquestions_dev.replay_stream.test.json \
     --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --save_all_ckpts 0 \
     --memory_path exp_results/dynamic_stream/memory_based/${prefix}_ckpts/memory_dict.pkl \
