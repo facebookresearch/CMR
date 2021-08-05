@@ -2,7 +2,7 @@
  
 num_adapt_epochs=1
 memory_store_rate=1.0
-prefix=nq_dev_0729_mbpa
+prefix=nq_dev_0804_mbpa
 log_file=exp_results/dynamic_stream/memory_based/run_${prefix}.log 
 mkdir exp_results/dynamic_stream/memory_based/${prefix}_ckpts/
 CUDA_VISIBLE_DEVICES=2,3 python semanticdebugger/debug_algs/run_lifelong_finetune.py \

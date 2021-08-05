@@ -17,7 +17,7 @@ from torch import nn
 import torch
 from torch.nn import functional as F
 import abc
-
+import copy
 
 
 
@@ -213,6 +213,7 @@ class OnlineEWC(ContinualFinetuning):
         for epoch_id in range(int(self.debugger_args.num_epochs)):
             for batch in tqdm(bug_loader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}", disable=quiet):
                 # here the batch is a mini batch of the current bug batch
+                global_step += 1
                 if self.use_cuda:
                     # print(type(batch[0]), batch[0])
                     batch = [b.to(torch.device("cuda")) for b in batch]
@@ -227,14 +228,16 @@ class OnlineEWC(ContinualFinetuning):
                 if self.n_gpu > 1:
                     loss = loss.mean()  # mean() to average on multi-gpu.
 
-                ewc_loss = self.regularizer.ewc_loss()
-                if self.regularizer.ewc_lambda>0:   # a hp to control the penalty weight.
+                
+                if self.regularizer.ewc_lambda > 0:   # a hp to control the penalty weight.
                     # add the regularzation term.
+                    ewc_loss = self.regularizer.ewc_loss()
                     loss = loss + self.regularizer.ewc_lambda * ewc_loss
 
                 train_losses.append(loss.detach().cpu())
                 loss.backward()
                 self.model_update_steps += 1
+
                 if global_step % self.debugger_args.gradient_accumulation_steps == 0:
                     torch.nn.utils.clip_grad_norm_(
                         self.base_model.parameters(), self.debugger_args.max_grad_norm)
@@ -243,7 +246,9 @@ class OnlineEWC(ContinualFinetuning):
                     self.base_model.zero_grad()
 
         # TODO: build bsz=1 dataloader for update the fisher information matrix
-        fisher_dataloader = bug_loader  # can we copy this object?
+        bug_loader.logger = None 
+        fisher_dataloader = copy.deepcopy(bug_loader)  # can we copy this object?
+        fisher_dataloader.logger = self.logger 
         fisher_dataloader.args.train_batch_size = 1 
         fi_dl = fisher_dataloader.load_dataloader(do_return=True)
         self.regularizer.estimate_fisher(fi_dl, pad_token_id)
