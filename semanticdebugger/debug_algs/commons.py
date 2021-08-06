@@ -113,15 +113,16 @@ class OnlineDebuggingMethod():
                     self.all_initial_error_ids.add(item["id"])
 
         # Create the list of replay eval loaders for monitoring the performance.
-        with open(data_args.replay_stream_json_path) as f:
-            replay_stream = json.load(f)
-        self.replay_stream = replay_stream
-        for replay_batch in tqdm(self.replay_stream, desc="Creating the replay data loaders."):
-            formatted_replay_batch = self.data_formatter(replay_batch)
-            _, eval_replay_dataloader = self.get_dataloader(
-                data_args, formatted_replay_batch, mode="eval")
-            self.replay_eval_loaders.append(eval_replay_dataloader)
-        self.replay_eval_loaders = self.replay_eval_loaders[:self.num_bug_batches]
+        if data_args.replay_stream_json_path:
+            with open(data_args.replay_stream_json_path) as f:
+                replay_stream = json.load(f)
+            self.replay_stream = replay_stream
+            for replay_batch in tqdm(self.replay_stream, desc="Creating the replay data loaders."):
+                formatted_replay_batch = self.data_formatter(replay_batch)
+                _, eval_replay_dataloader = self.get_dataloader(
+                    data_args, formatted_replay_batch, mode="eval")
+                self.replay_eval_loaders.append(eval_replay_dataloader)
+            self.replay_eval_loaders = self.replay_eval_loaders[:self.num_bug_batches]
         # assert len(self.replay_eval_loaders) == self.num_bug_batches
 
         # Init other useful statistics.
@@ -141,13 +142,17 @@ class OnlineDebuggingMethod():
                 data_args, pass_examples, mode="eval")
 
     def _replay_based_eval(self, result_dict):
+        if not self.data_args.replay_stream_json_path:
+            self.logger.info("Not doing replay-based eval.")
+            return
         replay_eval_loader = self.replay_eval_loaders[self.timecode]
         self.logger.info(
             f"Evaluating the replayed data from the recent episodes.... Timecode: {self.timecode}")
         predictions, results, results_all = self.evaluate(replay_eval_loader)
         result_dict["replay_eval"] = _pack_as_dict(predictions, results, results_all)
 
-        base_EM = float(np.mean([i["init_status"]=="pass" for i in self.replay_stream[self.timecode]]))
+        base_EM = float(
+            np.mean([i["init_status"] == "pass" for i in self.replay_stream[self.timecode]]))
         result_dict["model0_replay_eval"] = {"EM": base_EM}
 
         self.logger.info(f"Replayed Performance: {results['EM']} vs Model_0: {base_EM}")
@@ -202,8 +207,8 @@ class OnlineDebuggingMethod():
         self.logger.info(f"Instant Retention Rate: {instant_retention_rate}")
 
         self.logger.info("-"*50)
-        # Start the logging. 
-        
+        # Start the logging.
+
         result_dict["after_eval"] = _pack_as_dict(
             after_predictions, after_results, after_results_all)
         result_dict["forgotten_ids"] = forgotten_ids
@@ -232,7 +237,7 @@ class OnlineDebuggingMethod():
         self.overall_errors = []
         self.seen_stream_data = []
         for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):
-            
+
             result_dict = {"timecode": self.timecode}   # start with 0
 
             self._replay_based_eval(result_dict)
@@ -244,7 +249,7 @@ class OnlineDebuggingMethod():
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
             ############### CORE ###############
-            
+
             self._log_episode_result(result_dict, data_eval_loader)
             self.timecode += 1
 
@@ -262,11 +267,13 @@ class OnlineDebuggingMethod():
                                                               float(np.mean([r["before_eval"]["metric_results"][key]
                                                                              for r in self.online_eval_results]))
                                                               for key in self.metric.split("|")}
-
-        self.overall_eval_results["overall_replay_test"] = {key:
-                                                              float(np.mean([r["replay_eval"]["metric_results"][key]
-                                                                             for r in self.online_eval_results]))
-                                                              for key in self.metric.split("|")}
+        if self.data_args.replay_stream_json_path:
+            self.overall_eval_results["overall_replay_test"] = {key:
+                                                                float(np.mean([r["replay_eval"]["metric_results"][key]
+                                                                               for r in self.online_eval_results]))
+                                                                for key in self.metric.split("|")}
+            self.overall_eval_results["model0_replay_test"] = {"EM": float(
+                np.mean([r["model0_replay_eval"]["EM"] for r in self.online_eval_results]))}
 
         self.overall_eval_results["overall_error_number"] = len(self.overall_errors)
         self.overall_eval_results["overall_instant_fixing_rate"] = float(
@@ -289,10 +296,6 @@ class OnlineDebuggingMethod():
         self.overall_eval_results["final_instream_test"] = oie_results
         self.overall_eval_results["model0_instream_test"] = {"EM": float(
             np.mean([r["model0_instant_EM"] for r in self.online_eval_results]))}
-        self.overall_eval_results["model0_replay_test"] = {"EM": float(
-            np.mean([r["model0_replay_eval"]["EM"] for r in self.online_eval_results]))}
-                 
-
 
         # Test the upstream forgetting eval.
         self.logger.info("Test the upstream forgetting eval.")
@@ -322,7 +325,6 @@ class OnlineDebuggingMethod():
                     unfixed_ids.append(_id)
         return forgotten_ids, retained_ids, fixed_ids, unfixed_ids
       # So the 0-th checkpoint should be the original base model.
-
 
     def _save_base_model(self, ckpt_name=None):
         output_dir = self.debugger_args.overtime_ckpt_dir

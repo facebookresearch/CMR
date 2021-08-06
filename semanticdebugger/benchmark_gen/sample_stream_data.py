@@ -47,6 +47,22 @@ def get_data_stream(data_pool, batch_size, num_batches, use_score=False):
     return data_stream
 
 
+def get_data_stream_with_replacement(data_pool, batch_size, num_batches):
+    assert batch_size * num_batches <= len(data_pool)
+    # no sorting, randomly shuffuled
+    random.shuffle(data_pool)
+    data_stream = []
+    seen_ids = set()
+    num_repetition = 0
+    for _ in range(0, num_batches):
+        data_batch = random.sample(data_pool, batch_size)
+        data_stream.append(data_batch)
+        num_repetition += len([_ for item in data_batch if item["id"] in seen_ids])
+        seen_ids.update([item["id"] for item in data_batch])
+    print(f"num_repetition: {num_repetition}; num_total_examples: {len(seen_ids)}; length: {batch_size * num_batches}; ratio: {num_repetition/(batch_size * num_batches)}")
+    return data_stream
+
+
 
 def get_replay_stream(data_stream, replay_eval_size, window_size=10):
     past_error_pool = {} # errror in terms of the initial model 
@@ -103,13 +119,16 @@ def main():
     parser.add_argument(
         "--hidden_example_file", default="bug_data/mrqa_naturalquestions.hidden.jsonl", required=False)   # Output
     parser.add_argument("--batch_size", type=int, default=32, required=False)
-    parser.add_argument("--replay_eval_size", type=int, default=32, required=False)
+    parser.add_argument("--replay_eval_size", type=int, default=-1, required=False)
     parser.add_argument("--bug_sample_size", type=int, default=1000, required=False)
     parser.add_argument("--pass_sample_size", type=int, default=2200, required=False)
     parser.add_argument("--hidden_sample_size", type=int, default=-1, required=False)
     parser.add_argument("--num_batches", type=int, default=100, required=False)
     parser.add_argument("--seed", type=int, default=42, required=False)
     parser.add_argument("--metric", default="EM|QA-F1", required=False)
+
+    parser.add_argument("--sample_method", default="no_replace", required=False)
+
     # batch_size * num_batches <= # lines of bug_pool_file
     args = parser.parse_args()
 
@@ -162,24 +181,24 @@ def main():
  
     sampled_data_pool = sampled_bug_pool + sampled_pass_pool
 
-    data_stream = get_data_stream(
-        sampled_data_pool, args.batch_size, args.num_batches, use_score=False)   # randomly sorted bugs
+    if args.sample_method == "no_replace":
+        data_stream = get_data_stream(
+            sampled_data_pool, args.batch_size, args.num_batches, use_score=False)   # randomly sorted bugs
+    elif args.sample_method == "with_replace":
+        data_stream = get_data_stream_with_replacement(
+            sampled_data_pool, args.batch_size, args.num_batches)   # randomly sorted bugs
 
     
-    replay_stream = get_replay_stream(data_stream, args.replay_eval_size)
-    
-    # replay_stream.insert(0, random.sample(sampled_bug_pool, args.replay_eval_size))
-    replay_stream.insert(0, random.sample(sampled_data_pool, args.replay_eval_size))
+    if args.replay_eval_size > 0:
+        replay_stream = get_replay_stream(data_stream, args.replay_eval_size)
+        # replay_stream.insert(0, random.sample(sampled_bug_pool, args.replay_eval_size))
+        replay_stream.insert(0, random.sample(sampled_data_pool, args.replay_eval_size))
+        with open(args.replay_stream_file, "w") as f:
+            json.dump(replay_stream, f)
 
     with open(args.data_stream_file, "w") as f:
         json.dump(data_stream, f)
-    
-    with open(args.replay_stream_file, "w") as f:
-        json.dump(replay_stream, f)
-
- 
-   
-       
+      
         
 if __name__ == '__main__':
     main()
@@ -193,19 +212,39 @@ python semanticdebugger/benchmark_gen/sample_stream_data.py \
     --data_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.train.json \
     --hidden_example_file exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --replay_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.replay_stream.train.json \
-    --batch_size 32 --num_batches 500 \
+    --batch_size 32 --replay_eval_size 32 --num_batches 500 \
     --bug_sample_size 4688 --pass_sample_size 11312 \
-    --hidden_sample_size 500
-
-# 500*32 - 4688 = 11312
-
+    --hidden_sample_size 500 
 
 python semanticdebugger/benchmark_gen/sample_stream_data.py \
     --data_file data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl \
     --prediction_file bug_data/mrqa_naturalquestions_dev.predictions.jsonl \
     --data_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.test.json \
     --replay_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.replay_stream.test.json \
+    --batch_size 32 --replay_eval_size 32 --num_batches 100 \
+    --bug_sample_size 1091 --pass_sample_size 2109
+
+
+
+# Sample with replacement 
+
+python semanticdebugger/benchmark_gen/sample_stream_data.py \
+    --sample_method with_replace \
+    --data_file data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl \
+    --prediction_file bug_data/mrqa_naturalquestions_train.predictions.jsonl \
+    --data_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.train.wr.json \
+    --hidden_example_file exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
+    --batch_size 32 --num_batches 500 \
+    --bug_sample_size 4688 --pass_sample_size 11312 \
+    --hidden_sample_size -1
+
+python semanticdebugger/benchmark_gen/sample_stream_data.py \
+    --sample_method with_replace \
+    --data_file data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl \
+    --prediction_file bug_data/mrqa_naturalquestions_dev.predictions.jsonl \
+    --data_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.test.wr.json \
     --batch_size 32 --num_batches 100 \
+    --seed 42 \
     --bug_sample_size 1091 --pass_sample_size 2109
 
 """
