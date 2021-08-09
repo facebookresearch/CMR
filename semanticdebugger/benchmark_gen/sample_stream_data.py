@@ -53,13 +53,19 @@ def get_data_stream_with_replacement(data_pool, batch_size, num_batches):
     random.shuffle(data_pool)
     data_stream = []
     seen_ids = set()
+    duplicate_ids = set()
     num_repetition = 0
+    num_revisited_times = 0
     for _ in range(0, num_batches):
         data_batch = random.sample(data_pool, batch_size)
         data_stream.append(data_batch)
         num_repetition += len([_ for item in data_batch if item["id"] in seen_ids])
+        revisited_ids = [item["id"] for item in data_batch if item["id"] in seen_ids]
+        num_revisited_times += len(revisited_ids)
+        duplicate_ids.update(revisited_ids)
         seen_ids.update([item["id"] for item in data_batch])
-    print(f"num_repetition: {num_repetition}; num_total_examples: {len(seen_ids)}; length: {batch_size * num_batches}; ratio: {num_repetition/(batch_size * num_batches)}")
+    print(f"num_repetition: {num_repetition}; num_total_examples: {len(seen_ids)}; length: {batch_size * num_batches}; ratio: {num_repetition/(batch_size * num_batches)}; num_duplicate_ids: {len(duplicate_ids)}; num_revisited_times: {num_revisited_times}")
+
     return data_stream
 
 

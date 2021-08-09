@@ -81,7 +81,7 @@ def get_all_data(path, prefix, add_baselines=False):
  
 
 
-def draw_curve(df, y_scale=[0, 1], fig_title="", y_title="EM", y_key="em:Q", height=800):
+def draw_curve(df, y_scale=[0, 1], fig_title="", y_title="EM", y_key="em:Q", height=800, width=1100):
     x = alt.X("timecode", type="ordinal", title="Timecode")
     # y_em = alt.Y("em", type="quantitative", title="EM", scale=alt.Scale(domain=[0.5, 1.0]))
     # em_line = alt.Chart(df).mark_line(interpolate='natural', point=True).encode(x=x, y=y_em, opacity=alt.value(0.8), color=alt.value('red'))
@@ -101,7 +101,7 @@ def draw_curve(df, y_scale=[0, 1], fig_title="", y_title="EM", y_key="em:Q", hei
     fig = alt.Chart(df).mark_line(opacity=1, interpolate="natural", point=True).encode(x=x, y=alt.Y(y_key, stack=None, title=y_title, scale=alt.Scale(domain=y_scale)), color=color).properties(title=fig_title)
 
     fig = alt.layer(fig).resolve_scale()
-    fig = fig.properties(width=1100, height=height).configure_axis(
+    fig = fig.properties(width=width, height=height).configure_axis(
         labelFontSize=18,
         titleFontSize=16, 
     ).configure_legend(titleFontSize=0, labelFontSize=15, orient='bottom-right', strokeColor='gray',
@@ -137,12 +137,11 @@ methods = ["cl_simple", "baseline", "online_ewc", "sparse_er", "mbpa", "mbpa++"]
 
 
 # instant_em_df = all_data_df[all_data_df['instant_unseen_EM'].notna()][all_data_df["method"].isin(methods)]
-draw_curve(all_data_df, fig_title="Instant Unseen EM", y_scale=[0.2, 1],  y_key="instant_unseen_EM:Q").save('figures/dynamic_instant_unseen_EM.png')
+draw_curve(all_data_df, fig_title="Instant EM", y_scale=[0.35, 1],  y_key="instant_unseen_EM:Q").save('figures/dynamic_instant_unseen_EM.png', width=3000)
 
-draw_curve(all_data_df, fig_title="Instant Unseen EM (delta)", y_scale=[-0.5, 0.5],  y_key="instant_unseen_EM_delta:Q").save('figures/dynamic_instant_unseen_EM_delta.png')
+# draw_curve(all_data_df, fig_title="Instant EM (delta)", y_scale=[-0.5, 0.5],  y_key="instant_unseen_EM_delta:Q").save('figures/dynamic_instant_unseen_EM_delta.png')
 
-
-draw_curve(all_data_df, fig_title="Instant Unseen EM (MA)", y_scale=[0.5, 0.8],  y_key="instant_unseen_EM_MA:Q").save('figures/dynamic_instant_unseen_EM_MA.png')
+draw_curve(all_data_df, fig_title="Instant EM (MA)", y_scale=[0.55, 0.8],  y_key="instant_unseen_EM_MA:Q").save('figures/dynamic_instant_unseen_EM_MA.png', width=3000)
 
 draw_curve(all_data_df, fig_title="Instant Seen EM (MA)", y_scale=[0.5, 1],  y_key="instant_seen_EM_MA:Q").save('figures/dynamic_instant_seen_EM_MA.png')
 
