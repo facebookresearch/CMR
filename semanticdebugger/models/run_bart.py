@@ -111,6 +111,7 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
         for batch in tqdm(train_data.dataloader, desc="Epoch {}".format(epoch), disable=args.quiet):
             global_step += 1
             if torch.cuda.is_available():
+                # logger.info(f"torch.cuda.is_available()={torch.cuda.is_available()}")
                 batch = [b.to(torch.device("cuda")) for b in batch]
 
             pad_token_id = train_data.tokenizer.pad_token_id
@@ -195,13 +196,13 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
     predictions = []
     bos_token_id = dev_data.tokenizer.bos_token_id
     loss = []   # if needed
-    if args:
+    if args and hasattr(args, "quiet"):
         quiet = args.quiet
     else:
-        quiet = False
+        quiet = not verbose
     if not quiet:
         logger.info("Starting inference ...")
-    for batch in tqdm(dev_data.dataloader, desc="Infernece", disable=not verbose):
+    for batch in tqdm(dev_data.dataloader, desc="Infernece", disable=quiet):
         if torch.cuda.is_available():
             batch = [b.to(torch.device("cuda")) for b in batch]
         pad_token_id = dev_data.tokenizer.pad_token_id

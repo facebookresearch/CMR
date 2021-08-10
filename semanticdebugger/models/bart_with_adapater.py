@@ -94,6 +94,8 @@ class BartWithAdapterConfig(BartConfig):
 
         # Adapter
         self.adapter_dim = adapter_dim
+
+        # Hypernet
         self.generator_hdim = int(self.d_model * 0.25)  # TODO: make it a tunable hp.
         self.adapt_layer_norm = adapt_layer_norm
         self.unfreeze_hyper_encoder = unfreeze_hyper_encoder    # TODO: should be 

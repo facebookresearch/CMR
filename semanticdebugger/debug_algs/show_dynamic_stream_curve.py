@@ -152,7 +152,7 @@ draw_curve(all_data_df, fig_title="Instant Error Fixing Rate (MA)", y_scale=[0.,
 
 
 
-draw_curve(all_data_df, fig_title="Number of Errors", y_scale=[0, 600],  y_key="num_errors:Q").save('figures/dynamic_num_of_errors.png')
+draw_curve(all_data_df, fig_title="Number of Errors", y_scale=[0, 1200],  y_key="num_errors:Q").save('figures/dynamic_num_of_errors.png', width=500)
 
 # cf_prefixes = []
 # for bcf in base_cf_prefixes:
