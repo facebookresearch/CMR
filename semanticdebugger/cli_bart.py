@@ -9,7 +9,7 @@ import argparse
 import logging
 
 import random
-import numpy as np
+import numpy as np 
 import torch
 
 from semanticdebugger.models.run_bart import run

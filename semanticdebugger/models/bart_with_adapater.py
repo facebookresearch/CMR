@@ -100,9 +100,9 @@ class BartWithAdapterConfig(BartConfig):
         self.adapt_layer_norm = adapt_layer_norm
         self.unfreeze_hyper_encoder = unfreeze_hyper_encoder    # TODO: should be 
 
-def Linear(in_features, out_features, bias=True):
+def Linear(in_features, out_features, bias=True, std=0.0000001):
     m = nn.Linear(in_features, out_features, bias)
-    nn.init.xavier_uniform_(m.weight, gain=0.0000001)
+    nn.init.xavier_uniform_(m.weight, gain=std)
     if bias:
         nn.init.constant_(m.bias, 0.0)
     return m
@@ -118,8 +118,8 @@ class EncoderLayerWithAdapter(EncoderLayer):
 
         # self.adapter_up_weight = torch.zeros(self.adapter_dim, self.embed_dim)
         # self.adapter_up_bias = torch.zeros(self.embed_dim)
-        self.adapter_down_layer = Linear(self.embed_dim, self.adapter_dim)
-        self.adapter_up_layer = Linear(self.adapter_dim, self.embed_dim)
+        self.adapter_down_layer = Linear(self.embed_dim, self.adapter_dim, config.init_std)
+        self.adapter_up_layer = Linear(self.adapter_dim, self.embed_dim, config.init_std)
 
     def adapter_down(self, x):
         # print(x.size())
@@ -177,8 +177,8 @@ class DecoderLayerWithAdapter(DecoderLayer):
 
         # self.adapter_up_weight = torch.zeros(self.adapter_dim, self.embed_dim)
         # self.adapter_up_bias = torch.zeros(self.embed_dim)
-        self.adapter_down_layer = Linear(self.embed_dim, self.adapter_dim)
-        self.adapter_up_layer = Linear(self.adapter_dim, self.embed_dim)
+        self.adapter_down_layer = Linear(self.embed_dim, self.adapter_dim, config.init_std)
+        self.adapter_up_layer = Linear(self.adapter_dim, self.embed_dim, config.init_std)
 
     def adapter_down(self, x):
         # return F.linear(x, self.adapter_down_weight.t(), self.adapter_down_bias)

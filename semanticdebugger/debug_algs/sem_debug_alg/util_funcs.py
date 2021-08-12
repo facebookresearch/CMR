@@ -6,6 +6,7 @@ This script serves:
 
 
 
+import enum
 from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from semanticdebugger.models import run_bart
 from semanticdebugger.models.utils import convert_model_to_single_gpu
@@ -67,11 +68,12 @@ def init_adapters_for_bart(args, logger):
     base_model_path = "out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt"
     config = BartWithAdapterConfig.from_pretrained(model_type)
     config.adapter_dim = 64
+    setattr(config, "init_std", args.adapter_init_std)
     bart_w_adapter = MyBartWithAdapter(config)
     mybart_model = MyBart.from_pretrained(model_type, state_dict=convert_model_to_single_gpu(torch.load(base_model_path)))
     bart_w_adapter.model.load_state_dict(mybart_model.model.state_dict(), strict=False)
     
-    bart_w_adapter = mybart_model   # TODO: test.
+    # bart_w_adapter = mybart_model   # TODO: test.
 
     # set up the GPU parallel.
     setattr(args, "use_cuda", True)
@@ -90,13 +92,21 @@ def init_adapters_for_bart(args, logger):
     no_decay = ['bias', 'LayerNorm.weight']
 
     # TODO: only for the adapters
-    adapter_params = []
-
+    adapter_named_parameters = {}
+    def get_adapter_param(layers, prefix="encode"):
+        for ind, layer in enumerate(layers):
+            layer_prefix = f"{prefix}_layer_{ind}."
+            for n, p in layer.named_parameters():
+                if "adapter" in n:
+                    adapter_named_parameters[layer_prefix+n] = p
+    get_adapter_param(bart_w_adapter.module.encoders(), prefix="encoder")
+    get_adapter_param(bart_w_adapter.module.decoders(), prefix="decoder")
+    print(adapter_named_parameters.keys()) 
 
     optimizer_grouped_parameters = [
-        {'params': [p for n, p in bart_w_adapter.named_parameters() if not any(
+        {'params': [p for n, p in adapter_named_parameters.items() if not any(
             nd in n for nd in no_decay)], 'weight_decay': args.weight_decay},
-        {'params': [p for n, p in bart_w_adapter.named_parameters() if any(
+        {'params': [p for n, p in adapter_named_parameters.items() if any(
             nd in n for nd in no_decay)], 'weight_decay': 0.0}
     ]
     optimizer = AdamW(optimizer_grouped_parameters,
@@ -114,11 +124,13 @@ def init_adapters_for_bart(args, logger):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--learning_rate", default=1e-7, type=float,
+    parser.add_argument("--learning_rate", default=1e-6, type=float,
                         help="The initial learning rate for Adam.")
     parser.add_argument("--weight_decay", default=0.01, type=float,
                         help="Weight deay if we apply some.")
     parser.add_argument("--adam_epsilon", default=1e-8, type=float,
+                        help="Epsilon for Adam optimizer.")
+    parser.add_argument("--adapter_init_std", default=1e-7, type=float,
                         help="Epsilon for Adam optimizer.")
     parser.add_argument("--max_grad_norm", default=0.1, type=float,
                         help="Max gradient norm.")
@@ -130,7 +142,8 @@ if __name__ == '__main__':
                         help="Total number of training epochs to perform.")
     parser.add_argument("--eval_period", default=50, type=int,
                         help="Total number of training epochs to perform.")
-    parser.add_argument('--num_beams', type=int, default=3)
+    parser.add_argument('--num_beams', type=int, default=4)
+
                         
     parser.add_argument("--train_path", default="exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.train.json", type=str)
     # parser.add_argument("--test_path", default="exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl", type=str)
