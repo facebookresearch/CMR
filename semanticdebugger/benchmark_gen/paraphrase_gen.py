@@ -24,7 +24,7 @@ print("Device: ", device)
 model = model.to(device)
 
 
-sentence = "when did one child policy end in china ?"
+sentence = "canada is in which part of the world ?"
 inputs = ["paraphrase: " + sentence + " </s>" for _ in range(128)] 
  
 batch_size = 16

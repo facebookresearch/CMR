@@ -75,14 +75,17 @@ class OnlineDebuggingMethod():
         assert all([hasattr(self.data_args, att) for att in required_atts])
         return
 
-    def load_data(self, data_args):
+    def load_data(self, data_args, given_data_stream=None):
         """"For loading the data stream for dynamic building the errors."""
         self.data_args = data_args
         self._check_data_args(
             additional_args=["data_stream_json_path", "accumulate_eval_freq"])
         # Load bug stream
-        with open(data_args.data_stream_json_path) as f:
-            data_stream = json.load(f)
+        if given_data_stream:
+            data_stream = given_data_stream
+        else:
+            with open(data_args.data_stream_json_path) as f:
+                data_stream = json.load(f)
         self.data_stream = data_stream
         self.num_data_batches = len(data_stream)
         self.data_batch_size = len(data_stream[0])
@@ -92,6 +95,8 @@ class OnlineDebuggingMethod():
         instant_doing_nothing_EM = []
         self.all_initial_pass_ids = set()
         self.all_initial_error_ids = set()
+        self.data_eval_loaders = []
+        self.online_eval_results = []
         for data_batch in tqdm(self.data_stream, desc="Creating the data loaders."):
             if data_args.max_timecode > 0 and len(self.data_eval_loaders) >= data_args.max_timecode:
                 break
@@ -197,21 +202,23 @@ class OnlineDebuggingMethod():
             f"Evaluating again to analyze the performance .... Timecode: {self.timecode}")
         after_predictions, after_results, after_results_all = self.evaluate(
             data_eval_loader)
+        result_dict["after_eval"] = _pack_as_dict(
+            after_predictions, after_results, after_results_all)
+        
         self.logger.info(f"After Error Fixing: {after_results['EM']}")
 
-        forgotten_ids, retained_ids, fixed_ids, unfixed_ids = self._eval_forget_and_fix(
-            data_eval_loader.data, result_dict["before_eval"]["metric_results_detailed"], after_results_all)
+        forgotten_examples, retained_ids, fixed_ids, unfixed_ids = self._eval_forget_and_fix(
+            data_eval_loader.data, result_dict["before_eval"], result_dict["after_eval"])
         instant_fixing_rate = len(fixed_ids) / (len(fixed_ids) + len(unfixed_ids))
-        instant_retention_rate = len(retained_ids)/(len(retained_ids) + len(forgotten_ids))
+        instant_retention_rate = len(retained_ids)/(len(retained_ids) + len(forgotten_examples))
         self.logger.info(f"Instant Fixing Rate: {instant_fixing_rate}")
         self.logger.info(f"Instant Retention Rate: {instant_retention_rate}")
 
         self.logger.info("-"*50)
         # Start the logging.
 
-        result_dict["after_eval"] = _pack_as_dict(
-            after_predictions, after_results, after_results_all)
-        result_dict["forgotten_ids"] = forgotten_ids
+        
+        result_dict["forgotten_examples"] = forgotten_examples
         result_dict["retained_ids"] = retained_ids
         result_dict["fixed_ids"] = fixed_ids
         result_dict["unfixed_ids"] = unfixed_ids
@@ -306,15 +313,15 @@ class OnlineDebuggingMethod():
         self.overall_eval_results["final_upstream_test"] = oue_results
         self.logger.info("Finish the final evaluation.")
 
-    def _eval_forget_and_fix(self, examples, before_results_all, after_results_all):
-        forgotten_ids = []
+    def _eval_forget_and_fix(self, examples, before_results, after_results):
+        forgotten_examples = []
         retained_ids = []
         fixed_ids = []
         unfixed_ids = []
-        for (_input, _truth, _id), em_before, em_after in zip(examples, before_results_all["EM"], after_results_all["EM"]):
+        for (_input, _truth, _id), em_before, em_after, before_pred, after_pred in zip(examples, before_results["metric_results_detailed"]["EM"], after_results["metric_results_detailed"]["EM"], before_results["predictions"], after_results["predictions"]):
             if em_before == 1:
                 if em_after == 0:
-                    forgotten_ids.append(_id)
+                    forgotten_examples.append({"id": _id, "before_prediction": before_pred, "after_prediction": after_pred})
                 else:
                     retained_ids.append(_id)
 
@@ -323,7 +330,7 @@ class OnlineDebuggingMethod():
                     fixed_ids.append(_id)
                 else:
                     unfixed_ids.append(_id)
-        return forgotten_ids, retained_ids, fixed_ids, unfixed_ids
+        return forgotten_examples, retained_ids, fixed_ids, unfixed_ids
       # So the 0-th checkpoint should be the original base model.
 
     def _save_base_model(self, ckpt_name=None):

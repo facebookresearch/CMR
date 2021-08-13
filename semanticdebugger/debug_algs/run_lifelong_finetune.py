@@ -1,5 +1,6 @@
 from argparse import Namespace
 import argparse
+from semanticdebugger.debug_algs.distant_supervision.get_forgettable import MiningSupervision
 
 from torch import detach
 from semanticdebugger.models.utils import set_seeds
@@ -26,8 +27,7 @@ class TqdmHandler(logging.Handler):
         except:
             self.handleError(record)
 
-
-def run(args):
+def setup_args(args):
     set_seeds(args.seed)
     prefix = args.prefix
     log_filename = f"logs/{prefix}_online_debug.log"
@@ -53,6 +53,8 @@ def run(args):
         debugging_alg = MBPAPlusPlus(logger=logger)
     elif args.cl_method_name == "hyper_cl":
         debugging_alg = HyperCL(logger=logger)
+    elif args.cl_method_name == "simple_cl_for_mining_supervision":
+        debugging_alg = MiningSupervision(logger=logger)
     
     debugging_alg.stream_mode = args.stream_mode
     
@@ -77,7 +79,7 @@ def run(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug", "simple_replay", "mbpa++", "hyper_cl"]:
+    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug", "simple_replay", "mbpa++", "hyper_cl", "simple_cl_for_mining_supervision"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -111,7 +113,11 @@ def run(args):
             setattr(debugger_args, "adapter_dim", args.adapter_dim)
             setattr(debugger_args, "example_encoder_name", args.example_encoder_name)
             setattr(debugger_args, "task_emb_dim", args.task_emb_dim)
+    return debugging_alg, data_args, base_model_args, debugger_args, logger
 
+
+def run(args):
+    debugging_alg, data_args, base_model_args, debugger_args, logger = setup_args(args)
 
     if args.num_threads_eval <= 0:
         # The Online Debugging Mode + Computing offline debugging bounds.
