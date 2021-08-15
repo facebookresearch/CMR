@@ -34,25 +34,25 @@ prefix=mrqa_naturalquestions_dev_bart-base_0729_inference
 NGPU=7
 GPU_START=1
 
-# for shard_id in $(eval echo "{0..$(( NGPU-1 ))}") 
-# do 
-#     CUDA_VISIBLE_DEVICES=$((GPU_START+ shard_id)) python semanticdebugger/benchmark_gen/run_bart_infer.py \
-#         --data_dist --num_shards $NGPU --local_id ${shard_id} \
-#         --data_file "data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl" \
-#         --prediction_file "bug_data/mrqa_naturalquestions_dev.predictions.${shard_id}.jsonl" \
-#         --conig_file "scripts/infer_mrqa_bart_base.config" \
-#         --prefix ${prefix}  > logs/tmp/${prefix}_${shard_id}.log 2>&1 &
-#     echo logs/tmp/${prefix}_${shard_id}.log
-# done
-# wait;
+for shard_id in $(eval echo "{0..$(( NGPU-1 ))}") 
+do 
+    CUDA_VISIBLE_DEVICES=$((GPU_START+ shard_id)) python semanticdebugger/benchmark_gen/run_bart_infer.py \
+        --data_dist --num_shards $NGPU --local_id ${shard_id} \
+        --data_file "data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl" \
+        --prediction_file "bug_data/mrqa_naturalquestions_dev.predictions.${shard_id}.jsonl" \
+        --conig_file "scripts/infer_mrqa_bart_base.config" \
+        --prefix ${prefix}  > logs/tmp/${prefix}_${shard_id}.log 2>&1 &
+    echo logs/tmp/${prefix}_${shard_id}.log
+done
+wait;
 
-python semanticdebugger/benchmark_gen/run_bart_infer.py \
-    --post_process \
-    --num_shards $NGPU \
-    --data_file "data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl" \
-    --prediction_file "bug_data/mrqa_naturalquestions_dev.predictions.shard_id.jsonl" \
-    --conig_file "scripts/infer_mrqa_bart_base.config" \
-    --prefix ${prefix}
+# python semanticdebugger/benchmark_gen/run_bart_infer.py \
+#     --post_process \
+#     --num_shards $NGPU \
+#     --data_file "data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl" \
+#     --prediction_file "bug_data/mrqa_naturalquestions_dev.predictions.shard_id.jsonl" \
+#     --conig_file "scripts/infer_mrqa_bart_base.config" \
+#     --prefix ${prefix}
 
 
 
