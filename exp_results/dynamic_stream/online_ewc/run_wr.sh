@@ -1,5 +1,5 @@
 lambda=500
-prefix=nq_dev_0805_wr_dynamic_ewc
+prefix=nq_dev_0813_wr_wpara_dynamic_ewc
 log_file=exp_results/dynamic_stream/online_ewc/run_${prefix}.log
 touch ${log_file}
 echo ${log_file}
@@ -10,7 +10,7 @@ CUDA_VISIBLE_DEVICES=2,3 python semanticdebugger/debug_algs/run_lifelong_finetun
     --max_timecode 100 \
     --prefix ${prefix} \
     --stream_mode dynamic \
-    --data_stream_json_path exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.test.wr.json \
+    --data_stream_json_path exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.test.wr.wpara.json \
     --replay_stream_json_path "" \
     --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --save_all_ckpts 0 \

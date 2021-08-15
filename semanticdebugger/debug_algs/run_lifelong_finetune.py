@@ -1,15 +1,18 @@
 from argparse import Namespace
 import argparse
-from semanticdebugger.debug_algs.distant_supervision.get_forgettable import MiningSupervision
+
+
 
 from torch import detach
 from semanticdebugger.models.utils import set_seeds
+from semanticdebugger.debug_algs.cl_none import NoneCL
 from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
 from semanticdebugger.debug_algs.cl_simple_replay_alg import SimpleReplay
 from semanticdebugger.debug_algs.cl_mbpapp_alg import MBPAPlusPlus
 from semanticdebugger.debug_algs.cl_hypernet_alg import HyperCL
+from semanticdebugger.debug_algs.distant_supervision import get_forgettable
 import logging
 import os
 import json
@@ -41,7 +44,9 @@ def setup_args(args):
 
     logger.info(args)
 
-    if args.cl_method_name == "simple_cf":
+    if args.cl_method_name == "none_cl":
+        debugging_alg = NoneCL(logger=logger)
+    elif args.cl_method_name == "simple_cf":
         debugging_alg = ContinualFinetuning(logger=logger)
     elif args.cl_method_name == "online_ewc":
         debugging_alg = OnlineEWC(logger=logger)
@@ -54,7 +59,7 @@ def setup_args(args):
     elif args.cl_method_name == "hyper_cl":
         debugging_alg = HyperCL(logger=logger)
     elif args.cl_method_name == "simple_cl_for_mining_supervision":
-        debugging_alg = MiningSupervision(logger=logger)
+        debugging_alg = get_forgettable.MiningSupervision(logger=logger)
     
     debugging_alg.stream_mode = args.stream_mode
     
@@ -79,7 +84,7 @@ def setup_args(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["simple_cf", "online_ewc", "offline_debug", "simple_replay", "mbpa++", "hyper_cl", "simple_cl_for_mining_supervision"]:
+    if args.cl_method_name in ["none_cl", "simple_cf", "online_ewc", "offline_debug", "simple_replay", "mbpa++", "hyper_cl", "simple_cl_for_mining_supervision"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -100,7 +105,7 @@ def setup_args(args):
         elif args.cl_method_name in ["simple_replay", "mbpa++"]:
             setattr(debugger_args, "replay_size", args.replay_size)
             setattr(debugger_args, "replay_frequency", args.replay_frequency)
-            if args.cl_method_name == "mbpa++":
+            if args.cl_method_name == "mbpa++": # including er, mbpa, mbpa++
                 setattr(debugger_args, "memory_path", args.memory_path)
                 setattr(debugger_args, "memory_key_cache_path", args.memory_key_cache_path)
                 setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
@@ -108,6 +113,8 @@ def setup_args(args):
                 setattr(debugger_args, "memory_store_rate", args.memory_store_rate)                
                 setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
                 setattr(debugger_args, "inference_query_size", args.inference_query_size)
+                setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)
+                
                 
         elif args.cl_method_name in ["hyper_cl"]:
             setattr(debugger_args, "adapter_dim", args.adapter_dim)
@@ -262,7 +269,10 @@ def get_cli_parser():
     parser.add_argument('--memory_store_rate', type=float, default=1.0)   # 1= always store all examples to the memory. 
     parser.add_argument('--num_adapt_epochs', type=int, default=1) #
     parser.add_argument('--inference_query_size', type=int, default=1) #
-     
+
+    parser.add_argument('--local_adapt_lr', type=float, default=1e-5) #
+    
+
     
 
     ### The HPs for HyperCL

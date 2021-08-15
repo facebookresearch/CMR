@@ -145,6 +145,7 @@ class EWCRegularizer(nn.Module, metaclass=abc.ABCMeta):
             return (1./2)*sum(losses)
         else:
             # EWC-loss is 0 if there are no stored mode and precision yet
+            # TODO: instead of 0, let's use the normal L2 norm?
             return torch.tensor(0., device=torch.device("cuda"))
 
 

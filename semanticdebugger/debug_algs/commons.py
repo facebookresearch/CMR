@@ -91,10 +91,10 @@ class OnlineDebuggingMethod():
         self.data_batch_size = len(data_stream[0])
         # Create data loaders for each error batch.
         all_formatted_data = []
-        accumulate_doing_nothing_EM = []
-        instant_doing_nothing_EM = []
-        self.all_initial_pass_ids = set()
-        self.all_initial_error_ids = set()
+        # accumulate_doing_nothing_EM = []
+        # instant_doing_nothing_EM = []
+        # self.all_initial_pass_ids = set()
+        # self.all_initial_error_ids = set()
         self.data_eval_loaders = []
         self.online_eval_results = []
         for data_batch in tqdm(self.data_stream, desc="Creating the data loaders."):
@@ -106,16 +106,16 @@ class OnlineDebuggingMethod():
                 data_args, formatted_data_batch, mode="eval")
             self.data_eval_loaders.append(eval_data_dataloader)
             #
-            doing_nothing_EM = float(
-                np.mean([item["score"]["EM"] for item in data_batch]))
-            instant_doing_nothing_EM.append(doing_nothing_EM)
-            accumulate_doing_nothing_EM.append(
-                float(np.mean(instant_doing_nothing_EM)))
-            for item in data_batch:
-                if item["init_status"] == "pass":
-                    self.all_initial_pass_ids.add(item["id"])
-                else:
-                    self.all_initial_error_ids.add(item["id"])
+            # doing_nothing_EM = float(
+            #     np.mean([item["score"]["EM"] for item in data_batch]))
+            # instant_doing_nothing_EM.append(doing_nothing_EM)
+            # accumulate_doing_nothing_EM.append(
+            #     float(np.mean(instant_doing_nothing_EM)))
+            # for item in data_batch:
+            #     if item["init_status"] == "pass":
+            #         self.all_initial_pass_ids.add(item["id"])
+            #     else:
+            #         self.all_initial_error_ids.add(item["id"])
 
         # Create the list of replay eval loaders for monitoring the performance.
         if data_args.replay_stream_json_path:
@@ -132,8 +132,8 @@ class OnlineDebuggingMethod():
 
         # Init other useful statistics.
 
-        self.instant_doing_nothing_EM = instant_doing_nothing_EM
-        self.accumulate_doing_nothing_EM = accumulate_doing_nothing_EM
+        # self.instant_doing_nothing_EM = instant_doing_nothing_EM
+        # self.accumulate_doing_nothing_EM = accumulate_doing_nothing_EM
         self.all_formatted_data = all_formatted_data
 
         if data_args.pass_pool_jsonl_path:
@@ -158,7 +158,7 @@ class OnlineDebuggingMethod():
 
         base_EM = float(
             np.mean([i["init_status"] == "pass" for i in self.replay_stream[self.timecode]]))
-        result_dict["model0_replay_eval"] = {"EM": base_EM}
+        # result_dict["model0_replay_eval"] = {"EM": base_EM}
 
         self.logger.info(f"Replayed Performance: {results['EM']} vs Model_0: {base_EM}")
 
@@ -169,8 +169,8 @@ class OnlineDebuggingMethod():
         predictions, results, results_all = self.evaluate(data_eval_loader)
 
         self.logger.info(f"Before Error Fixing: {results['EM']}")
-        self.logger.info(
-            f"Doing-Nothing Instant EM: {self.instant_doing_nothing_EM[self.timecode]}")
+        # self.logger.info(
+        #     f"Doing-Nothing Instant EM: {self.instant_doing_nothing_EM[self.timecode]}")
 
         ### Pack the error examples for training. ###
         errors = []
@@ -224,7 +224,7 @@ class OnlineDebuggingMethod():
         result_dict["unfixed_ids"] = unfixed_ids
         result_dict["instant_fixing_rate"] = instant_fixing_rate
         result_dict["instant_retention_rate"] = instant_retention_rate
-        result_dict["model0_instant_EM"] = self.instant_doing_nothing_EM[self.timecode]
+        # result_dict["model0_instant_EM"] = self.instant_doing_nothing_EM[self.timecode]
         self.seen_stream_data += data_eval_loader.data
         # result_dict["doing-nothing_accmulative_EM"] = self.accumulate_doing_nothing_EM[self.timecode]
 
@@ -279,8 +279,8 @@ class OnlineDebuggingMethod():
                                                                 float(np.mean([r["replay_eval"]["metric_results"][key]
                                                                                for r in self.online_eval_results]))
                                                                 for key in self.metric.split("|")}
-            self.overall_eval_results["model0_replay_test"] = {"EM": float(
-                np.mean([r["model0_replay_eval"]["EM"] for r in self.online_eval_results]))}
+            # self.overall_eval_results["model0_replay_test"] = {"EM": float(
+            #     np.mean([r["model0_replay_eval"]["EM"] for r in self.online_eval_results]))}
 
         self.overall_eval_results["overall_error_number"] = len(self.overall_errors)
         self.overall_eval_results["overall_instant_fixing_rate"] = float(
@@ -299,10 +299,10 @@ class OnlineDebuggingMethod():
         _, overall_instream_eval_dataloader = self.get_dataloader(
             self.data_args, self.seen_stream_data, mode="eval")
         oie_predictions, oie_results, oie_results_all = self.evaluate(
-            eval_dataloader=overall_error_eval_dataloader, verbose=True)
+            eval_dataloader=overall_instream_eval_dataloader, verbose=True)
         self.overall_eval_results["final_instream_test"] = oie_results
-        self.overall_eval_results["model0_instream_test"] = {"EM": float(
-            np.mean([r["model0_instant_EM"] for r in self.online_eval_results]))}
+        # self.overall_eval_results["model0_instream_test"] = {"EM": float(
+        #     np.mean([r["model0_instant_EM"] for r in self.online_eval_results]))}
 
         # Test the upstream forgetting eval.
         self.logger.info("Test the upstream forgetting eval.")

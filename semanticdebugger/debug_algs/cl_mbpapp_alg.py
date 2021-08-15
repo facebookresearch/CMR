@@ -1,3 +1,4 @@
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from tqdm import tqdm
 import random
@@ -205,11 +206,13 @@ class MBPAPlusPlus(ContinualFinetuning):
             "memory_path",  # to save/load the memory module from disk
             "memory_key_cache_path",
             "num_adapt_epochs",
-            "inference_query_size"
+            "inference_query_size",
+            "local_adapt_lr"
         ]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
 
     def debugger_setup(self, debugger_args):
+
         super().debugger_setup(debugger_args)
 
         # Initializing the Key-Value memory module for MBPA++
@@ -241,7 +244,8 @@ class MBPAPlusPlus(ContinualFinetuning):
             self._replay_based_eval(result_dict)
             bug_train_loader = self._get_dynamic_errors(data_eval_loader, result_dict)
 
-            if (self.model_update_steps - last_steps) >= self.debugger_args.replay_frequency \
+            # if (self.model_update_steps - last_steps) >= self.debugger_args.replay_frequency \
+            if self.timecode % self.debugger_args.replay_frequency == 0 \
                     and self.debugger_args.replay_frequency > 0 and self.debugger_args.replay_size > 0 \
                     and self.timecode > 0 :
                 # sparse experience replay
@@ -408,8 +412,21 @@ class MBPAPlusPlus(ContinualFinetuning):
         curr_weights = list(model.parameters())
         global_step = 0
         pad_token_id = self.tokenizer.pad_token_id
-        super().debugger_setup(self.debugger_args)  # reset the optimizier and schduler
+
+
+
+        # super().debugger_setup(self.debugger_args)  # reset the optimizier and schduler
+
+
         model.train()
+        optimizer = AdamW(self.optimizer_grouped_parameters,
+                               lr=self.debugger_args.local_adapt_lr, eps=self.debugger_args.adam_epsilon)
+
+        # TODO: double check the decision about warm up for fine-tuning
+        scheduler = get_linear_schedule_with_warmup(optimizer,
+                                                         num_warmup_steps=self.debugger_args.warmup_steps,
+                                                         num_training_steps=self.debugger_args.total_steps)
+
         for epoch_id in range(int(self.debugger_args.num_adapt_epochs)):
             for batch in tqdm(adapt_dataloader.dataloader, desc=f"Local Adaptation Epoch {epoch_id}", disable=False):
                 global_step += 1
@@ -438,9 +455,9 @@ class MBPAPlusPlus(ContinualFinetuning):
                 if global_step % self.debugger_args.gradient_accumulation_steps == 0:
                     torch.nn.utils.clip_grad_norm_(
                         model.parameters(), self.debugger_args.max_grad_norm)
-                    self.optimizer.step()    # We have accumulated enough gradients
-                    self.scheduler.step()
-                    model.zero_grad()
+                    optimizer.step()    # We have accumulated enough gradients
+                    scheduler.step()
+                    model.zero_grad() 
         return model
 
     def inference_with_adaptation(self, model, dev_data, adapt_dataloaders, save_predictions=False, verbose=False, args=None, logger=None, return_all=False, predictions_only=False):
@@ -460,7 +477,9 @@ class MBPAPlusPlus(ContinualFinetuning):
             _model = copy.deepcopy(model)
             adapt_dataloader = adapt_dataloaders[current_index]
             if adapt_dataloader:
+                # TODO: debug. deactivate this step? then it should be the same as ER.
                 _model = self.local_adaptation(_model, adapt_dataloader)
+                pass
             ### Local Adaptation: End ###
 
             _model.eval()
