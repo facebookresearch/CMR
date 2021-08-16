@@ -257,10 +257,12 @@ if len(sys.argv) >= 2:
 # format("kilt_triviaqa", path)
 # format("glue_qnli", path)
 
-format("mrqa_SQuAD", path)
-format("mrqa_TriviaQA", path)
-format("mrqa_NaturalQuestions", path)
-format("mrqa_HotpotQA", path)
+# format("mrqa_SQuAD", path)
+# format("mrqa_TriviaQA", path)
+# format("mrqa_NaturalQuestions", path)
+# format("mrqa_HotpotQA", path)
+format("mrqa_NewsQA", path)
+format("mrqa_SearchQA", path)
 
 
 # shuf -n 1000 dev_file data/${task}/${task}_dev.mini.jsonl

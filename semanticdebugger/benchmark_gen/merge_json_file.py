@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(
         "--input_file_pattern",
-        default="exp_results/data_streams/paraphrase/mrqa_naturalquestions_dev.data_stream.test.wr.para_data_*.json", type=str)
+        default="exp_results/data_streams/paraphrase/mrqa_naturalquestions_dev.data_stream.test.wr.para_data_#.json", type=str)
 parser.add_argument(
         "--output_file",
         default="exp_results/data_streams/paraphrase/mrqa_naturalquestions_dev.data_stream.test.wr.para_data.json", type=str)
