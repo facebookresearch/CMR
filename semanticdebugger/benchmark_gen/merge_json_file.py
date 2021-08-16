@@ -12,6 +12,9 @@ parser.add_argument(
 parser.add_argument(
         "--range",
         default="range(16)", type=str)
+parser.add_argument(
+        "--mode",
+        default="json", type=str)
 
 args = parser.parse_args()
 
@@ -19,15 +22,27 @@ args = parser.parse_args()
 all_data = None
 for shard_id in eval(args.range):
     filename = args.input_file_pattern.replace("#", str(shard_id))
-    with open(filename) as f:
-        data = json.load(f)
+    if args.mode == "json":
+        with open(filename) as f:
+            print(f.name)
+            data = json.load(f)
+    elif args.mode == "jsonl":
+        with open(filename) as f:
+            print(f.name)
+            data = [json.loads(line) for line in f.read().splitlines() if line]
     if all_data is None:
         all_data = data
-    if type(all_data) == dict:
-        all_data.update(data)
     else:
-        all_data += data
+        if type(all_data) == dict:
+            all_data.update(data)
+        else:
+            all_data += data
+
+
 
 with open(args.output_file, "w") as f:
-    json.dump(all_data, f)
-
+    if args.mode == "json":
+        json.dump(all_data, f)
+    elif args.mode == "jsonl":
+        for item in all_data:
+            f.write(json.dumps(item) + "\n")

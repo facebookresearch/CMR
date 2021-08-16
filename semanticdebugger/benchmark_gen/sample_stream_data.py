@@ -138,28 +138,55 @@ def main():
     # batch_size * num_batches <= # lines of bug_pool_file
     args = parser.parse_args()
 
+    print(args)
+
     random.seed(args.seed)
     
     
-    # get the truth data
-    truth_data = []
-    with open(args.data_file) as fin:
-        lines = fin.readlines()
-    # train_examples = []
-    for line in lines:
-        # d = line.strip().split("\t")
-        # truth_data.append((d[0], d[1:]))
-        d = json.loads(line)
-        truth_data.append((d["input"], d["output"], d["id"]))
-    # get the predictions of a model via its API and config file.
+    all_truth_data = []
+    for data_file in args.data_file.split("#"):
+        truth_data = []
+        with open(data_file) as fin:
+            lines = fin.readlines()
 
-    with open(args.prediction_file, "r") as f:
-        predictions = json.load(f)
-    # get evaluation results.
-    results, results_all = evaluate_func(
-        predictions, truth_data, args.metric, return_all=True)
-    print(f"Evaluation results: {results}")
-    bug_pool, pass_pool = generate_bugs(predictions, truth_data, results_all)
+        # train_examples = []
+        for line in lines:
+            # d = line.strip().split("\t")
+            # truth_data.append((d[0], d[1:]))
+            d = json.loads(line)
+            truth_data.append((d["input"], d["output"], d["id"]))
+        all_truth_data.append(truth_data)
+
+    all_pred_data = []
+    merged_restuls_all = None
+    for prediction_file in args.prediction_file.split("#"):
+        with open(prediction_file, "r") as f:
+            predictions = json.load(f)
+        # get evaluation results.
+        print(f"len(predictions): {len(predictions)}")
+        print(f"len(all_truth_data[len(all_pred_data)]): {len(all_truth_data[len(all_pred_data)])}")
+        results, results_all = evaluate_func(
+            predictions, all_truth_data[len(all_pred_data)], args.metric, return_all=True)
+        print(f"{prediction_file}; Evaluation results: {results}")
+        all_pred_data.append(predictions)
+        if merged_restuls_all is None:
+            merged_restuls_all = results_all
+        else:
+            for key in merged_restuls_all:
+                merged_restuls_all[key].extend(results_all[key])
+
+
+    merged_truth_data = []
+    for item in all_truth_data:
+        merged_truth_data.extend(item)
+    merged_predictions = []
+    for item in all_pred_data:
+        merged_predictions.extend(item)
+
+    
+
+    bug_pool, pass_pool = generate_bugs(merged_predictions, merged_truth_data, merged_restuls_all)
+
 
     print(f"len(bug_pool)={len(bug_pool)}; len(pass_pool)={len(pass_pool)} <--- len(predictions)={len(predictions)}")
 
@@ -175,17 +202,22 @@ def main():
      
     random.shuffle(pass_pool)
     random.shuffle(bug_pool)
-    sampled_bug_pool = bug_pool[:args.bug_sample_size]
-    sampled_pass_pool = pass_pool[:args.pass_sample_size]
-    if args.hidden_sample_size > 0 and args.hidden_sample_size + args.pass_sample_size <= len(pass_pool):
-        hidden_examples = pass_pool[-args.hidden_sample_size:]
-        with open(args.hidden_example_file, "w") as f:
-            for item in hidden_examples:
-                f.write(json.dumps(item) + "\n")
+    
+    if args.bug_sample_size > 0 and args.pass_sample_size > 0:
+        sampled_bug_pool = bug_pool[:args.bug_sample_size]
+        sampled_pass_pool = pass_pool[:args.pass_sample_size]
+        if args.hidden_sample_size > 0 and args.hidden_sample_size + args.pass_sample_size <= len(pass_pool):
+            hidden_examples = pass_pool[-args.hidden_sample_size:]
+            with open(args.hidden_example_file, "w") as f:
+                for item in hidden_examples:
+                    f.write(json.dumps(item) + "\n")
 
-    print(len(sampled_bug_pool), len(sampled_pass_pool))
- 
-    sampled_data_pool = sampled_bug_pool + sampled_pass_pool
+        print(len(sampled_bug_pool), len(sampled_pass_pool))
+    
+        sampled_data_pool = sampled_bug_pool + sampled_pass_pool
+    else:
+        sampled_data_pool = pass_pool + bug_pool
+        sampled_data_pool = sampled_data_pool[:args.batch_size * args.num_batches]
 
     if args.sample_method == "no_replace":
         data_stream = get_data_stream(
@@ -256,8 +288,24 @@ python semanticdebugger/benchmark_gen/sample_stream_data.py \
 
 
 
+### Mixed stream for dev.
 
-
+python semanticdebugger/benchmark_gen/sample_stream_data.py \
+--sample_method with_replace \
+--data_file \
+data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl#\
+data/mrqa_squad/mrqa_squad_dev.jsonl#\
+data/mrqa_triviaqa/mrqa_triviaqa_dev.jsonl#\
+data/mrqa_hotpotqa/mrqa_hotpotqa_dev.jsonl \
+--prediction_file \
+bug_data/mrqa_naturalquestions_dev.predictions.jsonl#\
+bug_data/mrqa_squad_dev.predictions.jsonl#\
+bug_data/mrqa_triviaqa_dev.predictions.jsonl#\
+bug_data/mrqa_hotpotqa_dev.predictions.jsonl \
+--data_stream_file exp_results/data_streams/mrqa.mixed.data_stream.test.wr.json \
+--batch_size 32 --num_batches 100 \
+--seed 42 \
+--bug_sample_size -1 --pass_sample_size -1
 
 
 """
