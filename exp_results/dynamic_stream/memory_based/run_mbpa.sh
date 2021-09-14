@@ -8,7 +8,7 @@ mkdir exp_results/dynamic_stream/memory_based/${prefix}_ckpts/
 CUDA_VISIBLE_DEVICES=4,3,2,1 python semanticdebugger/debug_algs/run_lifelong_finetune.py \
     --train_batch_size 4 \
     --max_timecode 100 \
-    --cl_method_name "mbpa++" \
+    --cl_method_name "mbpa" \
     --memory_key_encoder "facebook/bart-base" \
     --memory_store_rate ${memory_store_rate} \
     --num_adapt_epochs ${num_adapt_epochs} --inference_query_size 5 \

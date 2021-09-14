@@ -1,8 +1,8 @@
-prefix=nq_dev_0813_wr_wpara_dynamic_none
+prefix=nq_dev_0914_wr_wpara_dynamic_none
 log_file=exp_results/dynamic_stream/none/run_${prefix}.log
 echo ${log_file}
 touch ${log_file}
-CUDA_VISIBLE_DEVICES=1 python semanticdebugger/debug_algs/run_lifelong_finetune.py \
+CUDA_VISIBLE_DEVICES=7 python semanticdebugger/debug_algs/run_lifelong_finetune.py \
     --cl_method "none_cl" \
     --predict_batch_size 64 \
     --max_timecode 100 \

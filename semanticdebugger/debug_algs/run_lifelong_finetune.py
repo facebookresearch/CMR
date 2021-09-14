@@ -9,8 +9,7 @@ from semanticdebugger.debug_algs.cl_none import NoneCL
 from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
-from semanticdebugger.debug_algs.cl_simple_replay_alg import SimpleReplay
-from semanticdebugger.debug_algs.cl_mbpapp_alg import MBPAPlusPlus
+from semanticdebugger.debug_algs.cl_mbcl_alg import MemoryBasedCL
 from semanticdebugger.debug_algs.cl_hypernet_alg import HyperCL
 from semanticdebugger.debug_algs.distant_supervision import get_forgettable
 import logging
@@ -52,10 +51,24 @@ def setup_args(args):
         debugging_alg = OnlineEWC(logger=logger)
     elif args.cl_method_name == "offline_debug":
         debugging_alg = OfflineDebugger(logger=logger)
-    elif args.cl_method_name == "simple_replay":
-        debugging_alg = SimpleReplay(logger=logger)
+    elif args.cl_method_name == "er":
+        assert args.num_adapt_epochs <= 0
+        assert args.replay_frequency > 0
+        assert args.replay_size > 0
+        debugging_alg = MemoryBasedCL(logger=logger)
+        debugging_alg.name = "er"
+    elif args.cl_method_name == "mbpa":
+        assert args.num_adapt_epochs > 0
+        assert args.replay_frequency <= 0
+        assert args.replay_size <= 0
+        debugging_alg = MemoryBasedCL(logger=logger)
+        debugging_alg.name = "mbpa"
     elif args.cl_method_name == "mbpa++":
-        debugging_alg = MBPAPlusPlus(logger=logger)
+        assert args.num_adapt_epochs > 0
+        assert args.replay_frequency > 0
+        assert args.replay_size > 0
+        debugging_alg = MemoryBasedCL(logger=logger)
+        debugging_alg.name = "mbpa++"
     elif args.cl_method_name == "hyper_cl":
         debugging_alg = HyperCL(logger=logger)
     elif args.cl_method_name == "simple_cl_for_mining_supervision":
@@ -105,7 +118,7 @@ def setup_args(args):
         elif args.cl_method_name in ["simple_replay", "mbpa++"]:
             setattr(debugger_args, "replay_size", args.replay_size)
             setattr(debugger_args, "replay_frequency", args.replay_frequency)
-            if args.cl_method_name == "mbpa++": # including er, mbpa, mbpa++
+            if args.cl_method_name in ["er", "mbpa", "mbpa++"]: 
                 setattr(debugger_args, "memory_path", args.memory_path)
                 setattr(debugger_args, "memory_key_cache_path", args.memory_key_cache_path)
                 setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)

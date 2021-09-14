@@ -191,10 +191,10 @@ class KeyValueMemoryModule(object):
             self.logger.info(f"Warning: {memory_path} doesn't exist.")
 
 
-class MBPAPlusPlus(ContinualFinetuning):
+class MemoryBasedCL(ContinualFinetuning):
     def __init__(self, logger):
         super().__init__(logger=logger)
-        self.name = "mbpa++"
+        self.name = "tbd" # can be er/mbpa/mbpa++
 
     def _check_debugger_args(self):
         super()._check_debugger_args()
@@ -386,7 +386,8 @@ class MBPAPlusPlus(ContinualFinetuning):
         """Evaluates the performance"""
 
         if self.debugger_args.num_adapt_epochs <= 0:
-            # This is for the equvilent version of the replay as the baseline (MbPA++ w/o local adaptation when inference.)
+            # ER (no local adpatation).
+            # This is for the equvilent version of the replay as the baseline (MbPA++ w/o local adaptation when inference or just simple replay.)
             return super().evaluate(eval_dataloader, verbose)
 
         if not eval_dataloader:

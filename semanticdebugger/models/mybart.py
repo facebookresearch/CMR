@@ -18,7 +18,7 @@ class MyBart(BartForConditionalGeneration):
         else:
             _decoder_input_ids = decoder_input_ids
 
-        outputs = self.model(x
+        outputs = self.model(
             input_ids,
             attention_mask=attention_mask,
             encoder_outputs=encoder_outputs,
