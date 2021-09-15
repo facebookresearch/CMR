@@ -200,6 +200,7 @@ class MemoryBasedCL(ContinualFinetuning):
         super()._check_debugger_args()
         required_atts = [
             "replay_size",
+            "replay_candidate_size",
             "replay_frequency",
             "memory_key_encoder",  # 'bert-base-uncased' by default
             "memory_store_rate",  # 0, 0.1, 1 etc.
@@ -222,6 +223,53 @@ class MemoryBasedCL(ContinualFinetuning):
         self.memroy_module.load_memory_key_cache(debugger_args.memory_key_cache_path)
         return
 
+
+
+    
+
+    def get_top_interfered_examples(self, K, candidate_examples, query_data_loader):
+        """
+        This is for the MIR method. 
+        1) use query examples to train current_model for getting a virtual model.
+        2) test the current_model and the virtual model seperately on the candidate examples
+        3) compare the loss udpate of each example and rank them by the delta.
+        4) return the top K examples with the largest positive loss changes.
+        """
+        assert self.name == "mir"
+        self.logger.info(f"get_top_interfered_examples: len(candidate_examples)={len(candidate_examples)};")
+        
+        before_model = copy.deepcopy(self.base_model)
+        # self.fix_bugs(query_data_loader)   # for debugging
+        after_model = self.local_adaptation(before_model, query_data_loader)
+        
+
+        mlr_data_args = copy.deepcopy(self.data_args)
+        mlr_data_args.train_batch_size = 4    # to get the loss for each example
+        memory_buffer_loader, _ = self.get_dataloader(mlr_data_args, candidate_examples, mode="train")        
+        
+        before_losses = run_bart.inference(before_model, memory_buffer_loader, compute_loss=True, loss_only=True, logger=self.logger)
+        after_losses = run_bart.inference(after_model, memory_buffer_loader, compute_loss=True, loss_only=True, logger=self.logger)
+        self.logger.info(f"len(before_losses)={len(before_losses)}; len(after_losses)={len(after_losses)};")
+        assert len(before_losses) == len(after_losses) == len(candidate_examples)
+        
+        # it's a virtual update and we need to recover it.
+        # del self.base_model
+        # del after_model
+        # self.base_model = before_model
+        
+        interference_scores = []
+        for example, before_loss, after_loss in zip(candidate_examples, before_losses, after_losses):
+            loss_delta = after_loss - before_loss
+            interference_scores.append((example, loss_delta))
+        interference_scores.sort(key=lambda x: x[1], reverse=True)
+        self.logger.info(f"interference_scores = {[x[1] for x in interference_scores]}")
+        top_K_examples = [x[0] for x in interference_scores][:K]
+        
+        del before_model 
+        del after_model
+        
+        return top_K_examples
+        
 
     # The new evaluation pipeline.
     def online_debug(self):
@@ -250,12 +298,22 @@ class MemoryBasedCL(ContinualFinetuning):
                     and self.timecode > 0 :
                 # sparse experience replay
                 self.logger.info("Triggering Sampling from Memory and starting to replay.")
-                retrieved_examples = self.memroy_module.random_sample(
-                    sample_size=self.debugger_args.replay_size)
-                
-                replay_data_loader, _ = self.get_dataloader(
-                    self.data_args, retrieved_examples, mode="train")
-                self.fix_bugs(replay_data_loader)  # sparse replay
+
+                if self.name == "mir" and \
+                    self.debugger_args.replay_candidate_size >= self.debugger_args.replay_size:
+                    retrieved_examples_candidates = self.memroy_module.random_sample(sample_size=self.debugger_args.replay_candidate_size)
+                    retrieved_examples = self.get_top_interfered_examples(K=self.debugger_args.replay_size, candidate_examples=retrieved_examples_candidates, query_data_loader=bug_train_loader)
+                    # self.logger.info(f"retrieved_examples (mir)={retrieved_examples}")
+                    # self.logger.info(f"retrieved_examples (random)={retrieved_examples_candidates[:self.debugger_args.replay_size]}")
+                    self.base_model.train()
+                    # retrieved_examples = retrieved_examples_candidates[:self.debugger_args.replay_size] # for debugging MIR
+                else:
+                    retrieved_examples = self.memroy_module.random_sample(sample_size=self.debugger_args.replay_size)
+
+                assert self.base_model.training
+
+                replay_data_loader, _ = self.get_dataloader(self.data_args, retrieved_examples, mode="train")
+                self.fix_bugs(replay_data_loader, quiet=False)  # sparse replay
                 self.logger.info("Replay-Training done.")
 
             last_steps = self.model_update_steps
@@ -389,6 +447,8 @@ class MemoryBasedCL(ContinualFinetuning):
             # ER (no local adpatation).
             # This is for the equvilent version of the replay as the baseline (MbPA++ w/o local adaptation when inference or just simple replay.)
             return super().evaluate(eval_dataloader, verbose)
+
+        assert self.name in ["mbpa", "mbpa++"]
 
         if not eval_dataloader:
             eval_dataloader = self.bug_eval_loaders[self.timecode]

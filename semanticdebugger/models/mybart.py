@@ -10,7 +10,7 @@ from .utils import label_smoothed_nll_loss
 class MyBart(BartForConditionalGeneration):
     def forward(self, input_ids, attention_mask=None, encoder_outputs=None,
                 decoder_input_ids=None, decoder_attention_mask=None, decoder_cached_states=None,
-                use_cache=False, is_training=False):
+                use_cache=False, is_training=False, return_all_loss=False):
 
         if is_training:
             _decoder_input_ids = shift_tokens_right(
@@ -31,7 +31,7 @@ class MyBart(BartForConditionalGeneration):
             outputs[0], self.model.shared.weight, bias=self.final_logits_bias)
         if is_training:
             lprobs = F.log_softmax(lm_logits, dim=-1)
-            loss, _ = label_smoothed_nll_loss(
-                lprobs, decoder_input_ids, epsilon=0.1, ignore_index=self.config.pad_token_id)
+            loss, nll_loss = label_smoothed_nll_loss(
+                lprobs, decoder_input_ids, epsilon=0.1, ignore_index=self.config.pad_token_id, return_all_loss=return_all_loss)
             return loss
         return (lm_logits, ) + outputs[1:]

@@ -2,7 +2,7 @@ from argparse import Namespace
 from logging import disable
 from semanticdebugger.task_manager.eval_metrics import evaluate_func
 from semanticdebugger.models.bart_with_adapater import BartWithAdapterConfig, MyBartWithAdapter
-from semanticdebugger.debug_algs.cl_mbpapp_alg import KeyValueMemoryModule
+from semanticdebugger.debug_algs.cl_mbcl_alg import KeyValueMemoryModule
 from semanticdebugger.models.hypernet import ParameterGenerator
 import numpy as np
 import torch

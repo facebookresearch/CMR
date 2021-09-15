@@ -51,24 +51,26 @@ def setup_args(args):
         debugging_alg = OnlineEWC(logger=logger)
     elif args.cl_method_name == "offline_debug":
         debugging_alg = OfflineDebugger(logger=logger)
-    elif args.cl_method_name == "er":
+    elif args.cl_method_name in ["er", "mir"]:  # replay only
         assert args.num_adapt_epochs <= 0
         assert args.replay_frequency > 0
         assert args.replay_size > 0
+        if args.cl_method_name == "mir":
+            assert args.replay_candidate_size >= args.replay_size
         debugging_alg = MemoryBasedCL(logger=logger)
-        debugging_alg.name = "er"
+        debugging_alg.name = args.cl_method_name
     elif args.cl_method_name == "mbpa":
         assert args.num_adapt_epochs > 0
         assert args.replay_frequency <= 0
         assert args.replay_size <= 0
         debugging_alg = MemoryBasedCL(logger=logger)
-        debugging_alg.name = "mbpa"
+        debugging_alg.name = args.cl_method_name
     elif args.cl_method_name == "mbpa++":
         assert args.num_adapt_epochs > 0
         assert args.replay_frequency > 0
         assert args.replay_size > 0
         debugging_alg = MemoryBasedCL(logger=logger)
-        debugging_alg.name = "mbpa++"
+        debugging_alg.name = args.cl_method_name
     elif args.cl_method_name == "hyper_cl":
         debugging_alg = HyperCL(logger=logger)
     elif args.cl_method_name == "simple_cl_for_mining_supervision":
@@ -97,7 +99,7 @@ def setup_args(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["none_cl", "simple_cf", "online_ewc", "offline_debug", "simple_replay", "mbpa++", "hyper_cl", "simple_cl_for_mining_supervision"]:
+    if args.cl_method_name in ["none_cl", "simple_cf", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "hyper_cl", "simple_cl_for_mining_supervision"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -115,18 +117,18 @@ def setup_args(args):
         if args.cl_method_name == "online_ewc":
             setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
             setattr(debugger_args, "ewc_gamma", args.ewc_gamma)       
-        elif args.cl_method_name in ["simple_replay", "mbpa++"]:
+        elif args.cl_method_name in ["er", "mbpa", "mbpa++", "mir"]: 
             setattr(debugger_args, "replay_size", args.replay_size)
+            setattr(debugger_args, "replay_candidate_size", args.replay_candidate_size)
             setattr(debugger_args, "replay_frequency", args.replay_frequency)
-            if args.cl_method_name in ["er", "mbpa", "mbpa++"]: 
-                setattr(debugger_args, "memory_path", args.memory_path)
-                setattr(debugger_args, "memory_key_cache_path", args.memory_key_cache_path)
-                setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
-                setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
-                setattr(debugger_args, "memory_store_rate", args.memory_store_rate)                
-                setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
-                setattr(debugger_args, "inference_query_size", args.inference_query_size)
-                setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)
+            setattr(debugger_args, "memory_path", args.memory_path)
+            setattr(debugger_args, "memory_key_cache_path", args.memory_key_cache_path)
+            setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
+            setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
+            setattr(debugger_args, "memory_store_rate", args.memory_store_rate)                
+            setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
+            setattr(debugger_args, "inference_query_size", args.inference_query_size)
+            setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)
                 
                 
         elif args.cl_method_name in ["hyper_cl"]:
@@ -275,6 +277,7 @@ def get_cli_parser():
  
     ### The HPs for replay-based methods and memory-based.
     parser.add_argument('--replay_size', type=int, default=8)
+    parser.add_argument('--replay_candidate_size', type=int, default=8)
     parser.add_argument('--replay_frequency', type=int, default=1) # 1 means always replay for every steps, set to 10 means sample after 10 model updates.
     parser.add_argument('--memory_key_encoder', type=str, default="facebook/bart-base")
     parser.add_argument('--memory_path', type=str, default="")    

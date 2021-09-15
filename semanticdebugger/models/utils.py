@@ -1,3 +1,4 @@
+import copy
 import torch.nn as nn
 import random
 import numpy as np 
@@ -16,7 +17,7 @@ def convert_model_to_single_gpu(state_dict):
     return {_convert(key): value for key, value in state_dict.items()}
 
 
-def label_smoothed_nll_loss(lprobs, target, epsilon=0.1, ignore_index=-100):
+def label_smoothed_nll_loss(lprobs, target, epsilon=0.1, ignore_index=-100, return_all_loss=False):
     """From fairseq"""
     if target.dim() == lprobs.dim() - 1:
         target = target.unsqueeze(-1)
@@ -29,9 +30,9 @@ def label_smoothed_nll_loss(lprobs, target, epsilon=0.1, ignore_index=-100):
     else:
         nll_loss = nll_loss.squeeze(-1)
         smooth_loss = smooth_loss.squeeze(-1)
-
-    nll_loss = nll_loss.sum()
-    smooth_loss = smooth_loss.sum()
+    if not return_all_loss:
+        nll_loss = nll_loss.sum()
+        smooth_loss = smooth_loss.sum()
     eps_i = epsilon / lprobs.size(-1)
     loss = (1.0 - epsilon) * nll_loss + eps_i * smooth_loss
     return loss, nll_loss

@@ -191,11 +191,11 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
     return best_performance, best_model_state_dict
 
 
-def inference(model, dev_data, save_predictions=False, verbose=False, args=None, logger=None, return_all=False, predictions_only=False):
+def inference(model, dev_data, save_predictions=False, verbose=False, args=None, logger=None, return_all=False, predictions_only=False, compute_loss=False, loss_only=False):
     model.eval()
     predictions = []
     bos_token_id = dev_data.tokenizer.bos_token_id
-    loss = []   # if needed
+    losses = []   # if needed
     if args and hasattr(args, "quiet"):
         quiet = args.quiet
     else:
@@ -207,19 +207,40 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
             batch = [b.to(torch.device("cuda")) for b in batch]
         pad_token_id = dev_data.tokenizer.pad_token_id
         batch[0], batch[1] = trim_batch(batch[0], pad_token_id, batch[1])
+
+        if compute_loss:
+            # to compute loss 
+            batch[2], batch[3] = trim_batch(batch[2], pad_token_id, batch[3])
+            
+            loss = model(input_ids=batch[0], attention_mask=batch[1],
+                            decoder_input_ids=batch[2], decoder_attention_mask=batch[3],
+                            is_training=True, return_all_loss=True)
+            loss = torch.sum(loss.squeeze(-1), 1)
+            # logger.info(loss)
+            # logger.info(f"batch.size(): {len(batch[2])}")
+            # logger.info(f"loss.size(): {loss.size()}")
+            # logger.info(f"len(loss): {len(loss)}")            
+            loss = loss.detach().cpu()            
+            # loss = loss.mean()  # mean() to average on multi-gpu.
+            losses += loss
+
         if return_all:
             pass
-        outputs = model.generate(input_ids=batch[0],
-                                 attention_mask=batch[1],
-                                 num_beams=dev_data.args.num_beams,
-                                 max_length=dev_data.args.max_output_length,
-                                 decoder_start_token_id=model.config.bos_token_id,
-                                 early_stopping=dev_data.gen_early_stop,)
-        for input_, output in zip(batch[0], outputs):
-            pred = dev_data.decode(output)
-            predictions.append(pred)
+        if not loss_only:
+            outputs = model.generate(input_ids=batch[0],
+                                    attention_mask=batch[1],
+                                    num_beams=dev_data.args.num_beams,
+                                    max_length=dev_data.args.max_output_length,
+                                    decoder_start_token_id=model.config.bos_token_id,
+                                    early_stopping=dev_data.gen_early_stop,)
+            for input_, output in zip(batch[0], outputs):
+                pred = dev_data.decode(output)
+                predictions.append(pred)
     if not quiet:
         logger.info("Starting inference ... Done")
+
+    if loss_only:
+        return losses
 
     if predictions_only:
         return predictions
@@ -229,7 +250,7 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
     result = dev_data.evaluate(predictions, verbose=verbose)
     # logger.info("Starting evaluation metric ... Done!")
     if return_all:
-        return predictions, result, loss
+        return predictions, result, losses
     return result
 
 
