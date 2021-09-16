@@ -305,13 +305,13 @@ class MemoryBasedCL(ContinualFinetuning):
                     retrieved_examples = self.get_top_interfered_examples(K=self.debugger_args.replay_size, candidate_examples=retrieved_examples_candidates, query_data_loader=bug_train_loader)
                     # self.logger.info(f"retrieved_examples (mir)={retrieved_examples}")
                     # self.logger.info(f"retrieved_examples (random)={retrieved_examples_candidates[:self.debugger_args.replay_size]}")
-                    self.base_model.train()
+                    
                     # retrieved_examples = retrieved_examples_candidates[:self.debugger_args.replay_size] # for debugging MIR
                 else:
                     retrieved_examples = self.memroy_module.random_sample(sample_size=self.debugger_args.replay_size)
-
-                assert self.base_model.training
-
+                
+                self.base_model.train()
+                
                 replay_data_loader, _ = self.get_dataloader(self.data_args, retrieved_examples, mode="train")
                 self.fix_bugs(replay_data_loader, quiet=False)  # sparse replay
                 self.logger.info("Replay-Training done.")

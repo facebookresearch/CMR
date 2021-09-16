@@ -2,16 +2,16 @@
  
 num_adapt_epochs=0
 memory_store_rate=1.0
-prefix=nq_dev_0914_wr_wpara_er
+prefix=nq_dev_0915_wr_wpara_er
 log_file=exp_results/dynamic_stream/memory_based/run_${prefix}.log
 mkdir exp_results/dynamic_stream/memory_based/${prefix}_ckpts/
-CUDA_VISIBLE_DEVICES=7 python semanticdebugger/debug_algs/run_lifelong_finetune.py \
+CUDA_VISIBLE_DEVICES=2 python semanticdebugger/debug_algs/run_lifelong_finetune.py \
     --max_timecode 100 \
     --cl_method_name "er" \
     --memory_key_encoder "facebook/bart-base" \
     --memory_store_rate ${memory_store_rate} \
     --num_adapt_epochs ${num_adapt_epochs} \
-    --replay_size 16 --replay_frequency 3 \
+    --replay_size 10 --replay_frequency 1 \
     --learning_rate 3e-5 --num_train_epochs 5 \
     --prefix ${prefix} \
     --stream_mode dynamic \
