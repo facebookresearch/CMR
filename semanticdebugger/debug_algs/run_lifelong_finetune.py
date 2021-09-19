@@ -93,6 +93,7 @@ def setup_args(args):
         num_beams=args.num_beams,
         max_timecode=args.max_timecode,
         accumulate_eval_freq=-1,
+        use_sampled_upstream=args.use_sampled_upstream,
     )
 
     base_model_args = Namespace(
@@ -112,8 +113,6 @@ def setup_args(args):
             save_all_ckpts=args.save_all_ckpts,
             overtime_ckpt_dir=args.overtime_ckpt_dir
         )
-
-        setattr(debugger_args, "use_sampled_upstream", args.use_sampled_upstream)
         if args.cl_method_name == "online_ewc":
             setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
             setattr(debugger_args, "ewc_gamma", args.ewc_gamma)       

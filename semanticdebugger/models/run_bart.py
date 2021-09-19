@@ -215,6 +215,8 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
             loss = model(input_ids=batch[0], attention_mask=batch[1],
                             decoder_input_ids=batch[2], decoder_attention_mask=batch[3],
                             is_training=True, return_all_loss=True)
+            # TODO: double check this part. are the results correct?
+            # TODO: do we need to use mean? 
             loss = torch.sum(loss.squeeze(-1), 1)
             # logger.info(loss)
             # logger.info(f"batch.size(): {len(batch[2])}")

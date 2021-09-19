@@ -284,7 +284,7 @@ def load_data_static(self, data_args):
             sampled_upstream_examples)
         # self.sampled_upstream_trainloader, self.sampled_upstream_evalloader = self.get_dataloader(
         #     data_args, sampled_upstream_examples, mode="eval")
-
+        
     return
 
 
@@ -311,3 +311,57 @@ def online_debug_static(self):
             self._save_base_model()
             # Note that we save the model from the id=1.
         
+    
+# semanticdebugger/debug_algs/cl_mbcl_alg.py
+def online_debug_static(self):
+    self.logger.info("Start Online Debugging")
+    self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
+    self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
+    self.logger.info(f"Replay Size: {self.debugger_args.replay_size}")
+    self.logger.info(f"Replay Frequency: {self.debugger_args.replay_frequency}")
+    self.timecode = 0
+
+    if self.debugger_args.save_all_ckpts:
+        # save the initial model as the 0-th model.
+        self._save_base_model()
+
+    # For the initial memory.
+    # TODO: sample and save to the memory.
+    last_steps = 0
+    for bug_train_loader in tqdm(self.bug_train_loaders, desc="Online Debugging", total=self.num_bug_batches):
+
+        if (self.model_update_steps - last_steps) >= self.debugger_args.replay_frequency \
+                and self.debugger_args.replay_frequency > 0 and self.debugger_args.replay_size > 0:
+            # sparse experience replay
+            self.logger.info("Triggering Sampling from Memory and starting to replay.")
+            retrieved_examples = self.memroy_module.random_sample(
+                sample_size=self.debugger_args.replay_size)
+            replay_data_loader, _ = self.get_dataloader(
+                self.data_args, retrieved_examples, mode="train")
+            self.fix_bugs(replay_data_loader)  # sparse replay
+            self.logger.info("Replay-Training done.")
+
+        last_steps = self.model_update_steps
+        ############### CORE START ###############
+        # Fix the bugs by mini-batch based "training"
+        self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
+        self.fix_bugs(bug_train_loader)   # for debugging
+        self.logger.info("Start bug-fixing .... Done!")
+        ############### CORE END ###############
+        self.timecode += 1
+        if self.debugger_args.save_all_ckpts:
+            self._save_base_model()
+            # Note that we save the model from the id=1.
+            # So the 0-th checkpoint should be the original base model.
+        _max = 1000000
+        flag_store_examples = bool(random.randrange(0, _max)/_max >=
+                                    1 - self.debugger_args.memory_store_rate)
+        if flag_store_examples:
+            self.logger.info("Saving examples to the memory.")
+            key_vectors = self.memroy_module.encode_examples(bug_train_loader.data, use_random_keys=bool(self.name in ["er", "mir"]))
+            self.memroy_module.store_examples(
+                key_vectors, bug_train_loader.data, timecode=self.timecode)
+            self.logger.info("Finished.")
+
+    self.memroy_module.save_memory_to_path(self.debugger_args.memory_path)
+

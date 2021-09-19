@@ -64,6 +64,7 @@ class OnlineDebuggingMethod():
     def _check_data_args(self, additional_args=[]):
         required_atts = ["bug_stream_json_path",
                          "pass_pool_jsonl_path",
+                         "use_sampled_upstream",
                          "sampled_upstream_json_path",
                          "do_lowercase",
                          "append_another_bos",
@@ -128,23 +129,35 @@ class OnlineDebuggingMethod():
                     data_args, formatted_replay_batch, mode="eval")
                 self.replay_eval_loaders.append(eval_replay_dataloader)
             self.replay_eval_loaders = self.replay_eval_loaders[:self.num_bug_batches]
+        else:
+            self.logger.info("Not creating the replay-stream for evaluation.")
         # assert len(self.replay_eval_loaders) == self.num_bug_batches
 
         # Init other useful statistics.
-
+        
         # self.instant_doing_nothing_EM = instant_doing_nothing_EM
         # self.accumulate_doing_nothing_EM = accumulate_doing_nothing_EM
         self.all_formatted_data = all_formatted_data
 
-        if data_args.pass_pool_jsonl_path:
-            # Create loaders for the sampled pass examples
+        if data_args.pass_pool_jsonl_path: 
+            # Create loaders for the sampled pass examples for evaluation.
             with open(data_args.pass_pool_jsonl_path) as f:
-                pass_examples = [json.loads(line)
-                                 for line in set(f.read().splitlines())]
+                pass_examples = [json.loads(line) for line in set(f.read().splitlines())]
             self.sampled_passes = pass_examples
             pass_examples = self.data_formatter(pass_examples)
             _, self.forget_eval_loader = self.get_dataloader(
                 data_args, pass_examples, mode="eval")
+        
+        self.sampled_upstream_examples = None 
+        if data_args.use_sampled_upstream and data_args.sampled_upstream_json_path:
+            # Create loaders for the sampled pass examples as the initial memory.
+                # for the ER/MIR use
+                # if for other memory-based methon, this part of data should be encoded offline
+            with open(data_args.sampled_upstream_json_path) as f:
+                sampled_upstream_examples = [json.loads(line)
+                                                for line in set(f.read().splitlines())]
+            self.sampled_upstream_examples = self.upstream_data_formatter(
+                sampled_upstream_examples)
 
     def _replay_based_eval(self, result_dict):
         if not self.data_args.replay_stream_json_path:

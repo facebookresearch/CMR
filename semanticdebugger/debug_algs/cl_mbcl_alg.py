@@ -101,7 +101,7 @@ class KeyValueMemoryModule(object):
             return all_tensors
         return all_vectors
 
-    def encode_examples(self, examples):
+    def encode_examples(self, examples, use_random_keys=False):
         """
         Return key representation of the documents
         """
@@ -110,6 +110,12 @@ class KeyValueMemoryModule(object):
         # only use the questions as the key text for encoding.
         key_texts = self.get_key_content(inputs)
         key_vectors = None
+
+        if use_random_keys:
+            self.logger.info("Using randomly generated memory keys for ER and MIR.")
+            key_vectors = np.random.rand(len(examples), 128)
+            return key_vectors
+
         if self.memory_key_cache:
             # self.logger.info("Using the cache.")
             key_vectors = []
@@ -117,6 +123,7 @@ class KeyValueMemoryModule(object):
                 assert key_text in self.memory_key_cache, key_text
                 key_vectors.append(self.memory_key_cache[key_text])
         else:
+            # on the fly
             with torch.no_grad():
                 inputs = self.tokenizer.batch_encode_plus(
                     key_texts, return_tensors="pt", pad_to_max_length=True)
@@ -285,6 +292,14 @@ class MemoryBasedCL(ContinualFinetuning):
         self.overall_errors = []
         self.seen_stream_data = []
         last_steps = 0
+
+        if self.sampled_upstream_examples and self.name in ["er", "mir"]:
+            self.logger.info("Prepare the sampled upstream data as the initial memory for the ER and MIR ")
+            key_vectors = self.memroy_module.encode_examples(self.sampled_upstream_examples, use_random_keys=True)
+            self.memroy_module.store_examples(key_vectors, self.sampled_upstream_examples, timecode=self.timecode)
+            self.logger.info("Finished.")
+
+
         for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):            
 
             result_dict = {"timecode": self.timecode}   # start with 0
@@ -312,6 +327,7 @@ class MemoryBasedCL(ContinualFinetuning):
                 
                 self.base_model.train()
                 
+                self.logger.info("Replay-Training Start!")
                 replay_data_loader, _ = self.get_dataloader(self.data_args, retrieved_examples, mode="train")
                 self.fix_bugs(replay_data_loader, quiet=False)  # sparse replay
                 self.logger.info("Replay-Training done.")
@@ -335,8 +351,8 @@ class MemoryBasedCL(ContinualFinetuning):
             flag_store_examples = bool(random.randrange(0, _max)/_max >=
                                        1 - self.debugger_args.memory_store_rate)
             if flag_store_examples:
-                self.logger.info("Saving examples to the memory.")
-                key_vectors = self.memroy_module.encode_examples(bug_train_loader.data)
+                self.logger.info("Saving the current examples to the memory.")
+                key_vectors = self.memroy_module.encode_examples(bug_train_loader.data, use_random_keys=bool(self.name in ["er", "mir"]))
                 self.memroy_module.store_examples(
                     key_vectors, bug_train_loader.data, timecode=self.timecode)
                 self.logger.info("Finished.")
@@ -346,59 +362,6 @@ class MemoryBasedCL(ContinualFinetuning):
 
         #### Save to path
         self.memroy_module.save_memory_to_path(self.debugger_args.memory_path)
-
-    def online_debug_static(self):
-        self.logger.info("Start Online Debugging")
-        self.logger.info(f"Number of Batches of Bugs: {self.num_bug_batches}")
-        self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
-        self.logger.info(f"Replay Size: {self.debugger_args.replay_size}")
-        self.logger.info(f"Replay Frequency: {self.debugger_args.replay_frequency}")
-        self.timecode = 0
-
-        if self.debugger_args.save_all_ckpts:
-            # save the initial model as the 0-th model.
-            self._save_base_model()
-
-        # For the initial memory.
-        # TODO: sample and save to the memory.
-        last_steps = 0
-        for bug_train_loader in tqdm(self.bug_train_loaders, desc="Online Debugging", total=self.num_bug_batches):
-
-            if (self.model_update_steps - last_steps) >= self.debugger_args.replay_frequency \
-                    and self.debugger_args.replay_frequency > 0 and self.debugger_args.replay_size > 0:
-                # sparse experience replay
-                self.logger.info("Triggering Sampling from Memory and starting to replay.")
-                retrieved_examples = self.memroy_module.random_sample(
-                    sample_size=self.debugger_args.replay_size)
-                replay_data_loader, _ = self.get_dataloader(
-                    self.data_args, retrieved_examples, mode="train")
-                self.fix_bugs(replay_data_loader)  # sparse replay
-                self.logger.info("Replay-Training done.")
-
-            last_steps = self.model_update_steps
-            ############### CORE START ###############
-            # Fix the bugs by mini-batch based "training"
-            self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
-            self.fix_bugs(bug_train_loader)   # for debugging
-            self.logger.info("Start bug-fixing .... Done!")
-            ############### CORE END ###############
-            self.timecode += 1
-            if self.debugger_args.save_all_ckpts:
-                self._save_base_model()
-                # Note that we save the model from the id=1.
-                # So the 0-th checkpoint should be the original base model.
-            _max = 1000000
-            flag_store_examples = bool(random.randrange(0, _max)/_max >=
-                                       1 - self.debugger_args.memory_store_rate)
-            if flag_store_examples:
-                self.logger.info("Saving examples to the memory.")
-                key_vectors = self.memroy_module.encode_examples(bug_train_loader.data)
-                self.memroy_module.store_examples(
-                    key_vectors, bug_train_loader.data, timecode=self.timecode)
-                self.logger.info("Finished.")
-
-        self.memroy_module.save_memory_to_path(self.debugger_args.memory_path)
-
 
     def get_adapt_dataloaders(self, eval_dataloader=None, verbose=False):
         """Get the adapt_dataloader."""

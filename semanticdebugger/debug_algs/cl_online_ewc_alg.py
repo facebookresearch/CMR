@@ -202,7 +202,7 @@ class OnlineEWC(ContinualFinetuning):
         pad_token_id = self.tokenizer.pad_token_id
 
         #### For the first update ###
-        if self.debugger_args.use_sampled_upstream and self.timecode==0:
+        if self.data_args.use_sampled_upstream and self.timecode==0:
             self.logger.info("Start the initial fisher info matrix computation....")
             upstream_dl, _ = self.get_dataloader(self.data_args, self.sampled_upstream_examples, mode="train")
             upstream_dl.args.train_batch_size = 1 

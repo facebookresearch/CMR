@@ -1,17 +1,29 @@
-### MbPA++ (w/o local adaptation) = Sparse ER ###
- 
+### Sparse ER ###
+
+gpu=0 
+declare -a seeds=("42" "2021" "0212" "1213")
+# data_name="mrqa_triviaqa"
+
+for seed in "${seeds[@]}"
+do
+
 num_adapt_epochs=0
 memory_store_rate=1.0
-prefix=nq_dev_0915_wr_wpara_er
+prefix="nq_dev_0917_wr_wpara_er_freq=3_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/run_${prefix}.log
 mkdir exp_results/dynamic_stream/memory_based/${prefix}_ckpts/
-CUDA_VISIBLE_DEVICES=2 python semanticdebugger/debug_algs/run_lifelong_finetune.py \
+
+echo ${log_file}
+
+CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetune.py \
+    --seed $seed \
     --max_timecode 100 \
     --cl_method_name "er" \
     --memory_key_encoder "facebook/bart-base" \
     --memory_store_rate ${memory_store_rate} \
     --num_adapt_epochs ${num_adapt_epochs} \
-    --replay_size 10 --replay_frequency 1 \
+    --use_sampled_upstream \
+    --replay_size 16 --replay_frequency 3 \
     --learning_rate 3e-5 --num_train_epochs 5 \
     --prefix ${prefix} \
     --stream_mode dynamic \
@@ -22,6 +34,8 @@ CUDA_VISIBLE_DEVICES=2 python semanticdebugger/debug_algs/run_lifelong_finetune.
     --memory_path exp_results/dynamic_stream/memory_based/${prefix}_ckpts/memory_dict.pkl \
     --memory_key_cache_path "na" \
     --overtime_ckpt_dir exp_results/dynamic_stream/memory_based/${prefix}_ckpts/ \
-    --result_file exp_results/dynamic_stream/memory_based/${prefix}_result.json > ${log_file} 2>&1 & 
+    --result_file exp_results/dynamic_stream/memory_based/${prefix}_result.json > ${log_file} 2>&1 &
 
-echo ${log_file}
+
+gpu=$((gpu+1))
+done 
