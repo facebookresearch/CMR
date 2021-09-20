@@ -267,11 +267,12 @@ class MemoryBasedCL(ContinualFinetuning):
 
         interference_scores = []
         for example, before_loss, after_loss in zip(candidate_examples, before_losses, after_losses):
-            loss_delta = after_loss - before_loss
+            loss_delta = after_loss   # only for debugging; biggest losers afterwards
+            # loss_delta = after_loss - before_loss
             # loss mean by the length of the output?
             interference_scores.append((example, loss_delta))
 
-
+        # interference_scores.sort(key=lambda x: x[1], reverse=False)  # only for debuggiing. it's actually reverse=Yes 
         interference_scores.sort(key=lambda x: x[1], reverse=True)
         
         top_K_examples = [x[0] for x in interference_scores][:K]

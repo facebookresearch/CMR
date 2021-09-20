@@ -217,14 +217,39 @@ def inference(model, dev_data, save_predictions=False, verbose=False, args=None,
                             is_training=True, return_all_loss=True)
             # TODO: double check this part. are the results correct?
             # TODO: do we need to use mean? 
-            loss = torch.sum(loss.squeeze(-1), 1)
+            # logger.info(loss.shape)
+            loss = loss.squeeze(-1)
+            # logger.info(loss.shape)
+            loss = loss.detach().cpu()
+            # logger.info(f"torch.sum(loss.squeeze(-1), 1) = {torch.sum(loss.squeeze(-1), 1)}")
+            for each_loss in loss:
+                num_nonzeros = (each_loss!=0).sum(0)
+                norm_loss = each_loss.sum()/ num_nonzeros
+                # add the normalized loss for each sentence.
+                losses.append(norm_loss)
+            
+            #     logger.info(f"each_loss= {each_loss}")
+            #     logger.info(f"norm_loss= {norm_loss}")
+            #     logger.info(f"num_nonzeros= {num_nonzeros}")
+            # logger.info(losses)
+            # x = 1/0 
+            
+            # logger.info(torch.mean(loss.squeeze(-1), 1))
+            
+            # logger.info(torch.mean(loss[loss!=0].squeeze(-1), 1))
+            # logger.info(torch.sum(loss.squeeze(-1), 1))
+            
+            # loss = torch.sum(loss.squeeze(-1), 1)
+
+            
+            
             # logger.info(loss)
             # logger.info(f"batch.size(): {len(batch[2])}")
             # logger.info(f"loss.size(): {loss.size()}")
             # logger.info(f"len(loss): {len(loss)}")            
-            loss = loss.detach().cpu()            
+            # loss = loss.detach().cpu()            
             # loss = loss.mean()  # mean() to average on multi-gpu.
-            losses += loss
+            # losses += loss
 
         if return_all:
             pass

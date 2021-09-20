@@ -2,12 +2,14 @@
 
 gpu=0 
 declare -a seeds=("42" "2021" "0212" "1213")
+# declare -a seeds=("42")
 
 for seed in "${seeds[@]}"
 do
 num_adapt_epochs=0
 memory_store_rate=1.0
-prefix="nq_dev_0919_wr_wpara_mir_mix=Yes_freq=3_candidate=512_seed=${seed}"
+# 
+prefix="nq_dev_0919_wr_wpara_mir_absolute=Yes_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 
@@ -20,7 +22,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --memory_key_encoder "facebook/bart-base" \
     --memory_store_rate ${memory_store_rate} \
     --num_adapt_epochs ${num_adapt_epochs} \
-    --replay_candidate_size 512 \
+    --replay_candidate_size 256 \
     --use_sampled_upstream --use_replay_mix \
     --replay_size 16 --replay_frequency 3 \
     --learning_rate 3e-5 --num_train_epochs 5 \

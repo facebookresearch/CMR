@@ -42,44 +42,79 @@ def show_result(path, prefix):
 print("method_name, avg_unseen_EM, final_retro_EM, overall_#error, avg_instant_efr, final_retro_efr, final_upstream_EM, #train_steps")
 
 
-show_result("exp_results/dynamic_stream/none/nq_dev_0813_wr_wpara_dynamic_none_result.json", "none_cl")
-show_result("exp_results/dynamic_stream/cl_simple/nq_dev_0813_wr_wpara_dynamic_simplecl_result.json", "simple_cl")
-show_result("exp_results/dynamic_stream/online_ewc/nq_dev_0813_wr_wpara_dynamic_ewc_result.json", "online_ewc")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0813_wr_wpara_er_result.json", "sparse_er")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0813_wr_wpara_mbpa_result.json", "mbpa")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0813_wr_wpara_mbpapp_result.json", "mbpa++")
+# show_result("exp_results/dynamic_stream/none/results/nq_dev_0813_wr_wpara_dynamic_none_result.json", "none_cl")
+# show_result("exp_results/dynamic_stream/cl_simple/results/nq_dev_0813_wr_wpara_dynamic_simplecl_result.json", "simple_cl")
+# show_result("exp_results/dynamic_stream/online_ewc/results/nq_dev_0813_wr_wpara_dynamic_ewc_result.json", "online_ewc")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0813_wr_wpara_er_result.json", "sparse_er")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0813_wr_wpara_mbpa_result.json", "mbpa")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0813_wr_wpara_mbpapp_result.json", "mbpa++")
 
+# print()
+
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_er_seed=42_result.json", "er_seed_1")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_er_seed=0212_result.json", "er_seed_2")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_er_seed=1213_result.json", "er_seed_3")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_er_seed=2021_result.json", "er_seed_4")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_er_seed=666_result.json", "er_seed_5")
+
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_mir_seed=42_result.json", "mir_seed_1")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_mir_seed=0212_result.json", "mir_seed_2")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_mir_seed=1213_result.json", "mir_seed_3")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_mir_seed=2021_result.json", "mir_seed_4")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0916_wr_wpara_mir_seed=666_result.json", "mir_seed_5")
+
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_mir_candidate=1024_seed=42_result.json", "mir_1024_seed_1")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_mir_candidate=1024_seed=0212_result.json", "mir_1024_seed_2")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_mir_candidate=1024_seed=2021_result.json", "mir_1024_seed_3")
+
+
+
+
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_er_freq=3_seed=42_result.json", "er_seed_1")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_er_freq=3_seed=2021_result.json", "er_seed_1")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_er_freq=3_seed=0212_result.json", "er_seed_1")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_er_freq=3_seed=1213_result.json", "er_seed_1")
+
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_mir_freq=3_candidate=2048_seed=42_result.json", "mir_2048_seed_1")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_mir_freq=3_candidate=2048_seed=2021_result.json", "mir_2048_seed_2")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_mir_freq=3_candidate=2048_seed=0212_result.json", "mir_2048_seed_3")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0917_wr_wpara_mir_freq=3_candidate=2048_seed=1213_result.json", "mir_2048_seed_4")
+
+
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_er_mix=Yes_freq=3_seed=42_result.json", "er_mix=Yes_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_er_mix=Yes_freq=3_seed=2021_result.json", "er_mix=Yes_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_er_mix=Yes_freq=3_seed=0212_result.json", "er_mix=Yes_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_er_mix=Yes_freq=3_seed=1213_result.json", "er_mix=Yes_seed_1")
 print()
-
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_er_seed=42_result.json", "er_seed_1")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_er_seed=0212_result.json", "er_seed_2")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_er_seed=1213_result.json", "er_seed_3")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_er_seed=2021_result.json", "er_seed_4")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_er_seed=666_result.json", "er_seed_5")
-
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_mir_seed=42_result.json", "mir_seed_1")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_mir_seed=0212_result.json", "mir_seed_2")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_mir_seed=1213_result.json", "mir_seed_3")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_mir_seed=2021_result.json", "mir_seed_4")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0916_wr_wpara_mir_seed=666_result.json", "mir_seed_5")
-
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_mir_candidate=1024_seed=42_result.json", "mir_1024_seed_1")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_mir_candidate=1024_seed=0212_result.json", "mir_1024_seed_2")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_mir_candidate=1024_seed=2021_result.json", "mir_1024_seed_3")
-
-
-
-
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_er_freq=3_seed=42_result.json", "er_seed_1")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_er_freq=3_seed=2021_result.json", "er_seed_1")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_er_freq=3_seed=0212_result.json", "er_seed_1")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_er_freq=3_seed=1213_result.json", "er_seed_1")
-
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_mir_freq=3_candidate=2048_seed=42_result.json", "mir_2048_seed_1")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_mir_freq=3_candidate=2048_seed=2021_result.json", "mir_2048_seed_2")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_mir_freq=3_candidate=2048_seed=0212_result.json", "mir_2048_seed_3")
-show_result("exp_results/dynamic_stream/memory_based/nq_dev_0917_wr_wpara_mir_freq=3_candidate=2048_seed=1213_result.json", "mir_2048_seed_4")
-
+print()
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_freq=3_candidate=256=42_result.json", "mir_mix=Yes_256_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_freq=3_candidate=256=2021_result.json", "mir_mix=Yes_256_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_freq=3_candidate=256=0212_result.json", "mir_mix=Yes_256_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_freq=3_candidate=256=1213_result.json", "mir_mix=Yes_256_seed_4")
+print()
+print()
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_mix=Yes_freq=3_candidate=512_seed=42_result.json", "mir_mix=Yes_512_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_mix=Yes_freq=3_candidate=512_seed=2021_result.json", "mir_mix=Yes_512_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_mix=Yes_freq=3_candidate=512_seed=0212_result.json", "mir_mix=Yes_512_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_mix=Yes_freq=3_candidate=512_seed=1213_result.json", "mir_mix=Yes_512_seed_4")
+print()
+print()
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_reverse=Yes_mix=Yes_freq=3_candidate=256_seed=42_result.json", "mir_reverse=Yes_mix=Yes_256_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_reverse=Yes_mix=Yes_freq=3_candidate=256_seed=2021_result.json", "mir_reverse=Yes_mix=Yes_256_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_reverse=Yes_mix=Yes_freq=3_candidate=256_seed=0212_result.json", "mir_reverse=Yes_mix=Yes_256_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_reverse=Yes_mix=Yes_freq=3_candidate=256_seed=1213_result.json", "mir_reverse=Yes_mix=Yes_256_seed_4")
+print()
+print()
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=2021_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_4")
+print()
+print()
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_absolute=Yes_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_result.json", "mir_absolute=Yes_meanloss=Yes_mix=Yes_256_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_absolute=Yes_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=2021_result.json", "mir_absolute=Yes_meanloss=Yes_mix=Yes_256_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_absolute=Yes_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_result.json", "mir_absolute=Yes_meanloss=Yes_mix=Yes_256_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0919_wr_wpara_mir_absolute=Yes_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_result.json", "mir_absolute=Yes_meanloss=Yes_mix=Yes_256_seed_4")
 
 # prefix = "model_0"
 # overall_perf = model0_instream_test
