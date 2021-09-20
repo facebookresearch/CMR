@@ -1,6 +1,6 @@
 lambda=500
 prefix=nq_dev_0804v2_dynamic_ewc
-log_file=exp_results/dynamic_stream/online_ewc/run_${prefix}.log
+log_file=exp_results/dynamic_stream/online_ewc/logs/run_${prefix}.log
 touch ${log_file}
 echo ${log_file}
 CUDA_VISIBLE_DEVICES=6,7 python semanticdebugger/debug_algs/run_lifelong_finetune.py \
@@ -14,7 +14,7 @@ CUDA_VISIBLE_DEVICES=6,7 python semanticdebugger/debug_algs/run_lifelong_finetun
     --replay_stream_json_path exp_results/data_streams/mrqa_naturalquestions_dev.replay_stream.test.json \
     --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --save_all_ckpts 0 \
-    --overtime_ckpt_dir exp_results/dynamic_stream/online_ewc/${prefix}_ckpts/ \
-    --result_file exp_results/dynamic_stream/online_ewc/${prefix}_result.json > ${log_file} 2>&1 & 
+    --overtime_ckpt_dir exp_results/dynamic_stream/online_ewc/ckpt_dir/${prefix}_ckpts/ \
+    --result_file exp_results/dynamic_stream/online_ewc/results/${prefix}_result.json > ${log_file} 2>&1 & 
 # tail -f ${log_file}
 

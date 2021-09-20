@@ -175,7 +175,7 @@ class OnlineDebuggingMethod():
 
         self.logger.info(f"Replayed Performance: {results['EM']} vs Model_0: {base_EM}")
 
-    def _get_dynamic_errors(self, data_eval_loader, result_dict):
+    def _get_dynamic_errors(self, data_eval_loader, result_dict, return_raw_bug_examples=False):
         ############### Get the errors dynamically. ###############
         self.logger.info(
             f"Evaluating to get errors .... Timecode: {self.timecode}")
@@ -202,13 +202,16 @@ class OnlineDebuggingMethod():
                 error_ids.append(_id)
                 self.overall_errors.append(bug)
         formatted_bug_batch = self.data_formatter(errors)
-        bug_train_loader, _ = self.get_dataloader(
-            self.data_args, formatted_bug_batch, mode="train")
-
         self.logger.info(f"Found {len(errors)} errors.")
         result_dict["before_eval"] = _pack_as_dict(predictions, results, results_all)
         result_dict["error_ids"] = error_ids
-        return bug_train_loader
+        
+        if return_raw_bug_examples:
+            return formatted_bug_batch
+        else:
+            bug_train_loader, _ = self.get_dataloader(
+                self.data_args, formatted_bug_batch, mode="train")        
+            return bug_train_loader
 
     def _log_episode_result(self, result_dict, data_eval_loader):
         self.logger.info(

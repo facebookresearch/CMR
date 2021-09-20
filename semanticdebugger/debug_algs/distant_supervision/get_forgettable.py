@@ -199,7 +199,7 @@ for (( thread=0; thread<${n_threads}; thread++ ))
 do 
 
     prefix=nq_dev_0812_wr_mined_supervision_from_train_${thread}
-    log_file=exp_results/supervision_data/run_${prefix}.log
+    log_file=exp_results/supervision_data/logs/run_${prefix}.log
     echo ${log_file}
     touch ${log_file}
     gpu=$(($start_gpuid + $thread % $n_gpus ))
@@ -216,7 +216,7 @@ do
         --replay_stream_json_path "" \
         --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
         --save_all_ckpts 0 \
-        --result_file exp_results/supervision_data/${prefix}_result.json > ${log_file} 2>&1 & 
+        --result_file exp_results/supervision_data/results/${prefix}_result.json > ${log_file} 2>&1 & 
     echo $log_file
 done
 
@@ -232,7 +232,7 @@ python semanticdebugger/benchmark_gen/merge_json_file.py \
 """
 # debug
 prefix=nq_dev_0816_wr_mined_supervision_from_train_${thread}
-log_file=exp_results/supervision_data/run_${prefix}.log
+log_file=exp_results/supervision_data/logs/run_${prefix}.log
 thread=0
 gpu=0
 CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervision/get_forgettable.py \
@@ -247,7 +247,7 @@ CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervisi
     --replay_stream_json_path "" \
     --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --save_all_ckpts 0 \
-    --result_file exp_results/supervision_data/${prefix}_result.json.tmp 
+    --result_file exp_results/supervision_data/results/${prefix}_result.json.tmp 
     
     > ${log_file} 2>&1 & 
 echo $log_file 

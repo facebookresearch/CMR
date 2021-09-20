@@ -3,8 +3,8 @@
 num_adapt_epochs=1
 memory_store_rate=1.0
 prefix=nq_dev_0813_wr_wpara_mbpapp
-log_file=exp_results/dynamic_stream/memory_based/run_${prefix}.log
-mkdir exp_results/dynamic_stream/memory_based/${prefix}_ckpts/
+log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
+mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 CUDA_VISIBLE_DEVICES=0,1,2,3 python semanticdebugger/debug_algs/run_lifelong_finetune.py \
     --train_batch_size 4 \
     --max_timecode 100 \
@@ -20,10 +20,10 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python semanticdebugger/debug_algs/run_lifelong_fin
     --replay_stream_json_path "" \
     --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --save_all_ckpts 0 \
-    --memory_path exp_results/dynamic_stream/memory_based/${prefix}_ckpts/memory_dict.pkl \
+    --memory_path exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/memory_dict.pkl \
     --memory_key_cache_path "na" \
-    --overtime_ckpt_dir exp_results/dynamic_stream/memory_based/${prefix}_ckpts/ \
-    --result_file exp_results/dynamic_stream/memory_based/${prefix}_result.json > ${log_file} 2>&1 & 
+    --overtime_ckpt_dir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/ \
+    --result_file exp_results/dynamic_stream/memory_based/results/${prefix}_result.json > ${log_file} 2>&1 & 
 
 echo ${log_file}
 

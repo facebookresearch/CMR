@@ -165,18 +165,6 @@ class OnlineEWC(ContinualFinetuning):
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
         return
 
-    # ### The same logic with the Simple Continual Fine-tuning Mehtod. ###
-    # def load_base_model(self, base_model_args):
-    #     super().load_base_model(base_model_args)
-
-    # def base_model_infer(self, eval_dataloader, verbose=False):
-    #     return super().base_model_infer(eval_dataloader, verbose)
-
-    # def data_formatter(self, bug_batch):
-    #     return super().data_formatter(bug_batch)
-
-    # def get_dataloader(self, bug_data_args, formatted_bug_batch, mode="both"):
-    #     return super().get_dataloader(bug_data_args, formatted_bug_batch, mode="both")
 
     # ### END ###
 

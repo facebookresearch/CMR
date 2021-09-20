@@ -117,6 +117,7 @@ def setup_args(args):
             setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
             setattr(debugger_args, "ewc_gamma", args.ewc_gamma)       
         elif args.cl_method_name in ["er", "mbpa", "mbpa++", "mir"]: 
+            setattr(debugger_args, "use_replay_mix", args.use_replay_mix)
             setattr(debugger_args, "replay_size", args.replay_size)
             setattr(debugger_args, "replay_candidate_size", args.replay_candidate_size)
             setattr(debugger_args, "replay_frequency", args.replay_frequency)
@@ -127,9 +128,7 @@ def setup_args(args):
             setattr(debugger_args, "memory_store_rate", args.memory_store_rate)                
             setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
             setattr(debugger_args, "inference_query_size", args.inference_query_size)
-            setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)
-                
-                
+            setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)           
         elif args.cl_method_name in ["hyper_cl"]:
             setattr(debugger_args, "adapter_dim", args.adapter_dim)
             setattr(debugger_args, "example_encoder_name", args.example_encoder_name)
@@ -284,7 +283,7 @@ def get_cli_parser():
     parser.add_argument('--memory_store_rate', type=float, default=1.0)   # 1= always store all examples to the memory. 
     parser.add_argument('--num_adapt_epochs', type=int, default=1) #
     parser.add_argument('--inference_query_size', type=int, default=1) #
-
+    parser.add_argument("--use_replay_mix", action='store_true', default=False) # mix the replayed examples with the current error examples.
     parser.add_argument('--local_adapt_lr', type=float, default=1e-5) #
     
 

@@ -1,5 +1,5 @@
 prefix=nq_dev_0813_wr_wpara_dynamic_simplecl
-log_file=exp_results/dynamic_stream/cl_simple/run_${prefix}.log
+log_file=exp_results/dynamic_stream/cl_simple/logs/run_${prefix}.log
 echo ${log_file}
 touch ${log_file}
 CUDA_VISIBLE_DEVICES=0,1 python semanticdebugger/debug_algs/run_lifelong_finetune.py \
@@ -11,6 +11,6 @@ CUDA_VISIBLE_DEVICES=0,1 python semanticdebugger/debug_algs/run_lifelong_finetun
     --replay_stream_json_path "" \
     --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --save_all_ckpts 0 \
-    --overtime_ckpt_dir exp_results/dynamic_stream/cl_simple/${prefix}_ckpts/ \
-    --result_file exp_results/dynamic_stream/cl_simple/${prefix}_result.json > ${log_file} 2>&1 & 
+    --overtime_ckpt_dir exp_results/dynamic_stream/cl_simple/ckpt_dir/${prefix}_ckpts/ \
+    --result_file exp_results/dynamic_stream/cl_simple/results/${prefix}_result.json > ${log_file} 2>&1 & 
 # tail -f ${log_file}

@@ -201,7 +201,7 @@ class KeyValueMemoryModule(object):
 class MemoryBasedCL(ContinualFinetuning):
     def __init__(self, logger):
         super().__init__(logger=logger)
-        self.name = "tbd" # can be er/mbpa/mbpa++
+        self.name = "tbd"  # can be er/mbpa/mbpa++
 
     def _check_debugger_args(self):
         super()._check_debugger_args()
@@ -215,7 +215,8 @@ class MemoryBasedCL(ContinualFinetuning):
             "memory_key_cache_path",
             "num_adapt_epochs",
             "inference_query_size",
-            "local_adapt_lr"
+            "local_adapt_lr",
+            "use_replay_mix",
         ]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
 
@@ -230,10 +231,6 @@ class MemoryBasedCL(ContinualFinetuning):
         self.memroy_module.load_memory_key_cache(debugger_args.memory_key_cache_path)
         return
 
-
-
-    
-
     def get_top_interfered_examples(self, K, candidate_examples, query_data_loader):
         """
         This is for the MIR method. 
@@ -243,42 +240,51 @@ class MemoryBasedCL(ContinualFinetuning):
         4) return the top K examples with the largest positive loss changes.
         """
         assert self.name == "mir"
-        self.logger.info(f"get_top_interfered_examples: len(candidate_examples)={len(candidate_examples)};")
-        
+        self.logger.info(
+            f"get_top_interfered_examples: len(candidate_examples)={len(candidate_examples)};")
+
         before_model = copy.deepcopy(self.base_model)
         # self.fix_bugs(query_data_loader)   # for debugging
         after_model = self.local_adaptation(before_model, query_data_loader)
-        
 
         mlr_data_args = copy.deepcopy(self.data_args)
         mlr_data_args.train_batch_size = 4    # to get the loss for each example
-        memory_buffer_loader, _ = self.get_dataloader(mlr_data_args, candidate_examples, mode="train")        
-        
-        before_losses = run_bart.inference(before_model, memory_buffer_loader, compute_loss=True, loss_only=True, logger=self.logger)
-        after_losses = run_bart.inference(after_model, memory_buffer_loader, compute_loss=True, loss_only=True, logger=self.logger)
-        self.logger.info(f"len(before_losses)={len(before_losses)}; len(after_losses)={len(after_losses)};")
+        memory_buffer_loader, _ = self.get_dataloader(
+            mlr_data_args, candidate_examples, mode="train")
+
+        before_losses = run_bart.inference(
+            before_model, memory_buffer_loader, compute_loss=True, loss_only=True, logger=self.logger)
+        after_losses = run_bart.inference(
+            after_model, memory_buffer_loader, compute_loss=True, loss_only=True, logger=self.logger)
+        # self.logger.info(
+        #     f"len(before_losses)={len(before_losses)}; len(after_losses)={len(after_losses)};")
         assert len(before_losses) == len(after_losses) == len(candidate_examples)
-        
+
         # it's a virtual update and we need to recover it.
         # del self.base_model
         # del after_model
         # self.base_model = before_model
-        
+
         interference_scores = []
         for example, before_loss, after_loss in zip(candidate_examples, before_losses, after_losses):
             loss_delta = after_loss - before_loss
+            # loss mean by the length of the output?
             interference_scores.append((example, loss_delta))
+
+
         interference_scores.sort(key=lambda x: x[1], reverse=True)
-        self.logger.info(f"interference_scores = {[x[1] for x in interference_scores]}")
+        
         top_K_examples = [x[0] for x in interference_scores][:K]
-        
-        del before_model 
+
+        self.logger.info(f"retrieved candidates ids = {[x[2] for x in top_K_examples]}")
+
+        del before_model
         del after_model
-        
+
         return top_K_examples
-        
 
     # The new evaluation pipeline.
+
     def online_debug(self):
         self.logger.info("Start Online Debugging with Dynamic Error Mode")
         self.logger.info(f"Number of Batches of Data: {self.num_data_batches}")
@@ -294,49 +300,63 @@ class MemoryBasedCL(ContinualFinetuning):
         last_steps = 0
 
         if self.sampled_upstream_examples and self.name in ["er", "mir"]:
-            self.logger.info("Prepare the sampled upstream data as the initial memory for the ER and MIR ")
-            key_vectors = self.memroy_module.encode_examples(self.sampled_upstream_examples, use_random_keys=True)
-            self.memroy_module.store_examples(key_vectors, self.sampled_upstream_examples, timecode=self.timecode)
+            self.logger.info(
+                "Prepare the sampled upstream data as the initial memory for the ER and MIR ")
+            key_vectors = self.memroy_module.encode_examples(
+                self.sampled_upstream_examples, use_random_keys=True)
+            self.memroy_module.store_examples(
+                key_vectors, self.sampled_upstream_examples, timecode=self.timecode)
             self.logger.info("Finished.")
 
-
-        for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):            
+        for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):
 
             result_dict = {"timecode": self.timecode}   # start with 0
 
             self._replay_based_eval(result_dict)
-            bug_train_loader = self._get_dynamic_errors(data_eval_loader, result_dict)
+            formatted_bug_examples = self._get_dynamic_errors(
+                data_eval_loader, result_dict, return_raw_bug_examples=True)
 
             # if (self.model_update_steps - last_steps) >= self.debugger_args.replay_frequency \
             if self.timecode % self.debugger_args.replay_frequency == 0 \
                     and self.debugger_args.replay_frequency > 0 and self.debugger_args.replay_size > 0 \
-                    and self.timecode > 0 :
+                    and self.timecode > 0:
                 # sparse experience replay
                 self.logger.info("Triggering Sampling from Memory and starting to replay.")
+                self.logger.info(f"Current memory size: {len(self.memroy_module.memory)}.")
 
                 if self.name == "mir" and \
-                    self.debugger_args.replay_candidate_size >= self.debugger_args.replay_size:
-                    retrieved_examples_candidates = self.memroy_module.random_sample(sample_size=self.debugger_args.replay_candidate_size)
-                    retrieved_examples = self.get_top_interfered_examples(K=self.debugger_args.replay_size, candidate_examples=retrieved_examples_candidates, query_data_loader=bug_train_loader)
+                        self.debugger_args.replay_candidate_size >= self.debugger_args.replay_size:
+                    retrieved_examples_candidates = self.memroy_module.random_sample(
+                        sample_size=self.debugger_args.replay_candidate_size)
+                    retrieved_examples = self.get_top_interfered_examples(
+                        K=self.debugger_args.replay_size, candidate_examples=retrieved_examples_candidates, query_data_loader=bug_train_loader)
                     # self.logger.info(f"retrieved_examples (mir)={retrieved_examples}")
                     # self.logger.info(f"retrieved_examples (random)={retrieved_examples_candidates[:self.debugger_args.replay_size]}")
-                    
+
                     # retrieved_examples = retrieved_examples_candidates[:self.debugger_args.replay_size] # for debugging MIR
                 else:
-                    retrieved_examples = self.memroy_module.random_sample(sample_size=self.debugger_args.replay_size)
-                
-                self.base_model.train()
-                
-                self.logger.info("Replay-Training Start!")
-                replay_data_loader, _ = self.get_dataloader(self.data_args, retrieved_examples, mode="train")
-                self.fix_bugs(replay_data_loader, quiet=False)  # sparse replay
-                self.logger.info("Replay-Training done.")
+                    retrieved_examples = self.memroy_module.random_sample(
+                        sample_size=self.debugger_args.replay_size)
 
+                self.base_model.train()
+
+                if self.debugger_args.use_replay_mix:
+                    formatted_bug_examples += retrieved_examples
+                    self.logger.info("Mixed the retrieved examples to the current batch for training.")
+                else:
+                    self.logger.info("Replay-Training Start!")
+                    replay_data_loader, _ = self.get_dataloader(
+                        self.data_args, retrieved_examples, mode="train")
+                    self.fix_bugs(replay_data_loader, quiet=False)  # sparse replay
+                    self.logger.info("Replay-Training done.")
+            
             last_steps = self.model_update_steps
 
             ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
             self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
+            bug_train_loader, _ = self.get_dataloader(
+                self.data_args, formatted_bug_examples, mode="train")
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
             ############### CORE ###############
@@ -344,23 +364,24 @@ class MemoryBasedCL(ContinualFinetuning):
             self.timecode += 1
 
             if self.debugger_args.save_all_ckpts:
-                self._save_base_model() 
+                self._save_base_model()
 
-            ## Store to memory 
+            # Store to memory
             _max = 1000000
             flag_store_examples = bool(random.randrange(0, _max)/_max >=
                                        1 - self.debugger_args.memory_store_rate)
             if flag_store_examples:
                 self.logger.info("Saving the current examples to the memory.")
-                key_vectors = self.memroy_module.encode_examples(bug_train_loader.data, use_random_keys=bool(self.name in ["er", "mir"]))
+                key_vectors = self.memroy_module.encode_examples(
+                    formatted_bug_examples, use_random_keys=bool(self.name in ["er", "mir"]))
                 self.memroy_module.store_examples(
-                    key_vectors, bug_train_loader.data, timecode=self.timecode)
+                    key_vectors, formatted_bug_examples, timecode=self.timecode)
                 self.logger.info("Finished.")
 
         #### Final evaluation ####
         self.final_evaluation()
 
-        #### Save to path
+        # Save to path
         self.memroy_module.save_memory_to_path(self.debugger_args.memory_path)
 
     def get_adapt_dataloaders(self, eval_dataloader=None, verbose=False):
@@ -377,7 +398,7 @@ class MemoryBasedCL(ContinualFinetuning):
         if not past_memory_keys:
             adapt_dataloaders = [None for _ in range(len(example_batches))]
             return adapt_dataloaders
-            
+
         past_memory_keys = np.frombuffer(np.asarray(
             past_memory_keys), dtype=np.float32).reshape(len(past_memory_keys), -1)
 
@@ -415,9 +436,9 @@ class MemoryBasedCL(ContinualFinetuning):
 
         if not eval_dataloader:
             eval_dataloader = self.bug_eval_loaders[self.timecode]
-        
+
         # TODO: reset the bsz for the local adaptation.
-        
+
         # prepare adapt_dataloaders
         adapt_dataloaders = self.get_adapt_dataloaders(eval_dataloader, verbose=True)
 
@@ -437,19 +458,16 @@ class MemoryBasedCL(ContinualFinetuning):
         global_step = 0
         pad_token_id = self.tokenizer.pad_token_id
 
-
-
         # super().debugger_setup(self.debugger_args)  # reset the optimizier and schduler
-
 
         model.train()
         optimizer = AdamW(self.optimizer_grouped_parameters,
-                               lr=self.debugger_args.local_adapt_lr, eps=self.debugger_args.adam_epsilon)
+                          lr=self.debugger_args.local_adapt_lr, eps=self.debugger_args.adam_epsilon)
 
         # TODO: double check the decision about warm up for fine-tuning
         scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                         num_warmup_steps=self.debugger_args.warmup_steps,
-                                                         num_training_steps=self.debugger_args.total_steps)
+                                                    num_warmup_steps=self.debugger_args.warmup_steps,
+                                                    num_training_steps=self.debugger_args.total_steps)
 
         for epoch_id in range(int(self.debugger_args.num_adapt_epochs)):
             for batch in tqdm(adapt_dataloader.dataloader, desc=f"Local Adaptation Epoch {epoch_id}", disable=False):
@@ -481,7 +499,7 @@ class MemoryBasedCL(ContinualFinetuning):
                         model.parameters(), self.debugger_args.max_grad_norm)
                     optimizer.step()    # We have accumulated enough gradients
                     scheduler.step()
-                    model.zero_grad() 
+                    model.zero_grad()
         return model
 
     def inference_with_adaptation(self, model, dev_data, adapt_dataloaders, save_predictions=False, verbose=False, args=None, logger=None, return_all=False, predictions_only=False):
