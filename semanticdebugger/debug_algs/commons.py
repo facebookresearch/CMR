@@ -229,11 +229,7 @@ class OnlineDebuggingMethod():
         instant_retention_rate = len(retained_ids)/(len(retained_ids) + len(forgotten_examples))
         self.logger.info(f"Instant Fixing Rate: {instant_fixing_rate}")
         self.logger.info(f"Instant Retention Rate: {instant_retention_rate}")
-
-        self.logger.info("-"*50)
-        # Start the logging.
-
-        
+        # Start the logging.        
         result_dict["forgotten_examples"] = forgotten_examples
         result_dict["retained_ids"] = retained_ids
         result_dict["fixed_ids"] = fixed_ids
@@ -245,6 +241,8 @@ class OnlineDebuggingMethod():
         # result_dict["doing-nothing_accmulative_EM"] = self.accumulate_doing_nothing_EM[self.timecode]
 
         self.online_eval_results.append(result_dict)
+
+        self.logger.info("-"*50)
 
     # The new evaluation pipeline.
     def online_debug(self):

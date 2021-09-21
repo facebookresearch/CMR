@@ -10,6 +10,7 @@ from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
 from semanticdebugger.debug_algs.cl_mbcl_alg import MemoryBasedCL
+# from semanticdebugger.debug_algs.cl_mbcl_alg_v1 import MemoryBasedCL
 from semanticdebugger.debug_algs.cl_hypernet_alg import HyperCL
 from semanticdebugger.debug_algs.distant_supervision import get_forgettable
 import logging
@@ -230,7 +231,8 @@ def get_cli_parser():
     parser.add_argument("--pass_pool_jsonl_path", 
                         default="bug_data/mrqa_naturalquestions_dev.sampled_pass.jsonl")
     parser.add_argument("--sampled_upstream_json_path",
-                        default="bug_data/mrqa_naturalquestions.sampled_upstream.jsonl")
+                        default="data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl")
+                        # default="bug_data/mrqa_naturalquestions.sampled_upstream.jsonl")
 
     parser.add_argument("--task_name", default="mrqa_naturalquestions")
     parser.add_argument('--train_batch_size', type=int, default=8)

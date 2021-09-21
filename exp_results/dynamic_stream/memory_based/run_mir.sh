@@ -10,9 +10,11 @@ do
 num_adapt_epochs=0
 memory_store_rate=1.0
 # prefix="nq_dev_0920v2_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=${candidate_size}_seed=${seed}"
-prefix="nq_dev_0920v2_wr_wpara_mir_reverse=Yes_meanloss=Yes_mix=Yes_freq=3_candidate=${candidate_size}_seed=${seed}"
+prefix="nq_dev_0920v3_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=${candidate_size}_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
+tmp_code_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.cl_mbcl_alg.py
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
+cp semanticdebugger/debug_algs/cl_mbcl_alg.py $tmp_code_copy
 
 echo ${log_file}
 

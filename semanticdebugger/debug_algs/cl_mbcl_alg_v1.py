@@ -141,7 +141,7 @@ class KeyValueMemoryModule(object):
         Add the examples as key-value pairs to the memory dictionary with content,attention_mask,label tuple as value
         and key determined by key network
         """
-        assert len(keys) == len(examples)
+
         # update the memory dictionary
         for i, key in enumerate(keys):
             # numpy array cannot be used as key since it is non-hashable, hence convert it to bytes to use as key.
@@ -268,13 +268,11 @@ class MemoryBasedCL(ContinualFinetuning):
         interference_scores = []
         for example, before_loss, after_loss in zip(candidate_examples, before_losses, after_losses):
             loss_delta = after_loss - before_loss
-            # loss_delta = after_loss   # only for debugging MIR; biggest losers afterwards
+            # loss mean by the length of the output?
             interference_scores.append((example, loss_delta))
 
-         
+
         interference_scores.sort(key=lambda x: x[1], reverse=True)
-        
-        # interference_scores.reverse() # only for debugging MIR. it's actually reverse=Yes
         
         top_K_examples = [x[0] for x in interference_scores][:K]
 
@@ -317,9 +315,7 @@ class MemoryBasedCL(ContinualFinetuning):
             self._replay_based_eval(result_dict)
             formatted_bug_examples = self._get_dynamic_errors(
                 data_eval_loader, result_dict, return_raw_bug_examples=True)
-            
-            examples_to_train = formatted_bug_examples[:]
-            
+
             # if (self.model_update_steps - last_steps) >= self.debugger_args.replay_frequency \
             if self.timecode % self.debugger_args.replay_frequency == 0 \
                     and self.debugger_args.replay_frequency > 0 and self.debugger_args.replay_size > 0 \
@@ -327,6 +323,7 @@ class MemoryBasedCL(ContinualFinetuning):
                 # sparse experience replay
                 self.logger.info("Triggering Sampling from Memory and starting to replay.")
                 self.logger.info(f"Current memory size: {len(self.memroy_module.memory)}.")
+
                 if self.name == "mir" and \
                         self.debugger_args.replay_candidate_size >= self.debugger_args.replay_size:
                     retrieved_examples_candidates = self.memroy_module.random_sample(
@@ -343,12 +340,11 @@ class MemoryBasedCL(ContinualFinetuning):
 
                 self.base_model.train()
 
-                
                 if self.debugger_args.use_replay_mix:
-                    examples_to_train += retrieved_examples
-                    self.logger.info(f"Mixed the retrieved examples (len={len(retrieved_examples)}) to the current batch for training.")
+                    formatted_bug_examples += retrieved_examples
+                    self.logger.info("Mixed the retrieved examples to the current batch for training.")
                 else:
-                    self.logger.info(f"Replay-Training Start! Using the retrieved examples (len={len(retrieved_examples)})  ")
+                    self.logger.info("Replay-Training Start!")
                     replay_data_loader, _ = self.get_dataloader(
                         self.data_args, retrieved_examples, mode="train")
                     self.fix_bugs(replay_data_loader, quiet=False)  # sparse replay
@@ -358,9 +354,9 @@ class MemoryBasedCL(ContinualFinetuning):
 
             ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
-            self.logger.info(f"Start bug-fixing (len(examples_to_train)={len(examples_to_train)}) .... Timecode: {self.timecode}")
+            self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
             bug_train_loader, _ = self.get_dataloader(
-                self.data_args, examples_to_train, mode="train")
+                self.data_args, formatted_bug_examples, mode="train")
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start bug-fixing .... Done!")
             ############### CORE ###############
@@ -375,8 +371,7 @@ class MemoryBasedCL(ContinualFinetuning):
             flag_store_examples = bool(random.randrange(0, _max)/_max >=
                                        1 - self.debugger_args.memory_store_rate)
             if flag_store_examples:
-                self.logger.info(f"Saving the current error examples (len={len(formatted_bug_examples)}) to the memory.")
-                self.logger.info(f"Current memory size: {len(self.memroy_module.memory)}.")
+                self.logger.info("Saving the current examples to the memory.")
                 key_vectors = self.memroy_module.encode_examples(
                     formatted_bug_examples, use_random_keys=bool(self.name in ["er", "mir"]))
                 self.memroy_module.store_examples(
