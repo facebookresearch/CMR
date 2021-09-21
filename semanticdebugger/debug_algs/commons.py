@@ -202,7 +202,7 @@ class OnlineDebuggingMethod():
                 error_ids.append(_id)
                 self.overall_errors.append(bug)
         formatted_bug_batch = self.data_formatter(errors)
-        self.logger.info(f"Found {len(errors)} errors.")
+        self.logger.info(f"Found {len(formatted_bug_batch)} errors.")
         result_dict["before_eval"] = _pack_as_dict(predictions, results, results_all)
         result_dict["error_ids"] = error_ids
         

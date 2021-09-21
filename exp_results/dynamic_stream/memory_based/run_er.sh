@@ -9,7 +9,7 @@ do
 
 num_adapt_epochs=0
 memory_store_rate=1.0
-prefix="nq_dev_0919_wr_wpara_er_mix=Yes_freq=3_seed=${seed}"
+prefix="nq_dev_0920v2_wr_wpara_er_mix=Yes_freq=3_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 
