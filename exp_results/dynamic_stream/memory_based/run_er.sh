@@ -9,9 +9,11 @@ do
 
 num_adapt_epochs=0
 memory_store_rate=1.0
-prefix="nq_dev_0920v2_wr_wpara_er_mix=Yes_freq=3_seed=${seed}"
+prefix="nq_dev_0920v3_wr_wpara_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
+tmp_code_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.cl_mbcl_alg.py
+cp semanticdebugger/debug_algs/cl_mbcl_alg.py $tmp_code_copy
 
 echo ${log_file}
 
@@ -23,7 +25,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --memory_store_rate ${memory_store_rate} \
     --num_adapt_epochs ${num_adapt_epochs} \
     --use_sampled_upstream --use_replay_mix \
-    --replay_size 16 --replay_frequency 3 \
+    --replay_size 32 --replay_frequency 3 \
     --learning_rate 3e-5 --num_train_epochs 5 \
     --prefix ${prefix} \
     --stream_mode dynamic \

@@ -129,7 +129,11 @@ def setup_args(args):
             setattr(debugger_args, "memory_store_rate", args.memory_store_rate)                
             setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
             setattr(debugger_args, "inference_query_size", args.inference_query_size)
-            setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)           
+            setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)
+            if args.cl_method_name == "mir":
+                setattr(debugger_args, "mir_debug_reverse", args.mir_debug_reverse)
+                setattr(debugger_args, "mir_debug_largestloss", args.mir_debug_largestloss)
+                # setattr(debugger_args, "debug_reverse", args.mir_debug_reverse)
         elif args.cl_method_name in ["hyper_cl"]:
             setattr(debugger_args, "adapter_dim", args.adapter_dim)
             setattr(debugger_args, "example_encoder_name", args.example_encoder_name)
@@ -289,7 +293,11 @@ def get_cli_parser():
     parser.add_argument('--local_adapt_lr', type=float, default=1e-5) #
     
 
-    
+    # debug MIR 
+    parser.add_argument("--mir_debug_reverse", action='store_true', default=False) # 
+    parser.add_argument("--mir_debug_largestloss", action='store_true', default=False) #  
+
+
 
     ### The HPs for HyperCL
     parser.add_argument('--adapter_dim', type=int, default=32) # 1 means always replay for every steps, set to 10 means sample after 10 model updates.

@@ -150,8 +150,6 @@ show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920_wr_wpar
 
 print()
 print()
-
-
 show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v2_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=16_seed=42_result.json", "mir_meanloss=Yes_mix=Yes_16_seed_1")
 show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v2_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=16_seed=2021_result.json", "mir_meanloss=Yes_mix=Yes_16_seed_2")
 show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v2_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=16_seed=0212_result.json", "mir_meanloss=Yes_mix=Yes_16_seed_3")
@@ -181,6 +179,72 @@ show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v2_wr_wp
 show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v2_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=0212_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_3")
 show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v2_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=1213_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_4")
 
+
+
+print()
+print("*"*50)
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_er_upstream=All_mix=Yes_freq=3_seed=42_result.json", "er_mix=Yes_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_er_upstream=All_mix=Yes_freq=3_seed=2021_result.json", "er_mix=Yes_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_er_upstream=All_mix=Yes_freq=3_seed=0212_result.json", "er_mix=Yes_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_er_upstream=All_mix=Yes_freq=3_seed=1213_result.json", "er_mix=Yes_seed_4")
+
+
+print()
+print() 
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=64_seed=42_result.json", "mir_meanloss=Yes_mix=Yes_64_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=64_seed=2021_result.json", "mir_meanloss=Yes_mix=Yes_64_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=64_seed=0212_result.json", "mir_meanloss=Yes_mix=Yes_64_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=64_seed=1213_result.json", "mir_meanloss=Yes_mix=Yes_64_seed_4")
+
+print()
+print() 
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=2021_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_4")
+
+print()
+print() 
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=42_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=2021_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=0212_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=1213_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_4")
+
+print()
+print() 
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_largestloss_result.json", "mir_largestloss_meanloss=Yes_mix=Yes_256_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=2021_largestloss_result.json", "mir_largestloss_meanloss=Yes_mix=Yes_256_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_largestloss_result.json", "mir_largestloss_meanloss=Yes_mix=Yes_256_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_largestloss_result.json", "mir_largestloss_meanloss=Yes_mix=Yes_256_seed_4")
+
+print()
+print() 
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_reverse_result.json", "mir_reverse_meanloss=Yes_mix=Yes_256_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=2021_reverse_result.json", "mir_reverse_meanloss=Yes_mix=Yes_256_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_reverse_result.json", "mir_reverse_meanloss=Yes_mix=Yes_256_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_reverse_result.json", "mir_reverse_meanloss=Yes_mix=Yes_256_seed_4")
+
+
+print()
+print("*"*50, "replay_size=32")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=42_result.json", "er_mix=Yes_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=2021_result.json", "er_mix=Yes_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=0212_result.json", "er_mix=Yes_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=1213_result.json", "er_mix=Yes_seed_4")
+
+print()
+print() 
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=2021_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_result.json", "mir_meanloss=Yes_mix=Yes_256_seed_4")
+
+print()
+print() 
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=42_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_1")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=2021_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_2")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=0212_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_3")
+show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0920v3_wr_wpara_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=1024_seed=1213_result.json", "mir_meanloss=Yes_mix=Yes_1024_seed_4")
 
 
 # prefix = "model_0"

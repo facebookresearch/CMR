@@ -242,7 +242,7 @@ class OnlineDebuggingMethod():
 
         self.online_eval_results.append(result_dict)
 
-        self.logger.info("-"*50)
+     
 
     # The new evaluation pipeline.
     def online_debug(self):

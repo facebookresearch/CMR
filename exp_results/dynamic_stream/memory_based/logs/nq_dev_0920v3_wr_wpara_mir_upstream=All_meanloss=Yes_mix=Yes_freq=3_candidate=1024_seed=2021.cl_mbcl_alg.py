@@ -267,17 +267,14 @@ class MemoryBasedCL(ContinualFinetuning):
 
         interference_scores = []
         for example, before_loss, after_loss in zip(candidate_examples, before_losses, after_losses):
-            if self.debugger_args.mir_debug_largestloss:
-                loss_delta = after_loss   # only for debugging MIR; biggest losers afterwards
-            else:
-                loss_delta = after_loss - before_loss
+            loss_delta = after_loss - before_loss
+            # loss_delta = after_loss   # only for debugging MIR; biggest losers afterwards
             interference_scores.append((example, loss_delta))
 
          
         interference_scores.sort(key=lambda x: x[1], reverse=True)
         
-        if self.debugger_args.mir_debug_reverse:
-            interference_scores.reverse() # only for debugging MIR. it's actually reverse=Yes
+        # interference_scores.reverse() # only for debugging MIR. it's actually reverse=Yes
         
         top_K_examples = [x[0] for x in interference_scores][:K]
 

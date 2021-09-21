@@ -8,15 +8,16 @@ declare -a seeds=("42" "2021" "0212" "1213")
 for seed in "${seeds[@]}"
 do
 num_adapt_epochs=0
-memory_store_rate=1.0
-# prefix="nq_dev_0920v2_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=${candidate_size}_seed=${seed}"
-prefix="nq_dev_0920v3_wr_wpara_mir_meanloss=Yes_mix=Yes_freq=3_candidate=${candidate_size}_seed=${seed}"
+memory_store_rate=1.0 
+prefix="nq_dev_0920v3_wr_wpara_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=${candidate_size}_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
-tmp_code_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.cl_mbcl_alg.py
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
+tmp_code_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.cl_mbcl_alg.py
 cp semanticdebugger/debug_algs/cl_mbcl_alg.py $tmp_code_copy
 
 echo ${log_file}
+
+# --mir_debug_reverse \
 
 CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetune.py \
     --seed $seed \
@@ -27,7 +28,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --num_adapt_epochs ${num_adapt_epochs} \
     --replay_candidate_size ${candidate_size} \
     --use_sampled_upstream --use_replay_mix \
-    --replay_size 16 --replay_frequency 3 \
+    --replay_size 32 --replay_frequency 3 \
     --learning_rate 3e-5 --num_train_epochs 5 \
     --prefix ${prefix} \
     --stream_mode dynamic \
