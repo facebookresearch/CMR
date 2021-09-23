@@ -127,6 +127,7 @@ def main():
     parser.add_argument("--batch_size", type=int, default=32, required=False)
     parser.add_argument("--replay_eval_size", type=int, default=-1, required=False)
     parser.add_argument("--bug_sample_size", type=int, default=1000, required=False)
+    parser.add_argument("--max_bug_each_data", type=int, default=-1, required=False) 
     parser.add_argument("--pass_sample_size", type=int, default=2200, required=False)
     parser.add_argument("--hidden_sample_size", type=int, default=-1, required=False)
     parser.add_argument("--num_batches", type=int, default=100, required=False)
@@ -187,6 +188,24 @@ def main():
 
     bug_pool, pass_pool = generate_bugs(merged_predictions, merged_truth_data, merged_restuls_all)
 
+    # make each dataset has the same number of examples 
+    if len(all_truth_data) >= 2:
+        filtered_bug_pool = []
+        counts = {}
+        random.shuffle(bug_pool)
+        for item in bug_pool:
+            dataset_name = item["id"].split("-")[0]
+            if dataset_name not in counts:
+                counts[dataset_name] = 0 
+            if counts[dataset_name] >= args.max_bug_each_data and args.max_bug_each_data > 0:
+                continue
+            filtered_bug_pool.append(item)
+            counts[dataset_name] += 1
+        bug_pool = filtered_bug_pool   
+    else:
+        bug_pool = bug_pool
+
+    # exit()
 
     print(f"len(bug_pool)={len(bug_pool)}; len(pass_pool)={len(pass_pool)} <--- len(predictions)={len(predictions)}")
 
@@ -203,11 +222,26 @@ def main():
     random.shuffle(pass_pool)
     random.shuffle(bug_pool)
     
-    if args.bug_sample_size > 0 and args.pass_sample_size > 0:
+    if args.bug_sample_size >= 0 and args.pass_sample_size >= 0:
         sampled_bug_pool = bug_pool[:args.bug_sample_size]
         sampled_pass_pool = pass_pool[:args.pass_sample_size]
         if args.hidden_sample_size > 0 and args.hidden_sample_size + args.pass_sample_size <= len(pass_pool):
-            hidden_examples = pass_pool[-args.hidden_sample_size:]
+
+            if len(all_truth_data) >= 2:
+                # make equal test examples.
+                hidden_examples = [] 
+                counts = {}
+                random.shuffle(pass_pool)
+                for item in pass_pool:
+                    dataset_name = item["id"].split("-")[0]
+                    if dataset_name not in counts:
+                        counts[dataset_name] = 0 
+                    if counts[dataset_name] >= (args.hidden_sample_size/len(all_truth_data)):
+                        continue
+                    hidden_examples.append(item)
+                    counts[dataset_name] += 1 
+            else:
+                hidden_examples = pass_pool[-args.hidden_sample_size:]
             with open(args.hidden_example_file, "w") as f:
                 for item in hidden_examples:
                     f.write(json.dumps(item) + "\n")
@@ -291,7 +325,7 @@ python semanticdebugger/benchmark_gen/sample_stream_data.py \
 ### Mixed stream for dev.
 
 python semanticdebugger/benchmark_gen/sample_stream_data.py \
---sample_method with_replace \
+--sample_method no_replace \
 --data_file \
 data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl#\
 data/mrqa_squad/mrqa_squad_dev.jsonl#\
@@ -302,10 +336,13 @@ bug_data/mrqa_naturalquestions_dev.predictions.jsonl#\
 bug_data/mrqa_squad_dev.predictions.jsonl#\
 bug_data/mrqa_triviaqa_dev.predictions.jsonl#\
 bug_data/mrqa_hotpotqa_dev.predictions.jsonl \
---data_stream_file exp_results/data_streams/mrqa.mixed.data_stream.test.wr.json \
+--data_stream_file exp_results/data_streams/mrqa.mixed.data_stream.test.json \
+--hidden_sample_size 1000 \
+--hidden_example_file exp_results/data_streams/mrqa.mixed.hidden_passes.jsonl \
 --batch_size 32 --num_batches 100 \
 --seed 42 \
---bug_sample_size -1 --pass_sample_size -1
+--max_bug_each_data 800 \
+--bug_sample_size 3200 --pass_sample_size 0
 
 
 """

@@ -226,7 +226,7 @@ class OnlineDebuggingMethod():
         forgotten_examples, retained_ids, fixed_ids, unfixed_ids = self._eval_forget_and_fix(
             data_eval_loader.data, result_dict["before_eval"], result_dict["after_eval"])
         instant_fixing_rate = len(fixed_ids) / (len(fixed_ids) + len(unfixed_ids))
-        instant_retention_rate = len(retained_ids)/(len(retained_ids) + len(forgotten_examples))
+        instant_retention_rate = len(retained_ids)/(len(retained_ids) + len(forgotten_examples) + 1e-8)
         self.logger.info(f"Instant Fixing Rate: {instant_fixing_rate}")
         self.logger.info(f"Instant Retention Rate: {instant_retention_rate}")
         # Start the logging.        
@@ -300,13 +300,14 @@ class OnlineDebuggingMethod():
         self.overall_eval_results["overall_instant_fixing_rate"] = float(
             np.mean([r["instant_fixing_rate"] for r in self.online_eval_results]))
 
-        # Re-test the past errors.
-        self.logger.info("Re-test the past errors.")
-        _, overall_error_eval_dataloader = self.get_dataloader(
-            self.data_args, self.data_formatter(self.overall_errors), mode="eval")
-        oev_predictions, oev_results, oev_results_all = self.evaluate(
-            eval_dataloader=overall_error_eval_dataloader, verbose=True)
-        self.overall_eval_results["final_fixing_rate"] = oev_results
+        # TODO: currently taken down. becuase all error mode doesn't need this that much.
+        # # Re-test the past errors. 
+        # self.logger.info("Re-test the past errors.")
+        # _, overall_error_eval_dataloader = self.get_dataloader(
+        #     self.data_args, self.data_formatter(self.overall_errors), mode="eval")
+        # oev_predictions, oev_results, oev_results_all = self.evaluate(
+        #     eval_dataloader=overall_error_eval_dataloader, verbose=True)
+        # self.overall_eval_results["final_fixing_rate"] = oev_results
 
         # Test the in-stream examples overall.
         self.logger.info("Test the in-stream examples overall.")

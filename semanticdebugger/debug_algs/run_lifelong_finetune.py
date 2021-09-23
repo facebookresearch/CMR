@@ -46,7 +46,7 @@ def setup_args(args):
 
     if args.cl_method_name == "none_cl":
         debugging_alg = NoneCL(logger=logger)
-    elif args.cl_method_name == "simple_cf":
+    elif args.cl_method_name == "simple_cl":
         debugging_alg = ContinualFinetuning(logger=logger)
     elif args.cl_method_name == "online_ewc":
         debugging_alg = OnlineEWC(logger=logger)
@@ -101,7 +101,7 @@ def setup_args(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["none_cl", "simple_cf", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "hyper_cl", "simple_cl_for_mining_supervision"]:
+    if args.cl_method_name in ["none_cl", "simple_cl", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "hyper_cl", "simple_cl_for_mining_supervision"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -241,7 +241,7 @@ def get_cli_parser():
     parser.add_argument("--task_name", default="mrqa_naturalquestions")
     parser.add_argument('--train_batch_size', type=int, default=8)
     parser.add_argument('--predict_batch_size', type=int, default=16)
-    parser.add_argument('--num_beams', type=int, default=3)
+    parser.add_argument('--num_beams', type=int, default=4)
 
     parser.add_argument("--do_lowercase", action='store_true', default=False)
     parser.add_argument("--freeze_embeds", action='store_true', default=False)
@@ -253,7 +253,7 @@ def get_cli_parser():
 
     # debugger_args
 
-    parser.add_argument('--cl_method_name', type=str, default="simple_cf",
+    parser.add_argument('--cl_method_name', type=str, default="simple_cl",
                         help="the method name of the continual learning method")
     
     ### The HPs for Simple Continual Fine-tuning Method. ###
