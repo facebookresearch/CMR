@@ -255,38 +255,73 @@ show_result("exp_results/dynamic_stream/none/results/nq_dev_0922_none_mixed_alle
 print()
 print() 
 
-show_result("exp_results/dynamic_stream/memory_based/results/0922_MixedAllError_simplecl_seed=42_result.json", "simple_seed_42")
-show_result("exp_results/dynamic_stream/memory_based/results/0922_MixedAllError_simplecl_seed=0212_result.json", "simple_seed_0212")
-show_result("exp_results/dynamic_stream/memory_based/results/0922_MixedAllError_simplecl_seed=1213_result.json", "simple_seed_1213") 
-print()
-print()  
+# show_result("exp_results/dynamic_stream/memory_based/results/0922_MixedAllError_simplecl_seed=42_result.json", "simple_seed_42")
+# show_result("exp_results/dynamic_stream/memory_based/results/0922_MixedAllError_simplecl_seed=0212_result.json", "simple_seed_0212")
+# show_result("exp_results/dynamic_stream/memory_based/results/0922_MixedAllError_simplecl_seed=1213_result.json", "simple_seed_1213") 
+# print()
+# print()  
 
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=42_result.json", "MixedAllError_ER_rs32_seed_42")
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=0212_result.json", "MixedAllError_ER_rs32_seed_0212")
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=1213_result.json", "MixedAllError_ER_rs32_seed_1213")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=42_result.json", "MixedAllError_ER_rs32_seed_42")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=0212_result.json", "MixedAllError_ER_rs32_seed_0212")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_replaysize=32_upstream=All_mix=Yes_freq=3_seed=1213_result.json", "MixedAllError_ER_rs32_seed_1213")
  
 
 
-print()
-print() 
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_42")
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_0212")
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_1213") 
+# print()
+# print() 
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_42")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_0212")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_1213") 
 
 
-print()
-print()
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=3_seed=42_result.json", "MixedAllError_ER_rs32_seed_42")
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=3_seed=0212_result.json", "MixedAllError_ER_rs32_seed_0212")
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=3_seed=1213_result.json", "MixedAllError_ER_rs32_seed_1213")
+# print()
+# print()
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=3_seed=42_result.json", "MixedAllError_ER_rs32_seed_42")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=3_seed=0212_result.json", "MixedAllError_ER_rs32_seed_0212")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=3_seed=1213_result.json", "MixedAllError_ER_rs32_seed_1213")
  
 
 
+# print()
+# print() 
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_42")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_0212")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_1213") 
+
+# print()
+# print() 
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=2560_seed=42_result.json", "MixedAllError_MIR_rs32_buffer=2560_seed_42")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=2560_seed=0212_result.json", "MixedAllError_MIR_rs32_buffer=2560_seed_0212")
+# show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=2560_seed=1213_result.json", "MixedAllError_MIR_rs32_buffer=2560_seed_1213") 
+
+
+
+
+
+
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllError_T=50_simplecl_seed=42_result.json", "simple_seed_42")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllError_T=50_simplecl_seed=0212_result.json", "simple_seed_0212")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllError_T=50_simplecl_seed=1213_result.json", "simple_seed_1213") 
 print()
-print() 
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=42_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_42")
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=0212_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_0212")
-show_result("exp_results/dynamic_stream/memory_based/results/nq_dev_0922_MixedAllErrors_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=3_candidate=256_seed=1213_result.json", "MixedAllError_MIR_rs32_buffer=256_seed_1213") 
+print()   
+
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=1_seed=42_result.json", "MixedAllError_ER_rs32_rf1_seed_42")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=1_seed=0212_result.json", "MixedAllError_ER_rs32_rf1_seed_0212")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=1_seed=1213_result.json", "MixedAllError_ER_rs32_rf1_seed_1213")
+
+print()
+print()   
+
+
+
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=256_seed=42_debug=LA_result.json", "MixedAllError_MIR_rs32_rf1_seed_42")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=256_seed=0212_debug=LA_result.json", "MixedAllError_MIR_rs32_rf1_seed_0212")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=256_seed=1213_debug=LA_result.json", "MixedAllError_MIR_rs32_rf1_seed_1213")
+
+
+
+
+
 
 
 

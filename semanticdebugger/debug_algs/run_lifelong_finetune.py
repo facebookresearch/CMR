@@ -53,11 +53,13 @@ def setup_args(args):
     elif args.cl_method_name == "offline_debug":
         debugging_alg = OfflineDebugger(logger=logger)
     elif args.cl_method_name in ["er", "mir"]:  # replay only
-        assert args.num_adapt_epochs <= 0
         assert args.replay_frequency > 0
         assert args.replay_size > 0
         if args.cl_method_name == "mir":
             assert args.replay_candidate_size >= args.replay_size
+            assert args.num_adapt_epochs >= 1 # this is for the virtual update 
+        else:
+            assert args.num_adapt_epochs <= 0
         debugging_alg = MemoryBasedCL(logger=logger)
         debugging_alg.name = args.cl_method_name
     elif args.cl_method_name == "mbpa":

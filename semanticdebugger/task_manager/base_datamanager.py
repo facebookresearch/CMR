@@ -8,7 +8,7 @@ class MyQADataset(Dataset):
                  input_ids, attention_mask,
                  decoder_input_ids, decoder_attention_mask,
                  in_metadata=None, out_metadata=None,
-                 is_training=False, uuids=None): 
+                 is_training=False, uuids=None, seed=42): 
 
         self.uuids = uuids
         self.input_ids = torch.LongTensor(input_ids)
@@ -25,6 +25,8 @@ class MyQADataset(Dataset):
             self.attention_mask) == self.in_metadata[-1][-1]
         assert len(self.decoder_input_ids) == len(
             self.decoder_attention_mask) == self.out_metadata[-1][-1]
+        
+        np.random.seed(seed) # for selecting the same answer if there are multiple 
 
     def __len__(self):
         return len(self.in_metadata)
@@ -35,7 +37,7 @@ class MyQADataset(Dataset):
             return self.input_ids[idx], self.attention_mask[idx]
 
         in_idx = np.random.choice(range(*self.in_metadata[idx]))
-        out_idx = np.random.choice(range(*self.out_metadata[idx]))
+        out_idx = np.random.choice(range(*self.out_metadata[idx]))  # if there are multiple answers
         # TODO: can we pass the self.uuids[in_idx] ?
         return self.input_ids[in_idx], self.attention_mask[in_idx], \
             self.decoder_input_ids[out_idx], self.decoder_attention_mask[out_idx]

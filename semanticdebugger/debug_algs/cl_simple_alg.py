@@ -68,7 +68,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
             formatted_bug_batch.append((_input, _truth, _id))
         return formatted_bug_batch
 
-    def get_dataloader(self, bug_data_args, formatted_bug_batch, mode="both"):
+    def get_dataloader(self, bug_data_args, formatted_bug_batch, mode="both", is_training="self"):
         # mini bug-batch size.
         assert hasattr(bug_data_args, "train_batch_size")
         assert hasattr(bug_data_args, "predict_batch_size")
@@ -81,7 +81,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                                                   given_data=formatted_bug_batch)
             train_bug_dataloader.load_dataset(
                 self.tokenizer, skip_cache=True, quiet=True)
-            train_bug_dataloader.load_dataloader()
+            train_bug_dataloader.load_dataloader(is_training=is_training)
         if mode == "both" or mode == "eval":
             # for evaluation
             eval_bug_dataloader = GeneralDataset(self.logger, bug_data_args, None,

@@ -175,9 +175,11 @@ class GeneralDataset(object):
         if do_return:
             return self.dataset
 
-    def load_dataloader(self, do_return=False):
+    def load_dataloader(self, do_return=False, is_training="self"):
+        if is_training == "self":
+            is_training = self.is_training
         self.dataloader = MyDataLoader(
-            self.args, self.dataset, self.is_training)
+            self.args, self.dataset, is_training)
         if do_return:
             return self.dataloader
 
