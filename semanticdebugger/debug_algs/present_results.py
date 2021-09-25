@@ -311,19 +311,130 @@ show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors
 
 print()
 print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=256_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_seed_42")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=256_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_seed_0212")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=256_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_seed_1213")
+
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_freq=1_candidate=256_seed=42_debug=reverse_result.json", "MixedAllError_MIR_rs32_rf1_c256_reverse_seed_42")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_freq=1_candidate=256_seed=0212_debug=reverse_result.json", "MixedAllError_MIR_rs32_rf1_c256_reverse_seed_0212")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_freq=1_candidate=256_seed=1213_debug=reverse_result.json", "MixedAllError_MIR_rs32_rf1_c256_reverse_seed_1213")
+
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_freq=1_candidate=256_seed=42_debug=largestloss_result.json", "MixedAllError_MIR_rs32_rf1_c256_largestloss_seed_42")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_freq=1_candidate=256_seed=0212_debug=largestloss_result.json", "MixedAllError_MIR_rs32_rf1_c256_largestloss_seed_0212")
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_freq=1_candidate=256_seed=1213_debug=largestloss_result.json", "MixedAllError_MIR_rs32_rf1_c256_largestloss_seed_1213")
+
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=random_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_random_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=random_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_random_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=random_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_random_seed_1213") 
+
+
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=none_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_none_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=none_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_none_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=none_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_none_seed_1213") 
+
+
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=reverse_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_reverse_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=reverse_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_reverse_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=reverse_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_reverse_seed_1213") 
+
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=largest_beforeloss_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_largest_beforeloss_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=largest_beforeloss_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_largest_beforeloss_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=largest_beforeloss_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_largest_beforeloss_seed_1213") 
+
+
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=largest_afterloss_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_largest_afterloss_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=largest_afterloss_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_largest_afterloss_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_rs=32_rq=1_candidate=256_mode=largest_afterloss_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_largest_afterloss_seed_1213") 
+
+
+# print()
+# print()
+# show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=1600_seed=42_debug=LA_result.json", "MixedAllError_MIR_rs32_rf1_c1600_seed_42")
+# show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=1600_seed=0212_debug=LA_result.json", "MixedAllError_MIR_rs32_rf1_c1600_seed_0212")
+# show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=1600_seed=1213_debug=LA_result.json", "MixedAllError_MIR_rs32_rf1_c1600_seed_1213")
+
+
+print("T=100 and rq=3")
+
+
+show_result("exp_results/dynamic_stream/none/results/0924_MixedAllError_T=100_nonecl_seed=42_result.json", "None")
+
+
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllError_T=100_simplecl_seed=42_result.json", "simple_seed_42")
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllError_T=100_simplecl_seed=0212_result.json", "simple_seed_0212")
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllError_T=100_simplecl_seed=1213_result.json", "simple_seed_1213") 
+
+print()
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=random_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_random_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=random_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_random_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=random_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_random_seed_1213") 
+
+
+print()
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_none_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_none_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_none_seed_1213") 
+
+
+print()
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=reverse_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_reverse_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=reverse_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_reverse_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=reverse_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_reverse_seed_1213") 
+
+print()
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=largest_afterloss_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c256_largest_afterloss_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=largest_afterloss_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c256_largest_afterloss_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=largest_afterloss_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c256_largest_afterloss_seed_1213") 
 
 
 
-show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=256_seed=42_debug=LA_result.json", "MixedAllError_MIR_rs32_rf1_seed_42")
-show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=256_seed=0212_debug=LA_result.json", "MixedAllError_MIR_rs32_rf1_seed_0212")
-show_result("exp_results/dynamic_stream/memory_based/results/0923_MixedAllErrors_T=50_mir_M=I_replaysize=32_upstream=All_meanloss=Yes_mix=Yes_freq=1_candidate=256_seed=1213_debug=LA_result.json", "MixedAllError_MIR_rs32_rf1_seed_1213")
+
+print()
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=512_mode=none_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c512_none_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=512_mode=none_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c512_none_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=512_mode=none_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c512_none_seed_1213") 
 
 
 
+print()
+print()
+print()   
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=1024_mode=none_seed=42_result.json", "MixedAllError_MIR_rs32_rf1_c1024_none_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=1024_mode=none_seed=0212_result.json", "MixedAllError_MIR_rs32_rf1_c1024_none_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=1024_mode=none_seed=1213_result.json", "MixedAllError_MIR_rs32_rf1_c1024_none_seed_1213") 
 
 
+print()
+print()
+print()   
 
-
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=42_result.json", "ER_seed_42") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=0212_result.json", "ER_seed_0212") 
+show_result("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=1213_result.json", "ER_seed_1213") 
 
 
  

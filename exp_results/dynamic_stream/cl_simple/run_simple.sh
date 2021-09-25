@@ -7,7 +7,7 @@ do
 
 num_adapt_epochs=0
 memory_store_rate=1.0
-prefix="0923_MixedAllError_T=50_simplecl_seed=${seed}"
+prefix="0924_MixedAllError_T=100_simplecl_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.run_mir.sh
@@ -19,13 +19,13 @@ echo ${log_file}
  
 CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetune.py \
     --seed $seed \
-    --max_timecode 50 \
+    --max_timecode 100 \
     --cl_method_name "simple_cl" \
     --learning_rate 3e-5 --num_train_epochs 5 \
     --prefix ${prefix} \
     --stream_mode dynamic \
     --data_stream_json_path exp_results/data_streams/mrqa.mixed.data_stream.test.json \
-    --pass_pool_jsonl_path exp_results/data_streams/mrqa.mixed.hidden_passes.jsonl \
+    --pass_pool_jsonl_path exp_results/data_streams/mrqa.mixed.upstream_eval.jsonl \
     --replay_stream_json_path "" \
     --save_all_ckpts 1 \
     --overtime_ckpt_dir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/ \

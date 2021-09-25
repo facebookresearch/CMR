@@ -64,7 +64,13 @@ class ContinualFinetuning(OnlineDebuggingMethod):
             _id = bug["id"]
             _input = bug["input"]
             # _mistake = bug["mistake"]
-            _truth = bug["truth"]   # a list of answers
+
+            # TODO: only for now debugging.
+            if "truth" in bug:
+                _truth = bug["truth"]   # a list of answers
+            else:
+                _truth = bug["output"]   # a list of answers
+
             formatted_bug_batch.append((_input, _truth, _id))
         return formatted_bug_batch
 

@@ -7,7 +7,7 @@ do
 
 num_adapt_epochs=0
 memory_store_rate=1.0
-prefix="0923_MixedAllErrors_T=50_er_M=I_replaysize=32_upstream=All_mix=Yes_freq=1_seed=${seed}"
+prefix="0924_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.run_mir.sh
@@ -22,18 +22,20 @@ echo ${log_file}
 
 CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetune.py \
     --seed $seed \
-    --max_timecode 50 \
+    --max_timecode 100 \
     --cl_method_name "er" \
     --memory_key_encoder "facebook/bart-base" \
     --memory_store_rate ${memory_store_rate} \
     --num_adapt_epochs ${num_adapt_epochs} \
     --use_replay_mix \
-    --replay_size 32 --replay_frequency 1 \
+    --replay_size 32 --replay_frequency 3 \
     --learning_rate 3e-5 --num_train_epochs 5 \
     --prefix ${prefix} \
     --stream_mode dynamic \
+    --use_sampled_upstream \
+    --sampled_upstream_json_path exp_results/data_streams/mrqa.nq_train.memory.jsonl \
     --data_stream_json_path exp_results/data_streams/mrqa.mixed.data_stream.test.json \
-    --pass_pool_jsonl_path exp_results/data_streams/mrqa.mixed.hidden_passes.jsonl \
+    --pass_pool_jsonl_path exp_results/data_streams/mrqa.mixed.upstream_eval.jsonl \
     --replay_stream_json_path "" \
     --save_all_ckpts 1 \
     --memory_path exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/memory_dict.pkl \

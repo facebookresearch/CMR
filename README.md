@@ -40,6 +40,10 @@ bash scripts/build_bugs_mrqa.sh
 
 shuf -n 500 "data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl" > "bug_data/mrqa_naturalquestions.sampled_upstream.jsonl"
 
+shuf -n 1000 "data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl" > "exp_results/data_streams/mrqa.mixed.upstream_eval.jsonl"
+
+shuf -n 10000 "data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl" > "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
+
 python semanticdebugger/benchmark_gen/sample_bug_stream.py \
     --seed 42 \
     --bug_pool_file "bug_data/mrqa_naturalquestions_dev.bugs.jsonl" \

@@ -214,7 +214,7 @@ do
         --stream_mode dynamic \
         --data_stream_json_path exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.train.wr.json \
         --replay_stream_json_path "" \
-        --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
+        --pass_pool_jsonl_path exp_results/data_streams/mrqa.mixed.upstream_eval.jsonl \
         --save_all_ckpts 0 \
         --result_file exp_results/supervision_data/results/${prefix}_result.json > ${log_file} 2>&1 & 
     echo $log_file

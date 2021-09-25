@@ -240,13 +240,19 @@ class MemoryBasedCL(ContinualFinetuning):
         4) return the top K examples with the largest positive loss changes.
         """
         assert self.name == "mir"
+
         self.logger.info(
             f"get_top_interfered_examples: len(candidate_examples)={len(candidate_examples)};")
 
+
+        if self.debugger_args.mir_abalation_args == "random":
+            self.logger.info(f"ablation mode: randomly sample {K} examples from the candidate_examples")
+            random.shuffle(candidate_examples)
+            return candidate_examples[:K]
+
         ##################### Prepare the candidate examples as Memory Buffer #####################
         mlr_data_args = copy.deepcopy(self.data_args)
-        mlr_data_args.train_batch_size = 1    # to get the loss for each example      # TODO: debug_MIR
-        mlr_data_args.predict_batch_size = 1
+        mlr_data_args.predict_batch_size = 8    # to get the loss for each example      # TODO: debug_MIR  
         # TODO: give the same random seed for selecting the same answer (if there are multiple answers)
 
         candidate_examples_single_ans = []
@@ -263,14 +269,23 @@ class MemoryBasedCL(ContinualFinetuning):
         before_model = copy.deepcopy(self.base_model)        
         before_losses = run_bart.inference(
             before_model, memory_buffer_loader, compute_loss=True, loss_only=True, logger=self.logger)
-        # virtual udpate 
-        after_model = self.local_adaptation(before_model, query_data_loader, diff_loss_weight=0)  
-        after_losses = run_bart.inference(
-            after_model, memory_buffer_loader, compute_loss=True, loss_only=True, logger=self.logger)
-        # self.logger.info(
-        #     f"len(before_losses)={len(before_losses)}; len(after_losses)={len(after_losses)};")
-        assert len(before_losses) == len(after_losses) == len(candidate_examples)
-
+        
+        if self.debugger_args.mir_abalation_args == "largest_beforeloss":
+            after_losses = before_losses
+        else:
+            # virtual udpate 
+            virtual_adapt_args = copy.deepcopy(self.data_args)
+            virtual_adapt_args.train_batch_size = 4
+            # change the batch size for the training.
+            query_data_loader, _ = self.get_dataloader(virtual_adapt_args, query_data_loader.data, mode="train") # fix of the order
+            
+            after_model = self.local_adaptation(before_model, query_data_loader, diff_loss_weight=0)  
+            after_losses = run_bart.inference(
+                after_model, memory_buffer_loader, compute_loss=True, loss_only=True, logger=self.logger)
+            # self.logger.info(
+            #     f"len(before_losses)={len(before_losses)}; len(after_losses)={len(after_losses)};")
+            assert len(before_losses) == len(after_losses) == len(candidate_examples)
+        self.logger.info(f"candidate_examples IDs: {[x[2] for x in candidate_examples]}")
         # it's a virtual update and we need to recover it.
         # del self.base_model
         # del after_model
@@ -278,33 +293,37 @@ class MemoryBasedCL(ContinualFinetuning):
 
         interference_scores = []
         for example, before_loss, after_loss in zip(candidate_examples, before_losses, after_losses):
-            if self.debugger_args.mir_debug_largestloss:
+            if self.debugger_args.mir_abalation_args == "largest_afterloss":
                 loss_delta = after_loss   # only for debugging MIR; biggest losers afterwards
+            elif self.debugger_args.mir_abalation_args == "largest_beforeloss":
+                loss_delta = before_loss
             else:
+                # MIR paper
                 loss_delta = after_loss - before_loss
+            
+                                
             interference_scores.append((example, loss_delta))
 
-        self.logger.info(f"before_losses={before_losses}")
+        # self.logger.info(f"before_losses={before_losses}")
 
-        self.logger.info(f"after_losses={after_losses}")
+        # self.logger.info(f"after_losses={after_losses}")
 
-        self.logger.info(f"interference_scores={[x[1] for x in interference_scores]}")
+        # self.logger.info(f"interference_scores={[x[1] for x in interference_scores]}")
 
-
+        
         interference_scores.sort(key=lambda x: x[1], reverse=True)
-        
-
-        
-        if self.debugger_args.mir_debug_reverse:
+            
+        if self.debugger_args.mir_abalation_args == "reverse":
             interference_scores.reverse() # only for debugging MIR. it's actually reverse=Yes
         
         top_K_examples = [x[0] for x in interference_scores][:K]
 
         self.logger.info(f"retrieved candidates ids = {[x[2] for x in top_K_examples]}")
 
-        del before_model
-        del after_model
-
+        del before_model 
+        del before_losses
+        del after_losses
+        del memory_buffer_loader
         return top_K_examples
 
     # The new evaluation pipeline.
