@@ -64,10 +64,10 @@ def show_result_stat(path, prefix, random_seeds):
     std = np.std(results, axis=0)
     print()
     print(f"{prefix}-mean, "+",".join([str(r) for r in mean]))
+    print(f"{prefix}-std, "+",".join([str(r) for r in std]))
+    print(f"{prefix}-min, "+",".join([str(r) for r in min]))
     print(f"{prefix}-max, "+",".join([str(r) for r in max]))
     print()
-    # print(f"{prefix}-min, "+",".join([str(r) for r in min]))
-    # print(f"{prefix}-std, "+",".join([str(r) for r in std]))
 
     
     
@@ -108,6 +108,23 @@ show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllE
 
  
 
+ 
 
 
-  
+print("09/25/2021 8 rounds average")
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=$seed_result.json", "ER_c256 (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=random_seed=$seed_result.json", "MIR_c256-random (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json", "MIR_c256 (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=1024_mode=none_seed=$seed_result.json", "MIR_c1024 (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=4096_mode=none_seed=$seed_result.json", "MIR_c4096 (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=reverse_seed=$seed_result.json", "MIR_c256-reverse (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=largestloss_seed=$seed_result.json", "MIR_c256-largestloss (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
