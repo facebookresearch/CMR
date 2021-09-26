@@ -1,13 +1,19 @@
-### Sparse ER ###
+#!/bin/bash
+source ~/.bashrc
+conda activate bartqa 
+cd ~/SemanticDebugger/
 
+# Experience Replay
+
+seed=$1
 gpu=0 
-declare -a seeds=("42" "0212" "1213")
-for seed in "${seeds[@]}"
-do
+# declare -a seeds=("42" "0212" "1213")
+# for seed in "${seeds[@]}"
+# do
 
 num_adapt_epochs=0
 memory_store_rate=1.0
-prefix="0924_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=${seed}"
+prefix="0925_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.run_mir.sh
@@ -41,9 +47,10 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --memory_path exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/memory_dict.pkl \
     --memory_key_cache_path "na" \
     --overtime_ckpt_dir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/ \
-    --result_file exp_results/dynamic_stream/memory_based/results/${prefix}_result.json > ${log_file} 2>&1 &
-gpu=$((gpu+1))
-done
+    --result_file exp_results/dynamic_stream/memory_based/results/${prefix}_result.json > ${log_file}
+    #  2>&1 &
+# gpu=$((gpu+1))
+# done
 
 
 # --data_stream_json_path exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.test.wr.wpara.json \
