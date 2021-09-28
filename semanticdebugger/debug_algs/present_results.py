@@ -64,8 +64,8 @@ def show_result_stat(path, prefix, random_seeds):
     std = np.std(results, axis=0)
     print()
     print(f"{prefix}-mean, "+",".join([str(r) for r in mean]))
-    print(f"{prefix}-std, "+",".join([str(r) for r in std]))
-    print(f"{prefix}-min, "+",".join([str(r) for r in min]))
+    # print(f"{prefix}-std, "+",".join([str(r) for r in std]))
+    # print(f"{prefix}-min, "+",".join([str(r) for r in min]))
     print(f"{prefix}-max, "+",".join([str(r) for r in max]))
     print()
 
@@ -79,52 +79,61 @@ print("method_name, avg_unseen_EM, avg_unseen_F1, final_retro_EM, final_retro_F1
 show_result("exp_results/dynamic_stream/none/results/nq_dev_0922_none_mixed_allerrors_result.json", "None") 
 
 
-print("T=100 and rq=3")
+# print("T=100 and rq=3")
 
-show_result("exp_results/dynamic_stream/none/results/0924_MixedAllError_T=100_nonecl_seed=42_result.json", "None")
-
-
+# show_result("exp_results/dynamic_stream/none/results/0924_MixedAllError_T=100_nonecl_seed=42_result.json", "None")
 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllError_T=100_simplecl_seed=$seed_result.json", "simple_cl", random_seeds=["42", "0212", "1213"]) 
+
+
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllError_T=100_simplecl_seed=$seed_result.json", "simple_cl", random_seeds=["42", "0212", "1213"]) 
 
  
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=random_seed=$seed_result.json", "MIR_c256_random", random_seeds=["42", "0212", "1213"]) 
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=random_seed=$seed_result.json", "MIR_c256_random", random_seeds=["42", "0212", "1213"]) 
 
-print("MixedAllError_MIR_rs32_rf1")
+# print("MixedAllError_MIR_rs32_rf1")
   
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=$seed_result.json", "ER", random_seeds=["42", "0212", "1213"]) 
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=$seed_result.json", "ER", random_seeds=["42", "0212", "1213"]) 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json", "MIR_c256", random_seeds=["42", "0212", "1213"]) 
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json", "MIR_c256", random_seeds=["42", "0212", "1213"]) 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=reverse_seed=$seed_result.json", "MIR_c256_reverse", random_seeds=["42", "0212", "1213"]) 
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=reverse_seed=$seed_result.json", "MIR_c256_reverse", random_seeds=["42", "0212", "1213"]) 
    
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=largest_afterloss_seed=$seed_result.json", "MIR_c256_largest_afterloss", random_seeds=["42", "0212", "1213"]) 
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=largest_afterloss_seed=$seed_result.json", "MIR_c256_largest_afterloss", random_seeds=["42", "0212", "1213"]) 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=512_mode=none_seed=$seed_result.json", "MIR_c512", random_seeds=["42", "0212", "1213"]) 
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=512_mode=none_seed=$seed_result.json", "MIR_c512", random_seeds=["42", "0212", "1213"]) 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=1024_mode=none_seed=$seed_result.json", "MIR_c1024", random_seeds=["42", "0212", "1213"]) 
-
- 
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0924_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=1024_mode=none_seed=$seed_result.json", "MIR_c1024", random_seeds=["42", "0212", "1213"]) 
 
  
 
+ 
 
-print("09/25/2021 8 rounds average")
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=$seed_result.json", "ER_c256 (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
-
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=random_seed=$seed_result.json", "MIR_c256-random (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+print("09/25/2021 8 rounds stat")
 
 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json", "MIR_c256 (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/cl_simple/results/0926_MixedAllError_T=100_simple_ep=5_seed=$seed_result.json", "SimpleCL ep=5", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=1024_mode=none_seed=$seed_result.json", "MIR_c1024 (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/cl_simple/results/0926_MixedAllError_T=100_simple_ep=7_seed=$seed_result.json", "SimpleCL ep=7", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=4096_mode=none_seed=$seed_result.json", "MIR_c4096 (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/cl_simple/results/0926_MixedAllError_T=100_simple_ep=8_seed=$seed_result.json", "SimpleCL ep=8", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/cl_simple/results/0926_MixedAllError_T=100_simple_ep=10_seed=$seed_result.json", "SimpleCL ep=10", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=reverse_seed=$seed_result.json", "MIR_c256-reverse (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=$seed_result.json", "ER", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
 
-show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=largestloss_seed=$seed_result.json", "MIR_c256-largestloss (8 rounds)", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0927_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=$seed_result.json", "ER", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/0927_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=32_mode=random_seed=$seed_result.json", "MIR_c32-random", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json", "MIR_c256", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=1024_mode=none_seed=$seed_result.json", "MIR_c1024", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=4096_mode=none_seed=$seed_result.json", "MIR_c4096", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=reverse_seed=$seed_result.json", "MIR_c256-reverse", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/0925_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=largestloss_seed=$seed_result.json", "MIR_c256-largestloss", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
