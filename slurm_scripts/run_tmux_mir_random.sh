@@ -1,5 +1,5 @@
 
-declare -a seeds=("42" "0212" "1213" "2021" "123" "456" "567" "789")
+declare -a seeds=("42" "10212" "11213" "12021" "1123" "1456" "1567" "1789")
 for seed in "${seeds[@]}"
 do
 session_name=mir-random_${seed}
