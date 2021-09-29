@@ -137,7 +137,7 @@ def setup_args(args):
             if args.cl_method_name == "mir":
                 setattr(debugger_args, "mir_abalation_args", args.mir_abalation_args)  
             if args.cl_method_name == "index_cl":
-                setattr(debugger_args, "rank_method", args.index_rank_method)  
+                setattr(debugger_args, "index_rank_method", args.index_rank_method)  
         elif args.cl_method_name in ["hyper_cl"]:
             setattr(debugger_args, "adapter_dim", args.adapter_dim)
             setattr(debugger_args, "example_encoder_name", args.example_encoder_name)

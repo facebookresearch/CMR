@@ -44,7 +44,7 @@ class IndexBasedCL(ContinualFinetuning):
         # Initializing the IndexManager
         self.memroy_module = IndexManager(self.logger)
         self.memroy_module.set_up_data_args(self.data_args)
-        self.memroy_module.data_args.predict_batch_size = 8
+        self.memroy_module.data_args.predict_batch_size = 4
         self.memroy_module.load_encoder_model(self.base_model_args)
         if debugger_args.init_memory_cache_path:
             self.memroy_module.load_memory_from_path(debugger_args.init_memory_cache_path)

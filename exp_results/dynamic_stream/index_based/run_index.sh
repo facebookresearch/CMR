@@ -3,18 +3,19 @@ source ~/.bashrc
 conda activate bartqa 
 cd ~/SemanticDebugger/
 
-# Experience Replay
+# Index-based Replay
 
 max_timecode=$1
 replay_size=$2
 replay_freq=$3
-seed=$4
+rank_method=$4
+seed=$5
 gpu=0 
 # declare -a seeds=("42" "0212" "1213")
 # for seed in "${seeds[@]}"
 # do
 memory_store_rate=1.0
-prefix="0929_MixedAllErrors_T=100_index_M=U+I_rs=32_rq=3_seed=${seed}"
+prefix="0929_MixedAllErrors_T=100_index_M=U+I_rs=32_rq=3_seed=${seed}_rank=${rank_method}"
 log_file=exp_results/dynamic_stream/index_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/index_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/index_based/logs/${prefix}.run_mir.sh
@@ -31,6 +32,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --seed $seed \
     --max_timecode ${max_timecode} \
     --cl_method_name "index_cl" \
+    --index_rank_method ${rank_method} \
     --memory_key_encoder "facebook/bart-base" \
     --memory_store_rate ${memory_store_rate} \
     --num_adapt_epochs 0 \
@@ -48,7 +50,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --init_memory_cache_path "exp_results/data_streams/init_memory.pkl" \
     --memory_path "exp_results/dynamic_stream/index_based/ckpt_dir/${prefix}_ckpts/memory_dict.pkl" \
     --overtime_ckpt_dir exp_results/dynamic_stream/index_based/ckpt_dir/${prefix}_ckpts/ \
-    --result_file exp_results/dynamic_stream/index_based/results/${prefix}_result.json > ${log_file}
+    --result_file exp_results/dynamic_stream/index_based/results/${prefix}_result.json > ${log_file} 2>&1
     #  2>&1 &
 # gpu=$((gpu+1))
 # done
