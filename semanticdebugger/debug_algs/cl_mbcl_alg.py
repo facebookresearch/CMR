@@ -300,8 +300,6 @@ class MemoryBasedCL(ContinualFinetuning):
             else:
                 # MIR paper
                 loss_delta = after_loss - before_loss
-            
-                                
             interference_scores.append((example, loss_delta))
 
         # self.logger.info(f"before_losses={before_losses}")

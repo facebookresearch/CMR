@@ -10,7 +10,8 @@ from semanticdebugger.debug_algs import run_lifelong_finetune
 
 from transformers.modeling_bart import _prepare_bart_decoder_inputs
 import numpy as np
-import faiss 
+import faiss
+import pickle 
 
 
 class IndexManager():
@@ -25,7 +26,7 @@ class IndexManager():
         self.tokenizer = None 
         self.cl_utils = ContinualFinetuning(logger=logger)
         self.initial_memory_path = ""
-        self.data_args = None
+        self.data_args = None 
         self.dim_vector = 2*768
         self.memory_index_sorted_ids = []
 
@@ -52,14 +53,15 @@ class IndexManager():
         assert self.bart_model is not None
 
         with open(self.initial_memory_path) as f:
-            initial_memory_examples = [json.loads(line) for line in set(f.read().splitlines())][:500]    # TODO: only for debugging
+            initial_memory_examples = [json.loads(line) for line in set(f.read().splitlines())][:]    # TODO: only for debugging
         initial_memory_examples = self.cl_utils.upstream_data_formatter(initial_memory_examples)
         for item in initial_memory_examples:
             # Note that we only keep the first answer here now.
             self.memory_examples[item[2]] = (item[0], item[1][0:1], item[2])
         self.logger.info(f"Set up the initial memory with {len(self.memory_examples)} examples.")
         initial_memory_example_ids = sorted(list(self.memory_examples.keys()))
-        vectors = self.get_representation(initial_memory_example_ids)
+        examples = self.get_examples_by_ids(initial_memory_example_ids) 
+        vectors = self.get_representation(examples)
         self.update_index(initial_memory_example_ids, vectors)
 
 
@@ -71,16 +73,7 @@ class IndexManager():
         vectors = np.array(vectors)
         self.memory_index.add(vectors)
         
-        
-    def query_examples(self, query_vectors, k=5):
-        """
-        Returns samples from buffer using K-nearest neighbour approach
-        """
-        retrieved_examples = []
-        for query_vector in query_vectors:
-            D, I = self.memory_index.search(np.array([query_vector]), k)
-            retrieved_examples.append([self.memory_index_sorted_ids[int(eid)] for eid in I[0]])
-        return retrieved_examples
+
 
     def set_up_model(self, model, tokenizer):
         self.bart_model = model 
@@ -90,11 +83,46 @@ class IndexManager():
         return [self.memory_examples[eid] for eid in example_ids]
 
 
-    
+    def load_memory_from_path(self, init_memory_cache_path):
+        with open(init_memory_cache_path, "rb") as f:
+            memory_cache = pickle.load(f)
+            self.logger.info(f"Load the cache to {f.name}")
+        self.memory_index_sorted_ids = memory_cache["memory_index_sorted_ids"]
+        self.memory_index = memory_cache["memory_index"] 
 
-    def get_representation(self, example_ids):
-        examples = self.get_examples_by_ids(example_ids) 
+
+    def save_memory_to_path(self, memory_pkl_path):
+        memory_cache = {}
+        memory_cache["memory_index_sorted_ids"] = self.memory_index_sorted_ids
+        memory_cache["memory_index"] = self.memory_index
+
+        with open(memory_pkl_path, "wb") as f:
+            pickle.dump(memory_cache, f)
+            self.logger.info(f"Saved the cache to {f.name}")
+             
         
+    def search_index(self, query_vector, k=5):  
+        D, I = self.memory_index.search(np.array([query_vector]), k)
+        retrieved_examples= [self.memory_index_sorted_ids[int(eid)] for eid in I[0]]
+        return retrieved_examples
+
+    def retrieve_from_memory(self, query_examples, sample_size=32, rank_method="most_similar"):
+        input_vectors = self.get_representation(query_examples)
+        input_vectors = np.array(input_vectors)
+        query_vector = np.mean(input_vectors, axis=0)
+        if rank_method == "most_different":
+            query_vector = -query_vector
+        retrieved_examples = self.search_index(query_vector, sample_size)
+        return retrieved_examples
+
+
+    def store_exampls(self, examples):
+        example_ids = [item[2] for item in examples]
+        vectors = self.get_representation(examples)
+        self.update_index(example_ids, vectors)
+
+
+    def get_representation(self, examples):
         data_manager, _ = self.cl_utils.get_dataloader(self.data_args, examples, mode="train", is_training=False)
         all_vectors = [] 
         bart_model = self.bart_model if self.cl_utils.n_gpu ==1 else self.bart_model.module
@@ -159,6 +187,9 @@ class IndexManager():
             all_vectors += list(vectors)
         return all_vectors
 
+    def load_encoder_model(self, base_model_args):
+        self.cl_utils.load_base_model(base_model_args)
+        self.set_up_model(model=self.cl_utils.base_model, tokenizer=self.cl_utils.tokenizer)
 
 
 if __name__ == '__main__':
@@ -170,14 +201,18 @@ if __name__ == '__main__':
     args.predict_batch_size = 8
     index_manager = IndexManager(logger=logger)
     index_manager.set_up_data_args(args) 
-    index_manager.cl_utils.load_base_model(base_model_args)
-    index_manager.set_up_model(model=index_manager.cl_utils.base_model, tokenizer=index_manager.cl_utils.tokenizer)
+    index_manager.load_encoder_model(base_model_args)
     index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
-    
     index_manager.set_up_initial_memory()
 
-    query_ids = list(index_manager.memory_examples.keys())[:3]
-    tensors = index_manager.get_representation(example_ids=query_ids)
-    print(query_ids, tensors)
-    retrived_ids = index_manager.query_examples(tensors)
-    print(retrived_ids)
+    index_manager.save_memory_from_path("exp_results/data_streams/init_memory.pkl")
+
+    
+
+
+    # # sanity check 
+    # query_ids = list(index_manager.memory_examples.keys())[:3]
+    # tensors = index_manager.get_representation(example_ids=query_ids)
+    # print(query_ids, tensors)
+    # retrieved_ids = index_manager.query_examples(tensors)
+    # print(retrieved_ids)

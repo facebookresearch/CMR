@@ -1,5 +1,5 @@
 """
-This script is used to get the training data for learning a retriver that can get back the most forgettable examples given a batch of error cases to fix.
+This script is used to get the training data for learning a retriever that can get back the most forgettable examples given a batch of error cases to fix.
 
 Input:
     - The training streams. ---> get the error cases.

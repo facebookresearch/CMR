@@ -20,7 +20,7 @@ mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.run_mir.sh
 tmp_code_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.cl_mbcl_alg.py
 cp semanticdebugger/debug_algs/cl_mbcl_alg.py $tmp_code_copy
-cp exp_results/dynamic_stream/memory_based/run_mir.sh $tmp_script_copy
+cp exp_results/dynamic_stream/memory_based/run_er.sh $tmp_script_copy
 
 echo ${log_file}
 
@@ -46,7 +46,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --replay_stream_json_path "" \
     --save_all_ckpts 0 \
     --memory_path exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/memory_dict.pkl \
-    --memory_key_cache_path "na" \
+    --init_memory_cache_path "na" \
     --overtime_ckpt_dir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/ \
     --result_file exp_results/dynamic_stream/memory_based/results/${prefix}_result.json > ${log_file}
     #  2>&1 &

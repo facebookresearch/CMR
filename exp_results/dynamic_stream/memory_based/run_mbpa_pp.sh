@@ -21,7 +21,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python semanticdebugger/debug_algs/run_lifelong_fin
     --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --save_all_ckpts 0 \
     --memory_path exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/memory_dict.pkl \
-    --memory_key_cache_path "na" \
+    --init_memory_cache_path "na" \
     --overtime_ckpt_dir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/ \
     --result_file exp_results/dynamic_stream/memory_based/results/${prefix}_result.json > ${log_file} 2>&1 & 
 

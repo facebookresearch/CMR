@@ -1,8 +1,5 @@
 from argparse import Namespace
 import argparse
-
-
-
 from torch import detach
 from semanticdebugger.models.utils import set_seeds
 from semanticdebugger.debug_algs.cl_none import NoneCL
@@ -10,7 +7,6 @@ from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
 from semanticdebugger.debug_algs.cl_mbcl_alg import MemoryBasedCL
-# from semanticdebugger.debug_algs.cl_mbcl_alg_v1 import MemoryBasedCL
 from semanticdebugger.debug_algs.cl_hypernet_alg import HyperCL
 from semanticdebugger.debug_algs.distant_supervision import get_forgettable
 import logging
@@ -74,6 +70,13 @@ def setup_args(args):
         assert args.replay_size > 0
         debugging_alg = MemoryBasedCL(logger=logger)
         debugging_alg.name = args.cl_method_name
+    elif args.cl_method_name == "index_cl":
+        from semanticdebugger.debug_algs.index_based.cl_indexed_alg import IndexBasedCL
+        assert args.replay_frequency > 0
+        assert args.replay_size > 0
+        assert args.num_adapt_epochs <= 0
+        debugging_alg = IndexBasedCL(logger=logger)
+        debugging_alg.name = args.cl_method_name 
     elif args.cl_method_name == "hyper_cl":
         debugging_alg = HyperCL(logger=logger)
     elif args.cl_method_name == "simple_cl_for_mining_supervision":
@@ -103,7 +106,7 @@ def setup_args(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["none_cl", "simple_cl", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "hyper_cl", "simple_cl_for_mining_supervision"]:
+    if args.cl_method_name in ["none_cl", "simple_cl", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "index_cl", "hyper_cl", "simple_cl_for_mining_supervision"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -119,21 +122,22 @@ def setup_args(args):
         if args.cl_method_name == "online_ewc":
             setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
             setattr(debugger_args, "ewc_gamma", args.ewc_gamma)       
-        elif args.cl_method_name in ["er", "mbpa", "mbpa++", "mir"]: 
+        elif args.cl_method_name in ["er", "mbpa", "mbpa++", "mir", "index_cl"]: 
             setattr(debugger_args, "use_replay_mix", args.use_replay_mix)
             setattr(debugger_args, "replay_size", args.replay_size)
             setattr(debugger_args, "replay_candidate_size", args.replay_candidate_size)
             setattr(debugger_args, "replay_frequency", args.replay_frequency)
             setattr(debugger_args, "memory_path", args.memory_path)
-            setattr(debugger_args, "memory_key_cache_path", args.memory_key_cache_path)
+            setattr(debugger_args, "init_memory_cache_path", args.init_memory_cache_path)
             setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
-            setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
-            setattr(debugger_args, "memory_store_rate", args.memory_store_rate)                
+            setattr(debugger_args, "memory_store_rate", args.memory_store_rate)
             setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
             setattr(debugger_args, "inference_query_size", args.inference_query_size)
             setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)
             if args.cl_method_name == "mir":
                 setattr(debugger_args, "mir_abalation_args", args.mir_abalation_args)  
+            if args.cl_method_name == "index_cl":
+                setattr(debugger_args, "rank_method", args.index_rank_method)  
         elif args.cl_method_name in ["hyper_cl"]:
             setattr(debugger_args, "adapter_dim", args.adapter_dim)
             setattr(debugger_args, "example_encoder_name", args.example_encoder_name)
@@ -285,7 +289,7 @@ def get_cli_parser():
     parser.add_argument('--replay_frequency', type=int, default=1) # 1 means always replay for every steps, set to 10 means sample after 10 model updates.
     parser.add_argument('--memory_key_encoder', type=str, default="facebook/bart-base")
     parser.add_argument('--memory_path', type=str, default="")    
-    parser.add_argument('--memory_key_cache_path', type=str, default="bug_data/memory_key_cache.pkl")
+    parser.add_argument('--init_memory_cache_path', type=str, default="bug_data/memory_key_cache.pkl")
     parser.add_argument('--memory_store_rate', type=float, default=1.0)   # 1= always store all examples to the memory. 
     parser.add_argument('--num_adapt_epochs', type=int, default=1) #
     parser.add_argument('--inference_query_size', type=int, default=1) #
@@ -295,6 +299,9 @@ def get_cli_parser():
 
     # debug MIR  
     parser.add_argument('--mir_abalation_args', type=str, default="none")
+    
+
+    parser.add_argument('--index_rank_method', type=str, default="most_similar")
     
 
 

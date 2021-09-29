@@ -48,7 +48,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --replay_stream_json_path "" \
     --save_all_ckpts 1 \
     --memory_path exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/memory_dict.pkl \
-    --memory_key_cache_path "na" \
+    --init_memory_cache_path "na" \
     --overtime_ckpt_dir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/ \
     --result_file exp_results/dynamic_stream/memory_based/results/${prefix}_result.json > ${log_file} 2>&1 &
 gpu=$((gpu+1))
