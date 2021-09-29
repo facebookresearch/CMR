@@ -17,7 +17,7 @@ from tqdm import tqdm
 class ContinualFinetuning(OnlineDebuggingMethod):
     def __init__(self, logger):
         super().__init__(logger=logger)
-        self.name = "continual_finetuning"
+        self.name = "simple_cl"
         
 
     def _check_debugger_args(self):
