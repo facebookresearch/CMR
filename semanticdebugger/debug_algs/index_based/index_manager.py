@@ -27,6 +27,7 @@ class IndexManager():
         self.initial_memory_path = ""
         self.data_args = None
         self.dim_vector = 2*768
+        self.memory_index_sorted_ids = []
 
     def set_up_data_args(self, args):
         self.data_args = Namespace(
@@ -58,7 +59,6 @@ class IndexManager():
             self.memory_examples[item[2]] = (item[0], item[1][0:1], item[2])
         self.logger.info(f"Set up the initial memory with {len(self.memory_examples)} examples.")
         initial_memory_example_ids = sorted(list(self.memory_examples.keys()))
-        self.memory_index_sorted_ids = initial_memory_example_ids
         vectors = self.get_representation(initial_memory_example_ids)
         self.update_index(initial_memory_example_ids, vectors)
 
@@ -66,17 +66,11 @@ class IndexManager():
     def update_index(self, example_ids, vectors):
         assert len(example_ids) == len(vectors)
         if not self.memory_index:
-            self.init_index(vectors)
-        else:
-            # TODO: update faiss index?
-            pass 
-
-
-    def init_index(self, vectors):        
-        self.memory_index = faiss.IndexFlatL2(self.dim_vector)
+            self.memory_index = faiss.IndexFlatL2(self.dim_vector)    
+        self.memory_index_sorted_ids += example_ids
         vectors = np.array(vectors)
         self.memory_index.add(vectors)
-
+        
         
     def query_examples(self, query_vectors, k=5):
         """
@@ -102,8 +96,8 @@ class IndexManager():
         examples = self.get_examples_by_ids(example_ids) 
         
         data_manager, _ = self.cl_utils.get_dataloader(self.data_args, examples, mode="train", is_training=False)
-        all_vectors = []
-        bart_model = self.bart_model.module
+        all_vectors = [] 
+        bart_model = self.bart_model if self.cl_utils.n_gpu ==1 else self.bart_model.module
         bart_model.eval()
         for batch in tqdm(data_manager.dataloader):
             # self.logger.info(f"len(batch)={len(batch)}")
