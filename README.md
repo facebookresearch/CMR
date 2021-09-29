@@ -16,6 +16,8 @@ pip install datasets==1.4.0 py7zr wget
 pip install torch==1.4.0 higher==0.2.1 scikit-learn==0.24.1 scipy==1.4.1 
 pip install git+https://github.com/huggingface/transformers.git@7b75aa9fa55bee577e2c7403301ed31103125a35
 pip install -e .
+
+conda install -n bartqa -c pytorch faiss-gpu
 ```
 
 
