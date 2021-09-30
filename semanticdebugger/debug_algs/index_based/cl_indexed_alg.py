@@ -1,4 +1,4 @@
-from semanticdebugger.debug_algs.index_based.index_manager import IndexManager
+from semanticdebugger.debug_algs.index_based.index_manager import BartIndexManager
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from tqdm import tqdm
@@ -41,8 +41,8 @@ class IndexBasedCL(ContinualFinetuning):
 
         super().debugger_setup(debugger_args)
 
-        # Initializing the IndexManager
-        self.memroy_module = IndexManager(self.logger)
+        # Initializing the BartIndexManager
+        self.memroy_module = BartIndexManager(self.logger)
         self.memroy_module.set_up_data_args(self.data_args)
         self.memroy_module.data_args.predict_batch_size = 4
         self.memroy_module.load_encoder_model(self.base_model_args)
@@ -83,7 +83,7 @@ class IndexBasedCL(ContinualFinetuning):
                     and self.timecode > 0:
                 # sparse experience replay
                 self.logger.info("Triggering Sampling from Memory and starting to replay.")
-                self.logger.info(f"Current memory size: {len(self.memroy_module.memory_index_sorted_ids)}.")
+                self.logger.info(f"Current memory size: {self.memroy_module.get_memory_size()}.")
 
                 retrieved_examples = self.memroy_module.retrieve_from_memory(
                     query_examples=formatted_bug_examples,
@@ -126,7 +126,7 @@ class IndexBasedCL(ContinualFinetuning):
             if flag_store_examples:
                 self.logger.info(
                     f"Saving the current error examples (len={len(formatted_bug_examples)}) to the memory.")
-                self.logger.info(f"Current memory size: {len(self.memroy_module.memory_index_sorted_ids)}.")
+                self.logger.info(f"Current memory size: {self.memroy_module.get_memory_size()}.")
                 self.memroy_module.store_exampls(formatted_bug_examples)
                 self.logger.info("Finished.")
             self.logger.info("-"*50)

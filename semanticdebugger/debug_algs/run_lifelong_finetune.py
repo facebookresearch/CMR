@@ -7,6 +7,7 @@ from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
 from semanticdebugger.debug_algs.cl_mbcl_alg import MemoryBasedCL
+from semanticdebugger.debug_algs.index_based.cl_indexed_alg import IndexBasedCL
 from semanticdebugger.debug_algs.cl_hypernet_alg import HyperCL
 from semanticdebugger.debug_algs.distant_supervision import get_forgettable
 import logging
@@ -71,7 +72,6 @@ def setup_args(args):
         debugging_alg = MemoryBasedCL(logger=logger)
         debugging_alg.name = args.cl_method_name
     elif args.cl_method_name == "index_cl":
-        from semanticdebugger.debug_algs.index_based.cl_indexed_alg import IndexBasedCL
         assert args.replay_frequency > 0
         assert args.replay_size > 0
         assert args.num_adapt_epochs <= 0
