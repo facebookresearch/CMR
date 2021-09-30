@@ -18,7 +18,7 @@ prefix="0927_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=${seed}"
 log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.run_mir.sh
-tmp_code_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.cl_mbcl_alg.py
+tmp_code_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.cl_mbcl_alg.pybackup
 cp semanticdebugger/debug_algs/cl_mbcl_alg.py $tmp_code_copy
 cp exp_results/dynamic_stream/memory_based/run_er.sh $tmp_script_copy
 

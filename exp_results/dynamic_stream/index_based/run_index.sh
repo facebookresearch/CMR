@@ -19,7 +19,7 @@ prefix="0929_MixedAllErrors_T=100_index_M=U+I_rs=32_rq=3_seed=${seed}_rank=${ran
 log_file=exp_results/dynamic_stream/index_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/index_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/index_based/logs/${prefix}.run_mir.sh
-tmp_code_copy=exp_results/dynamic_stream/index_based/logs/${prefix}.cl_indexed_alg.py
+tmp_code_copy=exp_results/dynamic_stream/index_based/logs/${prefix}.cl_indexed_alg.pybackup
 cp semanticdebugger/debug_algs/index_based/cl_indexed_alg.py $tmp_code_copy
 cp exp_results/dynamic_stream/index_based/run_index.sh $tmp_script_copy
 

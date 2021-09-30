@@ -24,7 +24,7 @@ log_file=exp_results/dynamic_stream/memory_based/logs/run_${prefix}.log
 rm -rf exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 mkdir exp_results/dynamic_stream/memory_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.run_mir.sh
-tmp_code_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.cl_mbcl_alg.py
+tmp_code_copy=exp_results/dynamic_stream/memory_based/logs/${prefix}.cl_mbcl_alg.pybackup
 cp semanticdebugger/debug_algs/cl_mbcl_alg.py $tmp_code_copy
 cp exp_results/dynamic_stream/memory_based/run_mir.sh $tmp_script_copy
 
