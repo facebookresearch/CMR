@@ -53,6 +53,7 @@ def setup_args(args):
         assert args.replay_frequency > 0
         assert args.replay_size > 0
         if args.cl_method_name == "mir":
+            args.use_mir = True
             assert args.replay_candidate_size >= args.replay_size
             assert args.num_adapt_epochs >= 1 # this is for the virtual update 
         else:
@@ -134,9 +135,10 @@ def setup_args(args):
             setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
             setattr(debugger_args, "inference_query_size", args.inference_query_size)
             setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)
-            if args.cl_method_name == "mir":
+            if args.cl_method_name == "mir" or args.use_mir:
                 setattr(debugger_args, "mir_abalation_args", args.mir_abalation_args)  
             if args.cl_method_name == "index_cl":
+                setattr(debugger_args, "use_mir", args.use_mir)  
                 setattr(debugger_args, "index_rank_method", args.index_rank_method)  
         elif args.cl_method_name in ["hyper_cl"]:
             setattr(debugger_args, "adapter_dim", args.adapter_dim)
@@ -297,10 +299,11 @@ def get_cli_parser():
     parser.add_argument('--local_adapt_lr', type=float, default=1e-5) #
     
 
-    # debug MIR  
+    # MIR ablation options
     parser.add_argument('--mir_abalation_args', type=str, default="none")
     
-
+    # Indexbased CL abalation options
+    parser.add_argument('--use_mir', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     parser.add_argument('--index_rank_method', type=str, default="most_similar")
     
 

@@ -111,10 +111,6 @@ class BartIndexManager(BaseMemoryManager):
 
     def set_up_data_args(self, args):
         self.data_args = Namespace(
-            bug_stream_json_path="",
-            pass_pool_jsonl_path="",
-            sampled_upstream_json_path="",
-            # pass_sample_size=args.pass_sample_size,
             do_lowercase=args.do_lowercase,
             append_another_bos=args.append_another_bos,
             max_input_length=args.max_input_length,
@@ -122,10 +118,6 @@ class BartIndexManager(BaseMemoryManager):
             task_name=args.task_name,
             train_batch_size=args.train_batch_size,
             predict_batch_size=args.predict_batch_size,
-            num_beams=args.num_beams,
-            max_timecode=args.max_timecode,
-            accumulate_eval_freq=-1,
-            use_sampled_upstream=False,
         )
 
     def set_up_initial_memory(self, initial_memory_path="", formatted_examples=None):
@@ -146,6 +138,8 @@ class BartIndexManager(BaseMemoryManager):
         self.memory_index.add(vectors)
 
     def set_up_model(self, model, tokenizer):
+        del self.bart_model
+        del self.tokenizer
         self.bart_model = model
         self.tokenizer = tokenizer
 
@@ -177,12 +171,21 @@ class BartIndexManager(BaseMemoryManager):
 
     def retrieve_from_memory(self, query_examples, sample_size, **kwargs):
         input_vectors = self.get_representation(query_examples)
-        input_vectors = np.array(input_vectors)
-        query_vector = np.mean(input_vectors, axis=0)
-        if kwargs["rank_method"] == "most_different":
-            query_vector = -query_vector
-        retrieved_example_ids = self.search_index(query_vector, sample_size)
-        retrieved_examples = [self.memory_examples[rid] for rid in retrieved_example_ids]
+        agg_method = kwargs.get("agg_method", "mean")
+        if agg_method == "mean":
+            input_vectors = np.array(input_vectors)
+            query_vector = np.mean(input_vectors, axis=0)
+            if kwargs["rank_method"] == "most_different":
+                query_vector = -query_vector
+            retrieved_example_ids = self.search_index(query_vector, sample_size)
+        elif agg_method == "each_topk_then_random":
+            each_sample_size = kwargs.get("each_sample_size", 5)
+            retrieved_example_ids = []
+            for query_vector in input_vectors:
+                retrieved_example_ids += self.search_index(query_vector, each_sample_size)
+            # retrieved_example_ids = set(retrieved_example_ids) # TODO: decide later.
+            retrieved_example_ids = random.sample(retrieved_example_ids, sample_size)
+        retrieved_examples = self.get_examples_by_ids(retrieved_example_ids)
         return retrieved_examples
 
     def store_exampls(self, examples):
