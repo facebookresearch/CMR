@@ -37,6 +37,7 @@ class IndexBasedCL(ContinualFinetuning):
             "index_rank_method"
         ]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
+        assert self.debugger_args.index_rank_method in ["most_similar", "most_different"]
 
     def debugger_setup(self, debugger_args):
 
@@ -87,11 +88,12 @@ class IndexBasedCL(ContinualFinetuning):
                 self.logger.info(f"Current memory size: {self.memroy_module.get_memory_size()}.")
                 if self.debugger_args.use_mir:
                     assert self.debugger_args.replay_candidate_size >= self.debugger_args.replay_size
-                    each_sample_size=int(self.debugger_args.replay_candidate_size/self.debugger_args.replay_size)*5
+                    each_sample_size=int(self.debugger_args.replay_candidate_size/self.debugger_args.replay_size)*2
                     self.logger.info(f"each_sample_size={each_sample_size}")
                     retrieved_examples_candidates = self.memroy_module.retrieve_from_memory(
                         query_examples=formatted_bug_examples,
                         sample_size=self.debugger_args.replay_size,
+                        rank_method=self.debugger_args.index_rank_method,
                         agg_method="each_topk_then_random",
                         each_sample_size=each_sample_size)
                     self.logger.info(f"retrieved_examples (index)={retrieved_examples_candidates}")
@@ -103,6 +105,7 @@ class IndexBasedCL(ContinualFinetuning):
                         query_examples=formatted_bug_examples,
                         sample_size=self.debugger_args.replay_size, 
                         agg_method="each_topk_then_random",
+                        rank_method=self.debugger_args.index_rank_method,
                         each_sample_size=5)
                     self.logger.info(f"retrieved_examples (index)={retrieved_examples}")
 

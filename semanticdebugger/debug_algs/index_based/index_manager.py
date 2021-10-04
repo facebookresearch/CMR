@@ -172,16 +172,19 @@ class BartIndexManager(BaseMemoryManager):
     def retrieve_from_memory(self, query_examples, sample_size, **kwargs):
         input_vectors = self.get_representation(query_examples)
         agg_method = kwargs.get("agg_method", "mean")
+        rank_method = kwargs.get("rank_method", "most_similar")
         if agg_method == "mean":
             input_vectors = np.array(input_vectors)
             query_vector = np.mean(input_vectors, axis=0)
-            if kwargs["rank_method"] == "most_different":
+            if rank_method == "most_different":
                 query_vector = -query_vector
             retrieved_example_ids = self.search_index(query_vector, sample_size)
         elif agg_method == "each_topk_then_random":
             each_sample_size = kwargs.get("each_sample_size", 5)
             retrieved_example_ids = []
             for query_vector in input_vectors:
+                if rank_method == "most_different":
+                    query_vector = -query_vector
                 retrieved_example_ids += self.search_index(query_vector, each_sample_size)
             # retrieved_example_ids = set(retrieved_example_ids) # TODO: decide later.
             retrieved_example_ids = random.sample(retrieved_example_ids, sample_size)

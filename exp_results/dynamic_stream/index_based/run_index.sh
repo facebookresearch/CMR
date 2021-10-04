@@ -17,7 +17,7 @@ gpu=0
 # for seed in "${seeds[@]}"
 # do
 memory_store_rate=1.0
-prefix="1001_MixedAllErrors_T=${max_timecode}_index_M=U+I_rs=${replay_size}_rq=${replay_freq}_rank=${rank_method}_mir=${use_mir}(${mir_cand_size})_seed=${seed}"
+prefix="1001v2_MixedAllErrors_T=${max_timecode}_index_M=U+I_rs=${replay_size}_rq=${replay_freq}_rank=${rank_method}_mir=${use_mir}(${mir_cand_size})_seed=${seed}"
 log_file=exp_results/dynamic_stream/index_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/index_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/index_based/logs/${prefix}.run_mir.sh
