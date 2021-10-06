@@ -3,9 +3,9 @@ source ~/.bashrc
 conda activate bartqa 
 cd ~/SemanticDebugger/
 
-index=0
+index=$1
 gpu=0
-prefix=data_collection_simple_${index}
+prefix=dm_simple_${index}
 log_file=exp_results/supervision_data/logs/run_${prefix}.log
 CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervision/data_collection.py \
     --cl_method_name "simple_ds_mine" \
