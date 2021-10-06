@@ -92,7 +92,7 @@ class RandomMemoryManger(BaseMemoryManager):
         for item in examples:
             # Note that we only keep the all answers here now.
             self.memory_examples[item[2]] = (item[0], item[1], item[2])
-        self.logger.info(f"Save {len(self.memory_examples)} examples to the memory.")
+        self.logger.info(f"Save {len(examples)} examples to the memory.")
 
 
 class BartIndexManager(BaseMemoryManager):

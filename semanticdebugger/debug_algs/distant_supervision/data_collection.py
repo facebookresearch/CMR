@@ -41,7 +41,7 @@ from operator import getitem
 class MiningSupervision(ContinualFinetuning):
     def __init__(self, logger):
         super().__init__(logger=logger)
-        self.name = "simple_data_collection"
+        self.name = "simple_ds_mine"
         self.init_model = None
     
     def _check_data_args(self, additional_args):
@@ -183,10 +183,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 
-    assert args.cl_method_name == "simple_data_collection" 
+    assert args.cl_method_name == "simple_ds_mine" 
 
     ## Create Training Stream ##
-    set_seeds(args.seed)
+    
+    seeds = list(range(100000))
+    random.shuffle(seeds)
+    set_seeds(seeds[args.seed])
     initial_memory, sampled_train_stream = create_training_stream(args)
         
     
@@ -213,61 +216,26 @@ if __name__ == '__main__':
     mined_supervision = cl_supervision_miner.mine_supervision(memory_manager)  
     with open(args.output_supervision, "wb") as f:
         pickle.dump(mined_supervision, f)
-
-"""
-n_threads=8
-n_gpus=8
-start_gpuid=0
-for (( thread=0; thread<${n_threads}; thread++ ))
-do 
-    prefix=nq_dev_0812_wr_mined_supervision_from_train_${thread}
-    log_file=exp_results/supervision_data/logs/run_${prefix}.log
-    echo ${log_file}
-    touch ${log_file}
-    gpu=$(($start_gpuid + $thread % $n_gpus ))
-    echo $thread, $gpu
-    CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervision/data_collection.py \
-        --cl_method_name simple_data_collection \
-        --num_rounds 10 --stream_len 100 \
-        --seed ${thread} \
-        --output_supervision "exp_results/supervision_data/error_forget_pairs.${thread}.pkl" \
-        --learning_rate 3e-5 --num_train_epochs 5 --train_batch_size 10 \
-        --prefix ${prefix} \
-        --stream_mode dynamic \
-        --data_stream_json_path exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.train.wr.json \
-        --replay_stream_json_path "" \
-        --pass_pool_jsonl_path exp_results/data_streams/mrqa.mixed.upstream_eval.jsonl \
-        --save_all_ckpts 0 \
-        --result_file exp_results/supervision_data/results/${prefix}_result.json > ${log_file} 2>&1 & 
-    echo $log_file
-done
-
-
-
-python semanticdebugger/benchmark_gen/merge_json_file.py \
-    --input_file_pattern exp_results/supervision_data/error_forget_pairs.#.json \
-    --range "range(8)" \
-    --output_file exp_results/supervision_data/error_forget_pairs.json
-"""
-
-
+ 
 """
 # debug
-thread=0
-gpu=1
+index=0
+gpu=0
 prefix=data_collection_simple_${thread}
 log_file=exp_results/supervision_data/logs/run_${prefix}.log
 CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervision/data_collection.py \
-    --cl_method_name simple_data_collection \
+    --cl_method_name simple_ds_mine \
     --seed ${thread} \
-    --output_supervision "exp_results/supervision_data/error_forget_pairs.${thread}.npy" \
+    --output_supervision "exp_results/supervision_data/simple_mir_dm/dm.${thread}.pkl" \
     --learning_rate 3e-5 --num_train_epochs 5 --train_batch_size 10 \
     --prefix ${prefix} \
     --stream_mode dynamic \
     --replay_stream_json_path "" \
     --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
     --save_all_ckpts 0     
-    > ${log_file} 2>&1 & 
+    > ${log_file} 2>&1 
+    
+    & 
 echo $log_file 
 
 
