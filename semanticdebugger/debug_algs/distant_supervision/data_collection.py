@@ -50,7 +50,7 @@ class MiningSupervision(ContinualFinetuning):
     def compute_MIR_scores(self, before_model, after_model, examples):
         _examples = _keep_first_answer(examples)
         mlr_data_args = copy.deepcopy(self.data_args)
-        mlr_data_args.predict_batch_size = 8    # TODO: set an arg. 
+        mlr_data_args.predict_batch_size = 4    # TODO: set an arg. 
         memory_buffer_loader, _ = self.get_dataloader(
             mlr_data_args, _examples, mode="train", is_training=False) # fix of the order
         
@@ -78,7 +78,7 @@ class MiningSupervision(ContinualFinetuning):
         cl_trainer = self
         tokenizer = self.tokenizer
         data_args = copy.deepcopy(self.data_args)
-        data_args.predict_batch_size = 8
+        data_args.predict_batch_size = 4
         query_vectors_before = get_bart_dual_representation(cl_trainer, before_model, tokenizer, data_args, query_examples)
         query_vectors_after = get_bart_dual_representation(cl_trainer, after_model, tokenizer, data_args, query_examples)
         assert len(query_vectors_before) == len(query_vectors_after) == len(query_examples)
@@ -112,18 +112,11 @@ class MiningSupervision(ContinualFinetuning):
         mined_supervision = []
 
         for data_eval_loader in tqdm(sub_stream_dataloaders, desc="Mining Supervision from Dynamic Error Stream"):
-
-            result_dict = {"timecode": self.timecode}   # start with 0
-
-            # self._replay_based_eval(result_dict)
-            # bug_train_loader = self._get_dynamic_errors(data_eval_loader, result_dict)
-
             episode_data = data_eval_loader.data 
             bug_train_loader, _ = self.get_dataloader(
                 self.data_args, episode_data, mode="train")
                 # TODO: this is actually not errors for M_t, it is just M_0's errors
             model_copy = copy.deepcopy(self.base_model)
-
             ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
             self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
@@ -139,17 +132,11 @@ class MiningSupervision(ContinualFinetuning):
             self.timecode += 1
             positive_results, negative_results = self.get_pos_neg_results(sampled_examples, 
                                                                     MIR_scores, positive_size=8, negative_size=8)
-            
-
             supervision = self.wrap_supervision(model_copy, updated_model, episode_data, positive_results, negative_results)
-            # supervision["error_ids"] = result_dict["fixed_ids"] + result_dict["unfixed_ids"]
-            # supervision["forgotten_examples"] = result_dict["forgotten_examples"]
-            # supervision["unforgettable_ids"] = result_dict["retained_ids"]
-            # supervision["fixed_ids"] = result_dict["fixed_ids"]
-            # supervision["model_weights"] = {}
-
+            self.logger.info(f"Get an instance for supervision at {self.timecode}")
             mined_supervision.append(supervision)
             memory_manager.store_examples(episode_data)
+            del model_copy
 
         return mined_supervision
 
@@ -180,43 +167,51 @@ if __name__ == '__main__':
 
     parser.add_argument('--init_memory_size', type=int, default=10000)
 
+    parser.add_argument('--num_rounds', type=int, default=1)
+
     args = parser.parse_args()
 
 
     assert args.cl_method_name == "simple_ds_mine" 
 
-    ## Create Training Stream ##
-    
-    seeds = list(range(100000))
-    random.shuffle(seeds)
-    set_seeds(seeds[args.seed])
-    initial_memory, sampled_train_stream = create_training_stream(args)
-        
-    
+
     ## init the useful args ##
     cl_supervision_miner, data_args, base_model_args, debugger_args, logger = run_lifelong_finetune.setup_args(
         args)
     
     setattr(data_args, "replay_stream_json_path", "")
 
-    ## Init the RandomMemroy module ##    
-    memory_manager = RandomMemoryManger(logger) # TODO: try the BART-base one?
-    formatted_initial_memory = cl_supervision_miner.data_formatter(initial_memory)
-    memory_manager.set_up_initial_memory(formatted_examples=formatted_initial_memory)
-    logger.info(f"Initial memory size: {memory_manager.get_memory_size()}")    
-    
-
 
     ## Init the cl_supervision_miner
-    cl_supervision_miner.load_data(data_args, given_data_stream=sampled_train_stream)
     cl_supervision_miner.load_base_model(base_model_args)
-
     cl_supervision_miner.init_model = copy.deepcopy(cl_supervision_miner.base_model)    # maintain M0
-    cl_supervision_miner.debugger_setup(debugger_args)
-    mined_supervision = cl_supervision_miner.mine_supervision(memory_manager)  
-    with open(args.output_supervision, "wb") as f:
-        pickle.dump(mined_supervision, f)
- 
+    
+    
+    ## Create Training Stream ##      
+
+    for _rid in range(args.num_rounds):
+        logger.info(f"Starting Round {_rid} ....")
+        seeds = list(range(100000))
+        random.shuffle(seeds)
+        set_seeds(seeds[args.seed])
+        initial_memory, sampled_train_stream = create_training_stream(args)           
+        
+
+        ## Init the RandomMemroy module ##    
+        memory_manager = RandomMemoryManger(logger) # TODO: try the BART-base one?
+        formatted_initial_memory = cl_supervision_miner.data_formatter(initial_memory)
+        memory_manager.set_up_initial_memory(formatted_examples=formatted_initial_memory)
+        logger.info(f"Initial memory size: {memory_manager.get_memory_size()}")    
+        
+        cl_supervision_miner.load_data(data_args, given_data_stream=sampled_train_stream)
+        cl_supervision_miner.debugger_setup(debugger_args)
+        mined_supervision = cl_supervision_miner.mine_supervision(memory_manager)  
+        path_to_save = args.output_supervision.replace(".pkl", f"-{_rid}.pkl")
+        with open(path_to_save, "wb") as f:
+            logger.info(f"Saving {f.name}")
+            pickle.dump(mined_supervision, f)
+            logger.info(f"Saving {f.name}...Done!")
+        logger.info(f"Finished Round {_rid} !")
 """
 # debug
 index=0
@@ -237,6 +232,5 @@ CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervisi
     
     & 
 echo $log_file 
-
 
 """

@@ -1,0 +1,994 @@
+10/06/2021 16:07:12 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Namespace(adam_epsilon=1e-08, adapter_dim=32, append_another_bos=1, base_model_path='out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt', base_model_type='facebook/bart-base', bug_stream_json_path='bug_data/mrqa_naturalquestions_dev.static_bug_stream.json', cl_method_name='simple_ds_mine', current_thread_id=None, data_stream_json_path='bug_data/mrqa_naturalquestions_dev.data_stream.test.json', do_lowercase=False, ewc_gamma=1, ewc_lambda=0.5, example_encoder_name='roberta-base', freeze_embeds=False, gradient_accumulation_steps=1, index_rank_method='most_similar', inference_query_size=1, init_memory_cache_path='bug_data/memory_key_cache.pkl', init_memory_size=10000, learning_rate=3e-05, local_adapt_lr=1e-05, max_grad_norm=0.1, max_input_length=888, max_output_length=50, max_timecode=-1, memory_key_encoder='facebook/bart-base', memory_path='', memory_store_rate=1.0, mir_abalation_args='none', num_adapt_epochs=1, num_beams=4, num_rounds=8, num_threads_eval=0, num_train_epochs=5.0, output_supervision='exp_results/supervision_data/1006v2_dm_simple/dm.22.pkl', overtime_ckpt_dir=None, pass_pool_jsonl_path='exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl', path_to_thread_result=None, predict_batch_size=16, prefix='1006v2_dm_simple_22', replay_candidate_size=8, replay_frequency=1, replay_size=8, replay_stream_json_path='', result_file='bug_data/results.json', sampled_upstream_json_path='data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl', save_all_ckpts=0, seed=22, stream_mode='dynamic', task_emb_dim=768, task_name='mrqa_naturalquestions', train_batch_size=4, train_stream_episode_size=16, train_stream_length=100, upstream_data_file='data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl', upstream_data_prediction_file='bug_data/mrqa_naturalquestions_train.predictions.jsonl', use_mir=False, use_replay_mix=False, use_sampled_upstream=False, weight_decay=0.01)
+10/06/2021 16:07:12 - INFO - transformers.tokenization_utils - loading file https://s3.amazonaws.com/models.huggingface.co/bert/roberta-large-vocab.json from cache at /private/home/yuchenlin/.cache/torch/transformers/1ae1f5b6e2b22b25ccc04c000bb79ca847aa226d0761536b011cf7e5868f0655.ef00af9e673c7160b4d41cfda1f48c5f4cba57d5142754525572a846a1ab1b9b
+10/06/2021 16:07:12 - INFO - transformers.tokenization_utils - loading file https://s3.amazonaws.com/models.huggingface.co/bert/roberta-large-merges.txt from cache at /private/home/yuchenlin/.cache/torch/transformers/f8f83199a6270d582d6245dc100e99c4155de81c9745c6248077018fe01abcfb.70bec105b4158ed9a1747fea67a43f5dee97855c64d62b6ec3742f4cfdb5feda
+10/06/2021 16:07:12 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Loading checkpoint from out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt for facebook/bart-base .....
+10/06/2021 16:07:14 - INFO - transformers.configuration_utils - loading configuration file https://s3.amazonaws.com/models.huggingface.co/bert/facebook/bart-base/config.json from cache at /private/home/yuchenlin/.cache/torch/transformers/09f4fcaeaf785dd3b97b085d6e3510c7081f586ec8e75981683c6299c0f81d9d.e8d516ad807436d395effad8c2326786872659b7dd1210827ac67c761198a0eb
+10/06/2021 16:07:14 - INFO - transformers.configuration_utils - Model config BartConfig {
+  "activation_dropout": 0.1,
+  "activation_function": "gelu",
+  "add_bias_logits": false,
+  "add_final_layer_norm": false,
+  "architectures": [
+    "BartModel",
+    "BartForConditionalGeneration",
+    "BartForSequenceClassification"
+  ],
+  "attention_dropout": 0.1,
+  "bos_token_id": 0,
+  "classif_dropout": 0.0,
+  "d_model": 768,
+  "decoder_attention_heads": 12,
+  "decoder_ffn_dim": 3072,
+  "decoder_layerdrop": 0.0,
+  "decoder_layers": 6,
+  "decoder_start_token_id": 2,
+  "dropout": 0.1,
+  "early_stopping": true,
+  "encoder_attention_heads": 12,
+  "encoder_ffn_dim": 3072,
+  "encoder_layerdrop": 0.0,
+  "encoder_layers": 6,
+  "eos_token_id": 2,
+  "id2label": {
+    "0": "LABEL_0",
+    "1": "LABEL_1",
+    "2": "LABEL_2"
+  },
+  "init_std": 0.02,
+  "is_encoder_decoder": true,
+  "label2id": {
+    "LABEL_0": 0,
+    "LABEL_1": 1,
+    "LABEL_2": 2
+  },
+  "max_position_embeddings": 1024,
+  "model_type": "bart",
+  "no_repeat_ngram_size": 3,
+  "normalize_before": false,
+  "normalize_embedding": true,
+  "num_beams": 4,
+  "num_hidden_layers": 6,
+  "pad_token_id": 1,
+  "scale_embedding": false,
+  "static_position_embeddings": false,
+  "task_specific_params": {
+    "summarization": {
+      "length_penalty": 1.0,
+      "max_length": 128,
+      "min_length": 12,
+      "num_beams": 4
+    },
+    "summarization_cnn": {
+      "length_penalty": 2.0,
+      "max_length": 142,
+      "min_length": 56,
+      "num_beams": 4
+    },
+    "summarization_xsum": {
+      "length_penalty": 1.0,
+      "max_length": 62,
+      "min_length": 11,
+      "num_beams": 6
+    }
+  },
+  "vocab_size": 50265
+}
+
+10/06/2021 16:07:14 - INFO - transformers.modeling_utils - loading weights file https://cdn.huggingface.co/facebook/bart-base/pytorch_model.bin from cache at /private/home/yuchenlin/.cache/torch/transformers/566c05fb6983817e8ad7a4fa51e3099fe9caa3b31730f964bc5198d71c677523.0a3d95c18c1e434448941bc25accea7b122882be6526fb67c8e8fb6d5ebc711c
+10/06/2021 16:07:18 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Loading checkpoint from out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt for facebook/bart-base ..... Done!
+10/06/2021 16:07:23 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Moving to the GPUs.
+10/06/2021 16:07:23 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Starting Round 0 ....
+10/06/2021 16:07:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Set up the initial memory with 10000 examples.
+10/06/2021 16:07:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Initial memory size: 10000
+Creating the data loaders.:   0%|          | 0/100 [00:00<?, ?it/s]Creating the data loaders.:   3%|▎         | 3/100 [00:00<00:04, 21.99it/s]Creating the data loaders.:   6%|▌         | 6/100 [00:00<00:04, 22.89it/s]Creating the data loaders.:  10%|█         | 10/100 [00:00<00:03, 25.20it/s]Creating the data loaders.:  13%|█▎        | 13/100 [00:00<00:03, 26.27it/s]Creating the data loaders.:  17%|█▋        | 17/100 [00:00<00:02, 28.67it/s]Creating the data loaders.:  21%|██        | 21/100 [00:00<00:02, 31.31it/s]Creating the data loaders.:  26%|██▌       | 26/100 [00:00<00:02, 33.17it/s]Creating the data loaders.:  31%|███       | 31/100 [00:00<00:01, 34.82it/s]Creating the data loaders.:  35%|███▌      | 35/100 [00:01<00:01, 35.31it/s]Creating the data loaders.:  39%|███▉      | 39/100 [00:01<00:01, 36.30it/s]Creating the data loaders.:  43%|████▎     | 43/100 [00:01<00:01, 37.06it/s]Creating the data loaders.:  48%|████▊     | 48/100 [00:01<00:01, 37.99it/s]Creating the data loaders.:  53%|█████▎    | 53/100 [00:01<00:01, 39.07it/s]Creating the data loaders.:  58%|█████▊    | 58/100 [00:01<00:01, 41.17it/s]Creating the data loaders.:  63%|██████▎   | 63/100 [00:01<00:00, 43.09it/s]Creating the data loaders.:  68%|██████▊   | 68/100 [00:01<00:00, 44.48it/s]Creating the data loaders.:  73%|███████▎  | 73/100 [00:01<00:00, 45.97it/s]Creating the data loaders.:  78%|███████▊  | 78/100 [00:02<00:00, 46.74it/s]Creating the data loaders.:  83%|████████▎ | 83/100 [00:02<00:00, 47.26it/s]Creating the data loaders.:  88%|████████▊ | 88/100 [00:02<00:00, 46.26it/s]Creating the data loaders.:  93%|█████████▎| 93/100 [00:02<00:00, 43.58it/s]Creating the data loaders.:  98%|█████████▊| 98/100 [00:02<00:00, 45.01it/s]Creating the data loaders.: 100%|██████████| 100/100 [00:02<00:00, 39.85it/s]
+10/06/2021 16:07:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Not creating the replay-stream for evaluation.
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Debugger Setup ......
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - debugger_args: Namespace(adam_epsilon=1e-08, gradient_accumulation_steps=1, learning_rate=3e-05, max_grad_norm=0.1, num_epochs=5.0, overtime_ckpt_dir=None, save_all_ckpts=0, total_steps=10000, warmup_steps=0, weight_decay=0.01) ......
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Debugger Setup ...... Done!
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start Mining Distant Supervision (as online debugging).
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Number of Batches of Data: 100
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Data Batch Size: 16;
+Mining Supervision from Dynamic Error Stream:   0%|          | 0/100 [00:00<?, ?it/s]10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 0
+                                                                                     Mining Supervision from Dynamic Error Stream:   0%|          | 0/100 [00:00<?, ?it/s]10/06/2021 16:07:38 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                     Mining Supervision from Dynamic Error Stream:   0%|          | 0/100 [00:03<?, ?it/s]10/06/2021 16:07:38 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                     Mining Supervision from Dynamic Error Stream:   0%|          | 0/100 [00:03<?, ?it/s]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.06it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.07it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 24.71it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.28it/s]
+10/06/2021 16:07:41 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 1
+                                                                                     Mining Supervision from Dynamic Error Stream:   0%|          | 0/100 [00:06<?, ?it/s]10/06/2021 16:07:41 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                     Mining Supervision from Dynamic Error Stream:   0%|          | 0/100 [00:06<?, ?it/s]Mining Supervision from Dynamic Error Stream:   1%|          | 1/100 [00:06<10:16,  6.23s/it]10/06/2021 16:07:41 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 1
+                                                                                             Mining Supervision from Dynamic Error Stream:   1%|          | 1/100 [00:06<10:16,  6.23s/it]10/06/2021 16:07:44 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                             Mining Supervision from Dynamic Error Stream:   1%|          | 1/100 [00:09<10:16,  6.23s/it]10/06/2021 16:07:44 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                             Mining Supervision from Dynamic Error Stream:   1%|          | 1/100 [00:09<10:16,  6.23s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 24.80it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 24.72it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.52it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 21.22it/s]
+10/06/2021 16:07:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 2
+                                                                                             Mining Supervision from Dynamic Error Stream:   1%|          | 1/100 [00:11<10:16,  6.23s/it]10/06/2021 16:07:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                             Mining Supervision from Dynamic Error Stream:   1%|          | 1/100 [00:11<10:16,  6.23s/it]Mining Supervision from Dynamic Error Stream:   2%|▏         | 2/100 [00:11<09:54,  6.07s/it]10/06/2021 16:07:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 2
+                                                                                             Mining Supervision from Dynamic Error Stream:   2%|▏         | 2/100 [00:11<09:54,  6.07s/it]10/06/2021 16:07:50 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                             Mining Supervision from Dynamic Error Stream:   2%|▏         | 2/100 [00:15<09:54,  6.07s/it]10/06/2021 16:07:50 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                             Mining Supervision from Dynamic Error Stream:   2%|▏         | 2/100 [00:15<09:54,  6.07s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 13.92it/s][A100%|██████████| 2/2 [00:00<00:00, 13.89it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 14.56it/s][A100%|██████████| 2/2 [00:00<00:00, 14.54it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 28.15it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 24.55it/s]
+10/06/2021 16:07:54 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 3
+                                                                                             Mining Supervision from Dynamic Error Stream:   2%|▏         | 2/100 [00:18<09:54,  6.07s/it]10/06/2021 16:07:54 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                             Mining Supervision from Dynamic Error Stream:   2%|▏         | 2/100 [00:18<09:54,  6.07s/it]Mining Supervision from Dynamic Error Stream:   3%|▎         | 3/100 [00:18<10:08,  6.28s/it]10/06/2021 16:07:54 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 3
+                                                                                             Mining Supervision from Dynamic Error Stream:   3%|▎         | 3/100 [00:18<10:08,  6.28s/it]10/06/2021 16:07:57 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                             Mining Supervision from Dynamic Error Stream:   3%|▎         | 3/100 [00:22<10:08,  6.28s/it]10/06/2021 16:07:57 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                             Mining Supervision from Dynamic Error Stream:   3%|▎         | 3/100 [00:22<10:08,  6.28s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 11.03it/s][A100%|██████████| 2/2 [00:00<00:00, 11.02it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 11.74it/s][A100%|██████████| 2/2 [00:00<00:00, 11.71it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 26.85it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 20.41it/s]
+10/06/2021 16:08:00 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 4
+                                                                                             Mining Supervision from Dynamic Error Stream:   3%|▎         | 3/100 [00:25<10:08,  6.28s/it]10/06/2021 16:08:00 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                             Mining Supervision from Dynamic Error Stream:   3%|▎         | 3/100 [00:25<10:08,  6.28s/it]Mining Supervision from Dynamic Error Stream:   4%|▍         | 4/100 [00:25<10:19,  6.45s/it]10/06/2021 16:08:00 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 4
+                                                                                             Mining Supervision from Dynamic Error Stream:   4%|▍         | 4/100 [00:25<10:19,  6.45s/it]10/06/2021 16:08:03 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                             Mining Supervision from Dynamic Error Stream:   4%|▍         | 4/100 [00:28<10:19,  6.45s/it]10/06/2021 16:08:03 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                             Mining Supervision from Dynamic Error Stream:   4%|▍         | 4/100 [00:28<10:19,  6.45s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 23.49it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 23.44it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 24.11it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 21.42it/s]
+10/06/2021 16:08:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 5
+                                                                                             Mining Supervision from Dynamic Error Stream:   4%|▍         | 4/100 [00:31<10:19,  6.45s/it]10/06/2021 16:08:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                             Mining Supervision from Dynamic Error Stream:   4%|▍         | 4/100 [00:31<10:19,  6.45s/it]Mining Supervision from Dynamic Error Stream:   5%|▌         | 5/100 [00:31<09:57,  6.29s/it]10/06/2021 16:08:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 5
+                                                                                             Mining Supervision from Dynamic Error Stream:   5%|▌         | 5/100 [00:31<09:57,  6.29s/it]10/06/2021 16:08:09 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                             Mining Supervision from Dynamic Error Stream:   5%|▌         | 5/100 [00:34<09:57,  6.29s/it]10/06/2021 16:08:09 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                             Mining Supervision from Dynamic Error Stream:   5%|▌         | 5/100 [00:34<09:57,  6.29s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 19.46it/s][A100%|██████████| 2/2 [00:00<00:00, 19.42it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 19.17it/s][A100%|██████████| 2/2 [00:00<00:00, 19.12it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 23.26it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.27it/s]
+10/06/2021 16:08:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 6
+                                                                                             Mining Supervision from Dynamic Error Stream:   5%|▌         | 5/100 [00:37<09:57,  6.29s/it]10/06/2021 16:08:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                             Mining Supervision from Dynamic Error Stream:   5%|▌         | 5/100 [00:37<09:57,  6.29s/it]Mining Supervision from Dynamic Error Stream:   6%|▌         | 6/100 [00:37<09:49,  6.27s/it]10/06/2021 16:08:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 6
+                                                                                             Mining Supervision from Dynamic Error Stream:   6%|▌         | 6/100 [00:37<09:49,  6.27s/it]10/06/2021 16:08:15 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                             Mining Supervision from Dynamic Error Stream:   6%|▌         | 6/100 [00:40<09:49,  6.27s/it]10/06/2021 16:08:15 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                             Mining Supervision from Dynamic Error Stream:   6%|▌         | 6/100 [00:40<09:49,  6.27s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.28it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 27.24it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.40it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.06it/s]
+10/06/2021 16:08:18 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 7
+                                                                                             Mining Supervision from Dynamic Error Stream:   6%|▌         | 6/100 [00:43<09:49,  6.27s/it]10/06/2021 16:08:18 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                             Mining Supervision from Dynamic Error Stream:   6%|▌         | 6/100 [00:43<09:49,  6.27s/it]Mining Supervision from Dynamic Error Stream:   7%|▋         | 7/100 [00:43<09:26,  6.09s/it]10/06/2021 16:08:18 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 7
+                                                                                             Mining Supervision from Dynamic Error Stream:   7%|▋         | 7/100 [00:43<09:26,  6.09s/it]10/06/2021 16:08:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                             Mining Supervision from Dynamic Error Stream:   7%|▋         | 7/100 [00:46<09:26,  6.09s/it]10/06/2021 16:08:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                             Mining Supervision from Dynamic Error Stream:   7%|▋         | 7/100 [00:46<09:26,  6.09s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 23.69it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 23.86it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 26.49it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 20.68it/s]
+10/06/2021 16:08:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 8
+                                                                                             Mining Supervision from Dynamic Error Stream:   7%|▋         | 7/100 [00:49<09:26,  6.09s/it]10/06/2021 16:08:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                             Mining Supervision from Dynamic Error Stream:   7%|▋         | 7/100 [00:49<09:26,  6.09s/it]Mining Supervision from Dynamic Error Stream:   8%|▊         | 8/100 [00:49<09:09,  5.97s/it]10/06/2021 16:08:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 8
+                                                                                             Mining Supervision from Dynamic Error Stream:   8%|▊         | 8/100 [00:49<09:09,  5.97s/it]10/06/2021 16:08:26 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                             Mining Supervision from Dynamic Error Stream:   8%|▊         | 8/100 [00:51<09:09,  5.97s/it]10/06/2021 16:08:26 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                             Mining Supervision from Dynamic Error Stream:   8%|▊         | 8/100 [00:51<09:09,  5.97s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 29.23it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 29.66it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 22.16it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.69it/s]
+10/06/2021 16:08:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 9
+                                                                                             Mining Supervision from Dynamic Error Stream:   8%|▊         | 8/100 [00:53<09:09,  5.97s/it]10/06/2021 16:08:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                             Mining Supervision from Dynamic Error Stream:   8%|▊         | 8/100 [00:53<09:09,  5.97s/it]Mining Supervision from Dynamic Error Stream:   9%|▉         | 9/100 [00:53<08:34,  5.65s/it]10/06/2021 16:08:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 9
+                                                                                             Mining Supervision from Dynamic Error Stream:   9%|▉         | 9/100 [00:53<08:34,  5.65s/it]10/06/2021 16:08:31 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                             Mining Supervision from Dynamic Error Stream:   9%|▉         | 9/100 [00:56<08:34,  5.65s/it]10/06/2021 16:08:31 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                             Mining Supervision from Dynamic Error Stream:   9%|▉         | 9/100 [00:56<08:34,  5.65s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 19.99it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 20.26it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 33.82it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 19.44it/s]
+10/06/2021 16:08:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 10
+                                                                                             Mining Supervision from Dynamic Error Stream:   9%|▉         | 9/100 [00:59<08:34,  5.65s/it]10/06/2021 16:08:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                             Mining Supervision from Dynamic Error Stream:   9%|▉         | 9/100 [00:59<08:34,  5.65s/it]Mining Supervision from Dynamic Error Stream:  10%|█         | 10/100 [00:59<08:16,  5.52s/it]10/06/2021 16:08:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 10
+                                                                                              Mining Supervision from Dynamic Error Stream:  10%|█         | 10/100 [00:59<08:16,  5.52s/it]10/06/2021 16:08:36 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  10%|█         | 10/100 [01:01<08:16,  5.52s/it]10/06/2021 16:08:36 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  10%|█         | 10/100 [01:01<08:16,  5.52s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 22.62it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 29.87it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 25.64it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 21.36it/s]
+10/06/2021 16:08:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 11
+                                                                                              Mining Supervision from Dynamic Error Stream:  10%|█         | 10/100 [01:04<08:16,  5.52s/it]10/06/2021 16:08:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  10%|█         | 10/100 [01:04<08:16,  5.52s/it]Mining Supervision from Dynamic Error Stream:  11%|█         | 11/100 [01:04<08:01,  5.42s/it]10/06/2021 16:08:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 11
+                                                                                              Mining Supervision from Dynamic Error Stream:  11%|█         | 11/100 [01:04<08:01,  5.42s/it]10/06/2021 16:08:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  11%|█         | 11/100 [01:07<08:01,  5.42s/it]10/06/2021 16:08:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  11%|█         | 11/100 [01:07<08:01,  5.42s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 15.29it/s][A100%|██████████| 2/2 [00:00<00:00, 15.26it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 15.17it/s][A100%|██████████| 2/2 [00:00<00:00, 15.14it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.55it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 23.51it/s]
+10/06/2021 16:08:45 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 12
+                                                                                              Mining Supervision from Dynamic Error Stream:  11%|█         | 11/100 [01:10<08:01,  5.42s/it]10/06/2021 16:08:45 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  11%|█         | 11/100 [01:10<08:01,  5.42s/it]Mining Supervision from Dynamic Error Stream:  12%|█▏        | 12/100 [01:10<08:10,  5.58s/it]10/06/2021 16:08:45 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 12
+                                                                                              Mining Supervision from Dynamic Error Stream:  12%|█▏        | 12/100 [01:10<08:10,  5.58s/it]10/06/2021 16:08:48 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  12%|█▏        | 12/100 [01:13<08:10,  5.58s/it]10/06/2021 16:08:48 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  12%|█▏        | 12/100 [01:13<08:10,  5.58s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 15.08it/s][A100%|██████████| 2/2 [00:00<00:00, 15.05it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 15.24it/s][A100%|██████████| 2/2 [00:00<00:00, 15.22it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 28.07it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 25.38it/s]
+10/06/2021 16:08:51 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 13
+                                                                                              Mining Supervision from Dynamic Error Stream:  12%|█▏        | 12/100 [01:15<08:10,  5.58s/it]10/06/2021 16:08:51 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  12%|█▏        | 12/100 [01:15<08:10,  5.58s/it]Mining Supervision from Dynamic Error Stream:  13%|█▎        | 13/100 [01:15<08:03,  5.56s/it]10/06/2021 16:08:51 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 13
+                                                                                              Mining Supervision from Dynamic Error Stream:  13%|█▎        | 13/100 [01:15<08:03,  5.56s/it]10/06/2021 16:08:53 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  13%|█▎        | 13/100 [01:18<08:03,  5.56s/it]10/06/2021 16:08:53 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  13%|█▎        | 13/100 [01:18<08:03,  5.56s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.19it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.29it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 22.70it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 23.74it/s]
+10/06/2021 16:08:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 14
+                                                                                              Mining Supervision from Dynamic Error Stream:  13%|█▎        | 13/100 [01:20<08:03,  5.56s/it]10/06/2021 16:08:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  13%|█▎        | 13/100 [01:20<08:03,  5.56s/it]Mining Supervision from Dynamic Error Stream:  14%|█▍        | 14/100 [01:20<07:37,  5.32s/it]10/06/2021 16:08:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 14
+                                                                                              Mining Supervision from Dynamic Error Stream:  14%|█▍        | 14/100 [01:20<07:37,  5.32s/it]10/06/2021 16:08:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  14%|█▍        | 14/100 [01:23<07:37,  5.32s/it]10/06/2021 16:08:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  14%|█▍        | 14/100 [01:23<07:37,  5.32s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 21.95it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 21.76it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.19it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 32.90it/s]
+10/06/2021 16:09:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 15
+                                                                                              Mining Supervision from Dynamic Error Stream:  14%|█▍        | 14/100 [01:25<07:37,  5.32s/it]10/06/2021 16:09:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  14%|█▍        | 14/100 [01:25<07:37,  5.32s/it]Mining Supervision from Dynamic Error Stream:  15%|█▌        | 15/100 [01:25<07:30,  5.30s/it]10/06/2021 16:09:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 15
+                                                                                              Mining Supervision from Dynamic Error Stream:  15%|█▌        | 15/100 [01:25<07:30,  5.30s/it]10/06/2021 16:09:03 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  15%|█▌        | 15/100 [01:28<07:30,  5.30s/it]10/06/2021 16:09:03 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  15%|█▌        | 15/100 [01:28<07:30,  5.30s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 30.16it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 30.46it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.70it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.61it/s]
+10/06/2021 16:09:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 16
+                                                                                              Mining Supervision from Dynamic Error Stream:  15%|█▌        | 15/100 [01:31<07:30,  5.30s/it]10/06/2021 16:09:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  15%|█▌        | 15/100 [01:31<07:30,  5.30s/it]Mining Supervision from Dynamic Error Stream:  16%|█▌        | 16/100 [01:31<07:24,  5.30s/it]10/06/2021 16:09:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 16
+                                                                                              Mining Supervision from Dynamic Error Stream:  16%|█▌        | 16/100 [01:31<07:24,  5.30s/it]10/06/2021 16:09:08 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  16%|█▌        | 16/100 [01:33<07:24,  5.30s/it]10/06/2021 16:09:08 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  16%|█▌        | 16/100 [01:33<07:24,  5.30s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 32.74it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 33.46it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 30.43it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 32.45it/s]
+10/06/2021 16:09:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 17
+                                                                                              Mining Supervision from Dynamic Error Stream:  16%|█▌        | 16/100 [01:36<07:24,  5.30s/it]10/06/2021 16:09:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  16%|█▌        | 16/100 [01:36<07:24,  5.30s/it]Mining Supervision from Dynamic Error Stream:  17%|█▋        | 17/100 [01:36<07:11,  5.19s/it]10/06/2021 16:09:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 17
+                                                                                              Mining Supervision from Dynamic Error Stream:  17%|█▋        | 17/100 [01:36<07:11,  5.19s/it]10/06/2021 16:09:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  17%|█▋        | 17/100 [01:38<07:11,  5.19s/it]10/06/2021 16:09:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  17%|█▋        | 17/100 [01:38<07:11,  5.19s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 24.98it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 25.28it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 30.07it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 31.74it/s]
+10/06/2021 16:09:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 18
+                                                                                              Mining Supervision from Dynamic Error Stream:  17%|█▋        | 17/100 [01:41<07:11,  5.19s/it]10/06/2021 16:09:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  17%|█▋        | 17/100 [01:41<07:11,  5.19s/it]Mining Supervision from Dynamic Error Stream:  18%|█▊        | 18/100 [01:41<07:07,  5.22s/it]10/06/2021 16:09:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 18
+                                                                                              Mining Supervision from Dynamic Error Stream:  18%|█▊        | 18/100 [01:41<07:07,  5.22s/it]10/06/2021 16:09:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  18%|█▊        | 18/100 [01:43<07:07,  5.22s/it]10/06/2021 16:09:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  18%|█▊        | 18/100 [01:43<07:07,  5.22s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 28.76it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 28.94it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 30.19it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.82it/s]
+10/06/2021 16:09:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 19
+                                                                                              Mining Supervision from Dynamic Error Stream:  18%|█▊        | 18/100 [01:46<07:07,  5.22s/it]10/06/2021 16:09:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  18%|█▊        | 18/100 [01:46<07:07,  5.22s/it]Mining Supervision from Dynamic Error Stream:  19%|█▉        | 19/100 [01:46<07:01,  5.20s/it]10/06/2021 16:09:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 19
+                                                                                              Mining Supervision from Dynamic Error Stream:  19%|█▉        | 19/100 [01:46<07:01,  5.20s/it]10/06/2021 16:09:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  19%|█▉        | 19/100 [01:48<07:01,  5.20s/it]10/06/2021 16:09:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  19%|█▉        | 19/100 [01:48<07:01,  5.20s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 28.17it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 28.77it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 24.09it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.73it/s]
+10/06/2021 16:09:27 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 20
+                                                                                              Mining Supervision from Dynamic Error Stream:  19%|█▉        | 19/100 [01:51<07:01,  5.20s/it]10/06/2021 16:09:27 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  19%|█▉        | 19/100 [01:51<07:01,  5.20s/it]Mining Supervision from Dynamic Error Stream:  20%|██        | 20/100 [01:51<06:59,  5.24s/it]10/06/2021 16:09:27 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 20
+                                                                                              Mining Supervision from Dynamic Error Stream:  20%|██        | 20/100 [01:51<06:59,  5.24s/it]10/06/2021 16:09:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  20%|██        | 20/100 [01:54<06:59,  5.24s/it]10/06/2021 16:09:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  20%|██        | 20/100 [01:54<06:59,  5.24s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 28.17it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 28.59it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 29.77it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 33.60it/s]
+10/06/2021 16:09:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 21
+                                                                                              Mining Supervision from Dynamic Error Stream:  20%|██        | 20/100 [01:56<06:59,  5.24s/it]10/06/2021 16:09:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  20%|██        | 20/100 [01:56<06:59,  5.24s/it]Mining Supervision from Dynamic Error Stream:  21%|██        | 21/100 [01:56<06:50,  5.19s/it]10/06/2021 16:09:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 21
+                                                                                              Mining Supervision from Dynamic Error Stream:  21%|██        | 21/100 [01:56<06:50,  5.19s/it]10/06/2021 16:09:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  21%|██        | 21/100 [01:59<06:50,  5.19s/it]10/06/2021 16:09:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  21%|██        | 21/100 [01:59<06:50,  5.19s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 30.08it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 30.47it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.76it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 25.54it/s]
+10/06/2021 16:09:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 22
+                                                                                              Mining Supervision from Dynamic Error Stream:  21%|██        | 21/100 [02:01<06:50,  5.19s/it]10/06/2021 16:09:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  21%|██        | 21/100 [02:01<06:50,  5.19s/it]Mining Supervision from Dynamic Error Stream:  22%|██▏       | 22/100 [02:01<06:41,  5.15s/it]10/06/2021 16:09:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 22
+                                                                                              Mining Supervision from Dynamic Error Stream:  22%|██▏       | 22/100 [02:01<06:41,  5.15s/it]10/06/2021 16:09:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  22%|██▏       | 22/100 [02:04<06:41,  5.15s/it]10/06/2021 16:09:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  22%|██▏       | 22/100 [02:04<06:41,  5.15s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 29.41it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 30.48it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 28.55it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.76it/s]
+10/06/2021 16:09:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 23
+                                                                                              Mining Supervision from Dynamic Error Stream:  22%|██▏       | 22/100 [02:07<06:41,  5.15s/it]10/06/2021 16:09:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  22%|██▏       | 22/100 [02:07<06:41,  5.15s/it]Mining Supervision from Dynamic Error Stream:  23%|██▎       | 23/100 [02:07<06:34,  5.13s/it]10/06/2021 16:09:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 23
+                                                                                              Mining Supervision from Dynamic Error Stream:  23%|██▎       | 23/100 [02:07<06:34,  5.13s/it]10/06/2021 16:09:44 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  23%|██▎       | 23/100 [02:09<06:34,  5.13s/it]10/06/2021 16:09:44 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  23%|██▎       | 23/100 [02:09<06:34,  5.13s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 30.07it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 30.11it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 25.77it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 30.98it/s]
+10/06/2021 16:09:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 24
+                                                                                              Mining Supervision from Dynamic Error Stream:  23%|██▎       | 23/100 [02:11<06:34,  5.13s/it]10/06/2021 16:09:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  23%|██▎       | 23/100 [02:11<06:34,  5.13s/it]Mining Supervision from Dynamic Error Stream:  24%|██▍       | 24/100 [02:11<06:24,  5.06s/it]10/06/2021 16:09:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 24
+                                                                                              Mining Supervision from Dynamic Error Stream:  24%|██▍       | 24/100 [02:11<06:24,  5.06s/it]10/06/2021 16:09:49 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  24%|██▍       | 24/100 [02:14<06:24,  5.06s/it]10/06/2021 16:09:49 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  24%|██▍       | 24/100 [02:14<06:24,  5.06s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 25.58it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 25.65it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 20.41it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.86it/s]
+10/06/2021 16:09:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 25
+                                                                                              Mining Supervision from Dynamic Error Stream:  24%|██▍       | 24/100 [02:16<06:24,  5.06s/it]10/06/2021 16:09:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  24%|██▍       | 24/100 [02:16<06:24,  5.06s/it]Mining Supervision from Dynamic Error Stream:  25%|██▌       | 25/100 [02:16<06:17,  5.03s/it]10/06/2021 16:09:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 25
+                                                                                              Mining Supervision from Dynamic Error Stream:  25%|██▌       | 25/100 [02:16<06:17,  5.03s/it]10/06/2021 16:09:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  25%|██▌       | 25/100 [02:20<06:17,  5.03s/it]10/06/2021 16:09:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  25%|██▌       | 25/100 [02:20<06:17,  5.03s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 14.86it/s][A100%|██████████| 2/2 [00:00<00:00, 14.84it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 15.04it/s][A100%|██████████| 2/2 [00:00<00:00, 15.02it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 20.60it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 23.98it/s]
+10/06/2021 16:09:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 26
+                                                                                              Mining Supervision from Dynamic Error Stream:  25%|██▌       | 25/100 [02:23<06:17,  5.03s/it]10/06/2021 16:09:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  25%|██▌       | 25/100 [02:23<06:17,  5.03s/it]Mining Supervision from Dynamic Error Stream:  26%|██▌       | 26/100 [02:23<06:41,  5.43s/it]10/06/2021 16:09:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 26
+                                                                                              Mining Supervision from Dynamic Error Stream:  26%|██▌       | 26/100 [02:23<06:41,  5.43s/it]10/06/2021 16:10:02 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  26%|██▌       | 26/100 [02:26<06:41,  5.43s/it]10/06/2021 16:10:02 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  26%|██▌       | 26/100 [02:26<06:41,  5.43s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 15.10it/s][A100%|██████████| 2/2 [00:00<00:00, 15.07it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 15.11it/s][A100%|██████████| 2/2 [00:00<00:00, 15.08it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 28.54it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 31.10it/s]
+10/06/2021 16:10:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 27
+                                                                                              Mining Supervision from Dynamic Error Stream:  26%|██▌       | 26/100 [02:29<06:41,  5.43s/it]10/06/2021 16:10:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  26%|██▌       | 26/100 [02:29<06:41,  5.43s/it]Mining Supervision from Dynamic Error Stream:  27%|██▋       | 27/100 [02:29<06:53,  5.66s/it]10/06/2021 16:10:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 27
+                                                                                              Mining Supervision from Dynamic Error Stream:  27%|██▋       | 27/100 [02:29<06:53,  5.66s/it]10/06/2021 16:10:07 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  27%|██▋       | 27/100 [02:32<06:53,  5.66s/it]10/06/2021 16:10:07 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  27%|██▋       | 27/100 [02:32<06:53,  5.66s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 17.53it/s][A100%|██████████| 2/2 [00:00<00:00, 17.49it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 18.11it/s][A100%|██████████| 2/2 [00:00<00:00, 18.07it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 25.88it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 21.03it/s]
+10/06/2021 16:10:10 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 28
+                                                                                              Mining Supervision from Dynamic Error Stream:  27%|██▋       | 27/100 [02:35<06:53,  5.66s/it]10/06/2021 16:10:10 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  27%|██▋       | 27/100 [02:35<06:53,  5.66s/it]Mining Supervision from Dynamic Error Stream:  28%|██▊       | 28/100 [02:35<06:56,  5.79s/it]10/06/2021 16:10:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 28
+                                                                                              Mining Supervision from Dynamic Error Stream:  28%|██▊       | 28/100 [02:35<06:56,  5.79s/it]10/06/2021 16:10:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  28%|██▊       | 28/100 [02:38<06:56,  5.79s/it]10/06/2021 16:10:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  28%|██▊       | 28/100 [02:38<06:56,  5.79s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.13it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 25.96it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 22.63it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 21.75it/s]
+10/06/2021 16:10:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 29
+                                                                                              Mining Supervision from Dynamic Error Stream:  28%|██▊       | 28/100 [02:41<06:56,  5.79s/it]10/06/2021 16:10:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  28%|██▊       | 28/100 [02:41<06:56,  5.79s/it]Mining Supervision from Dynamic Error Stream:  29%|██▉       | 29/100 [02:41<06:49,  5.77s/it]10/06/2021 16:10:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 29
+                                                                                              Mining Supervision from Dynamic Error Stream:  29%|██▉       | 29/100 [02:41<06:49,  5.77s/it]10/06/2021 16:10:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  29%|██▉       | 29/100 [02:44<06:49,  5.77s/it]10/06/2021 16:10:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  29%|██▉       | 29/100 [02:44<06:49,  5.77s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.17it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.12it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 26.62it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 22.51it/s]
+10/06/2021 16:10:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 30
+                                                                                              Mining Supervision from Dynamic Error Stream:  29%|██▉       | 29/100 [02:46<06:49,  5.77s/it]10/06/2021 16:10:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  29%|██▉       | 29/100 [02:46<06:49,  5.77s/it]Mining Supervision from Dynamic Error Stream:  30%|███       | 30/100 [02:46<06:38,  5.70s/it]10/06/2021 16:10:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 30
+                                                                                              Mining Supervision from Dynamic Error Stream:  30%|███       | 30/100 [02:46<06:38,  5.70s/it]10/06/2021 16:10:25 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  30%|███       | 30/100 [02:49<06:38,  5.70s/it]10/06/2021 16:10:25 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  30%|███       | 30/100 [02:49<06:38,  5.70s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 21.09it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 21.50it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.36it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 28.02it/s]
+10/06/2021 16:10:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 31
+                                                                                              Mining Supervision from Dynamic Error Stream:  30%|███       | 30/100 [02:52<06:38,  5.70s/it]10/06/2021 16:10:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  30%|███       | 30/100 [02:52<06:38,  5.70s/it]Mining Supervision from Dynamic Error Stream:  31%|███       | 31/100 [02:52<06:39,  5.79s/it]10/06/2021 16:10:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 31
+                                                                                              Mining Supervision from Dynamic Error Stream:  31%|███       | 31/100 [02:52<06:39,  5.79s/it]10/06/2021 16:10:31 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  31%|███       | 31/100 [02:55<06:39,  5.79s/it]10/06/2021 16:10:31 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  31%|███       | 31/100 [02:55<06:39,  5.79s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 14.32it/s][A100%|██████████| 2/2 [00:00<00:00, 14.28it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 14.74it/s][A100%|██████████| 2/2 [00:00<00:00, 14.72it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.03it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 20.18it/s]
+10/06/2021 16:10:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 32
+                                                                                              Mining Supervision from Dynamic Error Stream:  31%|███       | 31/100 [02:58<06:39,  5.79s/it]10/06/2021 16:10:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  31%|███       | 31/100 [02:58<06:39,  5.79s/it]Mining Supervision from Dynamic Error Stream:  32%|███▏      | 32/100 [02:58<06:33,  5.79s/it]10/06/2021 16:10:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 32
+                                                                                              Mining Supervision from Dynamic Error Stream:  32%|███▏      | 32/100 [02:58<06:33,  5.79s/it]10/06/2021 16:10:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  32%|███▏      | 32/100 [03:01<06:33,  5.79s/it]10/06/2021 16:10:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  32%|███▏      | 32/100 [03:01<06:33,  5.79s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 14.44it/s][A100%|██████████| 2/2 [00:00<00:00, 14.41it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 14.55it/s][A100%|██████████| 2/2 [00:00<00:00, 14.53it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 26.02it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.23it/s]
+10/06/2021 16:10:40 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 33
+                                                                                              Mining Supervision from Dynamic Error Stream:  32%|███▏      | 32/100 [03:05<06:33,  5.79s/it]10/06/2021 16:10:40 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  32%|███▏      | 32/100 [03:05<06:33,  5.79s/it]Mining Supervision from Dynamic Error Stream:  33%|███▎      | 33/100 [03:05<06:43,  6.02s/it]10/06/2021 16:10:40 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 33
+                                                                                              Mining Supervision from Dynamic Error Stream:  33%|███▎      | 33/100 [03:05<06:43,  6.02s/it]10/06/2021 16:10:43 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  33%|███▎      | 33/100 [03:08<06:43,  6.02s/it]10/06/2021 16:10:43 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  33%|███▎      | 33/100 [03:08<06:43,  6.02s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 18.07it/s][A100%|██████████| 2/2 [00:00<00:00, 18.03it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 18.11it/s][A100%|██████████| 2/2 [00:00<00:00, 18.07it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.79it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 21.44it/s]
+10/06/2021 16:10:46 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 34
+                                                                                              Mining Supervision from Dynamic Error Stream:  33%|███▎      | 33/100 [03:11<06:43,  6.02s/it]10/06/2021 16:10:46 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  33%|███▎      | 33/100 [03:11<06:43,  6.02s/it]Mining Supervision from Dynamic Error Stream:  34%|███▍      | 34/100 [03:11<06:43,  6.12s/it]10/06/2021 16:10:46 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 34
+                                                                                              Mining Supervision from Dynamic Error Stream:  34%|███▍      | 34/100 [03:11<06:43,  6.12s/it]10/06/2021 16:10:49 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  34%|███▍      | 34/100 [03:14<06:43,  6.12s/it]10/06/2021 16:10:49 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  34%|███▍      | 34/100 [03:14<06:43,  6.12s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 20.75it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 20.85it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 20.92it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.20it/s]
+10/06/2021 16:10:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 35
+                                                                                              Mining Supervision from Dynamic Error Stream:  34%|███▍      | 34/100 [03:17<06:43,  6.12s/it]10/06/2021 16:10:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  34%|███▍      | 34/100 [03:17<06:43,  6.12s/it]Mining Supervision from Dynamic Error Stream:  35%|███▌      | 35/100 [03:17<06:37,  6.11s/it]10/06/2021 16:10:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 35
+                                                                                              Mining Supervision from Dynamic Error Stream:  35%|███▌      | 35/100 [03:17<06:37,  6.11s/it]10/06/2021 16:10:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  35%|███▌      | 35/100 [03:20<06:37,  6.11s/it]10/06/2021 16:10:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  35%|███▌      | 35/100 [03:20<06:37,  6.11s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 21.19it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 21.35it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 19.58it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.33it/s]
+10/06/2021 16:10:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 36
+                                                                                              Mining Supervision from Dynamic Error Stream:  35%|███▌      | 35/100 [03:23<06:37,  6.11s/it]10/06/2021 16:10:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  35%|███▌      | 35/100 [03:23<06:37,  6.11s/it]Mining Supervision from Dynamic Error Stream:  36%|███▌      | 36/100 [03:23<06:27,  6.06s/it]10/06/2021 16:10:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 36
+                                                                                              Mining Supervision from Dynamic Error Stream:  36%|███▌      | 36/100 [03:23<06:27,  6.06s/it]10/06/2021 16:11:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  36%|███▌      | 36/100 [03:26<06:27,  6.06s/it]10/06/2021 16:11:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  36%|███▌      | 36/100 [03:26<06:27,  6.06s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 20.31it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 19.78it/s][A100%|██████████| 2/2 [00:00<00:00, 19.73it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 20.12it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 28.80it/s]
+10/06/2021 16:11:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 37
+                                                                                              Mining Supervision from Dynamic Error Stream:  36%|███▌      | 36/100 [03:29<06:27,  6.06s/it]10/06/2021 16:11:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  36%|███▌      | 36/100 [03:29<06:27,  6.06s/it]Mining Supervision from Dynamic Error Stream:  37%|███▋      | 37/100 [03:29<06:20,  6.04s/it]10/06/2021 16:11:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 37
+                                                                                              Mining Supervision from Dynamic Error Stream:  37%|███▋      | 37/100 [03:29<06:20,  6.04s/it]10/06/2021 16:11:08 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  37%|███▋      | 37/100 [03:32<06:20,  6.04s/it]10/06/2021 16:11:08 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  37%|███▋      | 37/100 [03:32<06:20,  6.04s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 14.81it/s][A100%|██████████| 2/2 [00:00<00:00, 14.78it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A
+100%|██████████| 2/2 [00:00<00:00, 14.76it/s][A100%|██████████| 2/2 [00:00<00:00, 14.73it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 21.10it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 25.50it/s]
+10/06/2021 16:11:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 38
+                                                                                              Mining Supervision from Dynamic Error Stream:  37%|███▋      | 37/100 [03:36<06:20,  6.04s/it]10/06/2021 16:11:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  37%|███▋      | 37/100 [03:36<06:20,  6.04s/it]Mining Supervision from Dynamic Error Stream:  38%|███▊      | 38/100 [03:36<06:25,  6.22s/it]10/06/2021 16:11:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 38
+                                                                                              Mining Supervision from Dynamic Error Stream:  38%|███▊      | 38/100 [03:36<06:25,  6.22s/it]10/06/2021 16:11:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  38%|███▊      | 38/100 [03:38<06:25,  6.22s/it]10/06/2021 16:11:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  38%|███▊      | 38/100 [03:38<06:25,  6.22s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 22.41it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 22.41it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 20.14it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 28.25it/s]
+10/06/2021 16:11:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 39
+                                                                                              Mining Supervision from Dynamic Error Stream:  38%|███▊      | 38/100 [03:41<06:25,  6.22s/it]10/06/2021 16:11:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  38%|███▊      | 38/100 [03:41<06:25,  6.22s/it]Mining Supervision from Dynamic Error Stream:  39%|███▉      | 39/100 [03:41<05:59,  5.90s/it]10/06/2021 16:11:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 39
+                                                                                              Mining Supervision from Dynamic Error Stream:  39%|███▉      | 39/100 [03:41<05:59,  5.90s/it]10/06/2021 16:11:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  39%|███▉      | 39/100 [03:44<05:59,  5.90s/it]10/06/2021 16:11:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  39%|███▉      | 39/100 [03:44<05:59,  5.90s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 23.87it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 23.82it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 21.43it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 10.12it/s]
+10/06/2021 16:11:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 40
+                                                                                              Mining Supervision from Dynamic Error Stream:  39%|███▉      | 39/100 [03:47<05:59,  5.90s/it]10/06/2021 16:11:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  39%|███▉      | 39/100 [03:47<05:59,  5.90s/it]Mining Supervision from Dynamic Error Stream:  40%|████      | 40/100 [03:47<05:53,  5.90s/it]10/06/2021 16:11:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 40
+                                                                                              Mining Supervision from Dynamic Error Stream:  40%|████      | 40/100 [03:47<05:53,  5.90s/it]10/06/2021 16:11:25 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  40%|████      | 40/100 [03:50<05:53,  5.90s/it]10/06/2021 16:11:25 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  40%|████      | 40/100 [03:50<05:53,  5.90s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 23.59it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 23.70it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 29.96it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 23.25it/s]
+10/06/2021 16:11:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 41
+                                                                                              Mining Supervision from Dynamic Error Stream:  40%|████      | 40/100 [03:53<05:53,  5.90s/it]10/06/2021 16:11:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  40%|████      | 40/100 [03:53<05:53,  5.90s/it]Mining Supervision from Dynamic Error Stream:  41%|████      | 41/100 [03:53<05:48,  5.91s/it]10/06/2021 16:11:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 41
+                                                                                              Mining Supervision from Dynamic Error Stream:  41%|████      | 41/100 [03:53<05:48,  5.91s/it]10/06/2021 16:11:30 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  41%|████      | 41/100 [03:55<05:48,  5.91s/it]10/06/2021 16:11:30 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  41%|████      | 41/100 [03:55<05:48,  5.91s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.59it/s]
+
+  0%|          | 0/2 [00:00<?, ?it/s][A100%|██████████| 2/2 [00:00<00:00, 26.72it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 32.73it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 29.46it/s]
+10/06/2021 16:11:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 42
+                                                                                              Mining Supervision from Dynamic Error Stream:  41%|████      | 41/100 [03:58<05:48,  5.91s/it]10/06/2021 16:11:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+                                                                                              Mining Supervision from Dynamic Error Stream:  41%|████      | 41/100 [03:58<05:48,  5.91s/it]Mining Supervision from Dynamic Error Stream:  42%|████▏     | 42/100 [03:58<05:26,  5.63s/it]10/06/2021 16:11:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 42
+                                                                                              Mining Supervision from Dynamic Error Stream:  42%|████▏     | 42/100 [03:58<05:26,  5.63s/it]10/06/2021 16:11:36 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+                                                                                              Mining Supervision from Dynamic Error Stream:  42%|████▏     | 42/100 [04:01<05:26,  5.63s/it]10/06/2021 16:11:36 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+                                                                                              Mining Supervision from Dynamic Error Stream:  42%|████▏     | 42/100 [04:01<05:26,  5.63s/it]
+  0%|          | 0/2 [00:00<?, ?it/s][A 50%|█████     | 1/2 [00:00<00:00,  3.69it/s]
+Mining Supervision from Dynamic Error Stream:  42%|████▏     | 42/100 [04:04<05:36,  5.81s/it]
+10/06/2021 16:07:12 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Namespace(adam_epsilon=1e-08, adapter_dim=32, append_another_bos=1, base_model_path='out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt', base_model_type='facebook/bart-base', bug_stream_json_path='bug_data/mrqa_naturalquestions_dev.static_bug_stream.json', cl_method_name='simple_ds_mine', current_thread_id=None, data_stream_json_path='bug_data/mrqa_naturalquestions_dev.data_stream.test.json', do_lowercase=False, ewc_gamma=1, ewc_lambda=0.5, example_encoder_name='roberta-base', freeze_embeds=False, gradient_accumulation_steps=1, index_rank_method='most_similar', inference_query_size=1, init_memory_cache_path='bug_data/memory_key_cache.pkl', init_memory_size=10000, learning_rate=3e-05, local_adapt_lr=1e-05, max_grad_norm=0.1, max_input_length=888, max_output_length=50, max_timecode=-1, memory_key_encoder='facebook/bart-base', memory_path='', memory_store_rate=1.0, mir_abalation_args='none', num_adapt_epochs=1, num_beams=4, num_rounds=8, num_threads_eval=0, num_train_epochs=5.0, output_supervision='exp_results/supervision_data/1006v2_dm_simple/dm.22.pkl', overtime_ckpt_dir=None, pass_pool_jsonl_path='exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl', path_to_thread_result=None, predict_batch_size=16, prefix='1006v2_dm_simple_22', replay_candidate_size=8, replay_frequency=1, replay_size=8, replay_stream_json_path='', result_file='bug_data/results.json', sampled_upstream_json_path='data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl', save_all_ckpts=0, seed=22, stream_mode='dynamic', task_emb_dim=768, task_name='mrqa_naturalquestions', train_batch_size=4, train_stream_episode_size=16, train_stream_length=100, upstream_data_file='data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl', upstream_data_prediction_file='bug_data/mrqa_naturalquestions_train.predictions.jsonl', use_mir=False, use_replay_mix=False, use_sampled_upstream=False, weight_decay=0.01)
+10/06/2021 16:07:12 - INFO - transformers.tokenization_utils - loading file https://s3.amazonaws.com/models.huggingface.co/bert/roberta-large-vocab.json from cache at /private/home/yuchenlin/.cache/torch/transformers/1ae1f5b6e2b22b25ccc04c000bb79ca847aa226d0761536b011cf7e5868f0655.ef00af9e673c7160b4d41cfda1f48c5f4cba57d5142754525572a846a1ab1b9b
+10/06/2021 16:07:12 - INFO - transformers.tokenization_utils - loading file https://s3.amazonaws.com/models.huggingface.co/bert/roberta-large-merges.txt from cache at /private/home/yuchenlin/.cache/torch/transformers/f8f83199a6270d582d6245dc100e99c4155de81c9745c6248077018fe01abcfb.70bec105b4158ed9a1747fea67a43f5dee97855c64d62b6ec3742f4cfdb5feda
+10/06/2021 16:07:12 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Loading checkpoint from out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt for facebook/bart-base .....
+10/06/2021 16:07:14 - INFO - transformers.configuration_utils - loading configuration file https://s3.amazonaws.com/models.huggingface.co/bert/facebook/bart-base/config.json from cache at /private/home/yuchenlin/.cache/torch/transformers/09f4fcaeaf785dd3b97b085d6e3510c7081f586ec8e75981683c6299c0f81d9d.e8d516ad807436d395effad8c2326786872659b7dd1210827ac67c761198a0eb
+10/06/2021 16:07:14 - INFO - transformers.configuration_utils - Model config BartConfig {
+  "activation_dropout": 0.1,
+  "activation_function": "gelu",
+  "add_bias_logits": false,
+  "add_final_layer_norm": false,
+  "architectures": [
+    "BartModel",
+    "BartForConditionalGeneration",
+    "BartForSequenceClassification"
+  ],
+  "attention_dropout": 0.1,
+  "bos_token_id": 0,
+  "classif_dropout": 0.0,
+  "d_model": 768,
+  "decoder_attention_heads": 12,
+  "decoder_ffn_dim": 3072,
+  "decoder_layerdrop": 0.0,
+  "decoder_layers": 6,
+  "decoder_start_token_id": 2,
+  "dropout": 0.1,
+  "early_stopping": true,
+  "encoder_attention_heads": 12,
+  "encoder_ffn_dim": 3072,
+  "encoder_layerdrop": 0.0,
+  "encoder_layers": 6,
+  "eos_token_id": 2,
+  "id2label": {
+    "0": "LABEL_0",
+    "1": "LABEL_1",
+    "2": "LABEL_2"
+  },
+  "init_std": 0.02,
+  "is_encoder_decoder": true,
+  "label2id": {
+    "LABEL_0": 0,
+    "LABEL_1": 1,
+    "LABEL_2": 2
+  },
+  "max_position_embeddings": 1024,
+  "model_type": "bart",
+  "no_repeat_ngram_size": 3,
+  "normalize_before": false,
+  "normalize_embedding": true,
+  "num_beams": 4,
+  "num_hidden_layers": 6,
+  "pad_token_id": 1,
+  "scale_embedding": false,
+  "static_position_embeddings": false,
+  "task_specific_params": {
+    "summarization": {
+      "length_penalty": 1.0,
+      "max_length": 128,
+      "min_length": 12,
+      "num_beams": 4
+    },
+    "summarization_cnn": {
+      "length_penalty": 2.0,
+      "max_length": 142,
+      "min_length": 56,
+      "num_beams": 4
+    },
+    "summarization_xsum": {
+      "length_penalty": 1.0,
+      "max_length": 62,
+      "min_length": 11,
+      "num_beams": 6
+    }
+  },
+  "vocab_size": 50265
+}
+
+10/06/2021 16:07:14 - INFO - transformers.modeling_utils - loading weights file https://cdn.huggingface.co/facebook/bart-base/pytorch_model.bin from cache at /private/home/yuchenlin/.cache/torch/transformers/566c05fb6983817e8ad7a4fa51e3099fe9caa3b31730f964bc5198d71c677523.0a3d95c18c1e434448941bc25accea7b122882be6526fb67c8e8fb6d5ebc711c
+10/06/2021 16:07:18 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Loading checkpoint from out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt for facebook/bart-base ..... Done!
+10/06/2021 16:07:23 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Moving to the GPUs.
+10/06/2021 16:07:23 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Starting Round 0 ....
+len(predictions): 88251
+len(upstream_truth_data]): 88251
+Upstream evaluation results: {'EM': 0.859344370035467, 'QA-F1': 0.9337433033424515}
+10/06/2021 16:07:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Set up the initial memory with 10000 examples.
+10/06/2021 16:07:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Initial memory size: 10000
+10/06/2021 16:07:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Not creating the replay-stream for evaluation.
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Debugger Setup ......
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - debugger_args: Namespace(adam_epsilon=1e-08, gradient_accumulation_steps=1, learning_rate=3e-05, max_grad_norm=0.1, num_epochs=5.0, overtime_ckpt_dir=None, save_all_ckpts=0, total_steps=10000, warmup_steps=0, weight_decay=0.01) ......
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Debugger Setup ...... Done!
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start Mining Distant Supervision (as online debugging).
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Number of Batches of Data: 100
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Data Batch Size: 16;
+10/06/2021 16:07:35 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 0
+10/06/2021 16:07:38 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:07:38 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:07:41 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 1
+10/06/2021 16:07:41 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:07:41 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 1
+10/06/2021 16:07:44 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:07:44 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:07:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 2
+10/06/2021 16:07:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:07:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 2
+10/06/2021 16:07:50 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:07:50 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:07:54 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 3
+10/06/2021 16:07:54 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:07:54 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 3
+10/06/2021 16:07:57 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:07:57 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:00 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 4
+10/06/2021 16:08:00 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:00 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 4
+10/06/2021 16:08:03 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:03 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 5
+10/06/2021 16:08:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 5
+10/06/2021 16:08:09 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:09 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 6
+10/06/2021 16:08:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 6
+10/06/2021 16:08:15 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:15 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:18 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 7
+10/06/2021 16:08:18 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:18 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 7
+10/06/2021 16:08:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 8
+10/06/2021 16:08:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 8
+10/06/2021 16:08:26 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:26 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 9
+10/06/2021 16:08:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 9
+10/06/2021 16:08:31 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:31 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 10
+10/06/2021 16:08:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 10
+10/06/2021 16:08:36 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:36 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 11
+10/06/2021 16:08:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 11
+10/06/2021 16:08:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:45 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 12
+10/06/2021 16:08:45 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:45 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 12
+10/06/2021 16:08:48 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:48 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:51 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 13
+10/06/2021 16:08:51 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:51 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 13
+10/06/2021 16:08:53 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:53 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:08:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 14
+10/06/2021 16:08:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:08:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 14
+10/06/2021 16:08:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:08:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 15
+10/06/2021 16:09:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 15
+10/06/2021 16:09:03 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:03 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 16
+10/06/2021 16:09:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:06 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 16
+10/06/2021 16:09:08 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:08 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 17
+10/06/2021 16:09:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 17
+10/06/2021 16:09:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 18
+10/06/2021 16:09:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 18
+10/06/2021 16:09:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 19
+10/06/2021 16:09:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:21 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 19
+10/06/2021 16:09:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:24 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:27 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 20
+10/06/2021 16:09:27 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:27 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 20
+10/06/2021 16:09:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:29 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 21
+10/06/2021 16:09:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:32 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 21
+10/06/2021 16:09:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 22
+10/06/2021 16:09:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 22
+10/06/2021 16:09:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:39 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 23
+10/06/2021 16:09:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:42 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 23
+10/06/2021 16:09:44 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:44 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 24
+10/06/2021 16:09:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:47 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 24
+10/06/2021 16:09:49 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:49 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 25
+10/06/2021 16:09:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 25
+10/06/2021 16:09:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:09:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:09:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 26
+10/06/2021 16:09:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:09:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 26
+10/06/2021 16:10:02 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:02 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 27
+10/06/2021 16:10:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 27
+10/06/2021 16:10:07 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:07 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:10 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 28
+10/06/2021 16:10:10 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 28
+10/06/2021 16:10:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 29
+10/06/2021 16:10:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 29
+10/06/2021 16:10:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 30
+10/06/2021 16:10:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 30
+10/06/2021 16:10:25 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:25 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 31
+10/06/2021 16:10:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 31
+10/06/2021 16:10:31 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:31 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 32
+10/06/2021 16:10:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:34 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 32
+10/06/2021 16:10:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:37 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:40 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 33
+10/06/2021 16:10:40 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:40 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 33
+10/06/2021 16:10:43 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:43 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:46 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 34
+10/06/2021 16:10:46 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:46 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 34
+10/06/2021 16:10:49 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:49 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 35
+10/06/2021 16:10:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:52 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 35
+10/06/2021 16:10:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:10:55 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:10:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 36
+10/06/2021 16:10:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:10:58 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 36
+10/06/2021 16:11:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:11:01 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:11:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 37
+10/06/2021 16:11:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:11:04 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 37
+10/06/2021 16:11:08 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:11:08 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:11:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 38
+10/06/2021 16:11:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:11:11 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 38
+10/06/2021 16:11:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:11:13 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:11:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 39
+10/06/2021 16:11:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:11:16 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 39
+10/06/2021 16:11:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:11:19 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:11:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 40
+10/06/2021 16:11:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:11:22 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 40
+10/06/2021 16:11:25 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:11:25 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:11:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 41
+10/06/2021 16:11:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:11:28 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 41
+10/06/2021 16:11:30 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:11:30 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+10/06/2021 16:11:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Get an instance for supervision at 42
+10/06/2021 16:11:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Save 16 examples to the memory.
+10/06/2021 16:11:33 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Timecode: 42
+10/06/2021 16:11:36 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Start bug-fixing .... Done!
+10/06/2021 16:11:36 - INFO - semanticdebugger.debug_algs.run_lifelong_finetune - Randomly retrieve from the memory. `query_examples` not used
+Traceback (most recent call last):
+  File "semanticdebugger/debug_algs/distant_supervision/data_collection.py", line 208, in <module>
+    mined_supervision = cl_supervision_miner.mine_supervision(memory_manager)  
+  File "/private/home/yuchenlin/SemanticDebugger/semanticdebugger/debug_algs/distant_supervision/data_collection.py", line 135, in mine_supervision
+    supervision = self.wrap_supervision(model_copy, updated_model, episode_data, positive_results, negative_results)
+  File "/private/home/yuchenlin/SemanticDebugger/semanticdebugger/debug_algs/distant_supervision/data_collection.py", line 82, in wrap_supervision
+    query_vectors_before = get_bart_dual_representation(cl_trainer, before_model, tokenizer, data_args, query_examples)
+  File "/private/home/yuchenlin/SemanticDebugger/semanticdebugger/debug_algs/index_based/index_utils.py", line 32, in get_bart_dual_representation
+    input_ids, input_attention_mask)
+  File "/private/home/yuchenlin/.conda/envs/bartqa/lib/python3.6/site-packages/torch/nn/modules/module.py", line 532, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/private/home/yuchenlin/.conda/envs/bartqa/lib/python3.6/site-packages/transformers/modeling_bart.py", line 309, in forward
+    x, attn = encoder_layer(x, attention_mask)
+  File "/private/home/yuchenlin/.conda/envs/bartqa/lib/python3.6/site-packages/torch/nn/modules/module.py", line 532, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/private/home/yuchenlin/.conda/envs/bartqa/lib/python3.6/site-packages/transformers/modeling_bart.py", line 213, in forward
+    query=x, key=x, key_padding_mask=encoder_padding_mask, need_weights=self.output_attentions
+  File "/private/home/yuchenlin/.conda/envs/bartqa/lib/python3.6/site-packages/torch/nn/modules/module.py", line 532, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/private/home/yuchenlin/.conda/envs/bartqa/lib/python3.6/site-packages/transformers/modeling_bart.py", line 646, in forward
+    attn_weights = attn_weights.masked_fill(reshaped, float("-inf"))
+RuntimeError: CUDA out of memory. Tried to allocate 282.00 MiB (GPU 0; 15.78 GiB total capacity; 13.81 GiB already allocated; 277.75 MiB free; 14.45 GiB reserved in total by PyTorch)
