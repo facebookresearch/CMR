@@ -321,6 +321,8 @@ python semanticdebugger/benchmark_gen/sample_stream_data.py \
 
 
 
+##  Late Sept  ##
+
 
 ### Mixed stream for dev.
 
@@ -344,5 +346,19 @@ bug_data/mrqa_hotpotqa_dev.predictions.jsonl \
 --max_bug_each_data 800 \
 --bug_sample_size 3200 --pass_sample_size 0
 
+
+
+
+
+
+# python semanticdebugger/benchmark_gen/sample_stream_data.py \
+#     --sample_method no_replace \
+#     --data_file data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl \
+#     --prediction_file bug_data/mrqa_naturalquestions_train.predictions.jsonl \
+#     --data_stream_file exp_results/data_streams/mrqa_naturalquestions_dev.data_stream.train.wr.json \
+#     --hidden_example_file exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
+#     --batch_size 32 --num_batches 500 \
+#     --bug_sample_size 4688 --pass_sample_size 0 \
+#     --hidden_sample_size -1
 
 """

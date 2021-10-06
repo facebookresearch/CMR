@@ -9,7 +9,7 @@ from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
 from semanticdebugger.debug_algs.cl_mbcl_alg import MemoryBasedCL
 from semanticdebugger.debug_algs.index_based.cl_indexed_alg import IndexBasedCL
 from semanticdebugger.debug_algs.cl_hypernet_alg import HyperCL
-from semanticdebugger.debug_algs.distant_supervision import get_forgettable
+from semanticdebugger.debug_algs.distant_supervision import data_collection
 import logging
 import os
 import json
@@ -80,8 +80,8 @@ def setup_args(args):
         debugging_alg.name = args.cl_method_name 
     elif args.cl_method_name == "hyper_cl":
         debugging_alg = HyperCL(logger=logger)
-    elif args.cl_method_name == "simple_cl_for_mining_supervision":
-        debugging_alg = get_forgettable.MiningSupervision(logger=logger)
+    elif args.cl_method_name == "simple_data_collection":
+        debugging_alg = data_collection.MiningSupervision(logger=logger)
     
     debugging_alg.stream_mode = args.stream_mode
     
@@ -107,7 +107,7 @@ def setup_args(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["none_cl", "simple_cl", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "index_cl", "hyper_cl", "simple_cl_for_mining_supervision"]:
+    if args.cl_method_name in ["none_cl", "simple_cl", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "index_cl", "hyper_cl", "simple_data_collection"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
