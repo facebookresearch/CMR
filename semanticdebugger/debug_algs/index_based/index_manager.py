@@ -157,7 +157,7 @@ class BartIndexManager(BaseMemoryManager):
 
     def save_memory_to_path(self, memory_pkl_path):
         memory_cache = {}
-        memory_cache["memory_index_sorted_ids"] = self.memory_index_sorted_ids
+        memory_cache["memory_index_sorted_ids"] = self.memory_index_soroted_ids
         memory_cache["memory_index"] = self.memory_index
         memory_cache["memory_examples"] = self.memory_examples
 
