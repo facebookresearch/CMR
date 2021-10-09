@@ -1,9 +1,11 @@
 from logging import Logger
 import logging
+
+from tqdm.utils import disp_trim
 from semanticdebugger.debug_algs.index_based.index_manager import BartIndexManager
 
 import torch
-from torch import Tensor
+from torch import Tensor, normal
 import torch.nn as nn
 from torch.nn import functional as F
 from torch.nn import Module
@@ -73,6 +75,17 @@ def load_distant_supervision(folder_name, sample_size=1, logger=None, specified_
     for pkl_path in tqdm(pkl_files, desc="loading pkl files"):
         with open(pkl_path, "rb") as f:
             ds_items += pickle.load(f)
+
+    # # # For Debugging #
+    # for item in ds_items:
+    #     for q in item["query"]:
+    #         item["query"][q] = np.random.normal(0, 0.3, 768*2*2)
+    #     for q in item["positive"]:
+    #         item["positive"][q] = np.random.normal(0, 0.1, 768*2)
+    #     for q in item["negative"]:
+    #         item["negative"][q] = np.random.normal(0, 0.3, 768*2)
+    #     pass
+    
     return ds_items 
     
 
@@ -82,28 +95,26 @@ class MLP(Module):
         super().__init__()
         self.layers = torch.nn.Sequential(
         #   torch.nn.Flatten(),
-        #   torch.nn.Linear(input_dim, hidden_dim),
-        #   torch.nn.ReLU(),
-        #   torch.nn.Linear(hidden_dim, output_dim),
-        #   torch.nn.ReLU(),
-          torch.nn.Linear(input_dim, output_dim)
+          torch.nn.Linear(input_dim, hidden_dim),
+          torch.nn.Sigmoid(),
+          torch.nn.Linear(hidden_dim, output_dim),
+
+        #   torch.nn.Linear(input_dim, output_dim)
         )
         self.init_weights()
 
     def init_weights(self):
-        for module in self.modules():
+        for module in self.layers:
             if isinstance(module, (nn.Linear, nn.Embedding)):
                 module.weight.data.normal_(mean=0.0, std=0.02)
             elif isinstance(module, nn.LayerNorm):
                 module.bias.data.zero_()
                 module.weight.data.fill_(1.0)
             if isinstance(module, nn.Linear) and module.bias is not None:
-                module.bias.data.zero_()
-        
+                module.bias.data.zero_() 
         
     def forward(self, X):
-        X = self.layers(X)
-        X = F.normalize(X, dim=0)
+        X = self.layers(X) 
         return X
 
 # class BiMLPEncoder(Module):
@@ -135,6 +146,21 @@ def merge_groups(groups):
             n = np.append(n, group["n"], axis=0)
     return q, p, n
 
+def create_batch_from_groups(groups, neg_size=1): 
+    queries, candidates, targets = [], [], []
+    for group in groups: 
+        # Correct #
+        queries.append(random.choice(group["q"]))
+        candidates.append(random.choice(group["p"]))
+        candidates += random.choices(group["n"], k=neg_size) 
+        
+        targets.append(len(queries)-1)
+
+    assert len(queries) == len(groups)
+    assert len(candidates) == len(groups) * (1+neg_size)
+    return np.array(queries), np.array(candidates), np.array(targets)
+
+
 class BiEncoderIndexManager(BartIndexManager):
     def __init__(self, logger):
         super().__init__(logger=logger)
@@ -152,62 +178,63 @@ class BiEncoderIndexManager(BartIndexManager):
         self.query_encoder = MLP(self.query_input_dim, self.final_index_dim, self.hidden_dim)
     
     def train_biencoder(self, train_data, eval_data):
-        lr = 1e-1 # self.index_train_args.learning_rate
-        margin = 0.3
+        lr = 1e-2 # self.index_train_args.learning_rate
+        
         n_steps = 100
         trainable_params = list(self.query_encoder.parameters()) + list(self.memory_encoder.parameters())
         optimizer = torch.optim.Adam(trainable_params, lr=lr) 
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1000, gamma=0.9, last_epoch=-1)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1000, gamma=0.1, last_epoch=-1)
 
+        # margin = 0.3
         # loss_fn = torch.nn.TripletMarginLoss(margin=margin)
-        loss_fn = MyTripletLoss(margin=margin)
+        # loss_fn = MyTripletLoss(margin=margin)
         
 
-        num_group_per_batch = 8
+        batch_size = 4
+        neg_size = 8
 
         eval_acc = eval_func(biencoder_memory_module, eval_data, k=5)
         self.logger.info(f"Zero-Training Evaluation Top-5 acc: {eval_acc}")
 
+        losses = []
         for _step in tqdm(range(n_steps), desc="Training steps"):
             self.memory_encoder.train()
             self.query_encoder.train()  
             self.logger.info(f"Training step {_step}/{n_steps}")
-            losses = [] 
-            sampled_groups = random.choices(train_data, k=num_group_per_batch)
+             
+            sampled_groups = random.choices(train_data, k=batch_size)
+            queries, candidates, targets = create_batch_from_groups(sampled_groups, neg_size) 
+            optimizer.zero_grad()  
             
-            
-            q, p, n = merge_groups(sampled_groups)
+            query_inputs = self.query_encoder(normalize(torch.Tensor(queries)))
+            memory_inputs = self.memory_encoder(normalize(torch.Tensor(candidates)))  
 
-            assert self.query_input_dim == q.shape[1]
-            assert self.memory_input_dim == p.shape[1]
-            assert self.memory_input_dim == n.shape[1]
+            # loss, dp, dn = loss_fn(query_inputs, )
 
-
-            optimizer.zero_grad() 
-
-            query_inputs = torch.Tensor(q)
-            positive_inputs = torch.Tensor(p)
-            negative_inputs = torch.Tensor(n) 
-            query_inputs = self.query_encoder(query_inputs)
-            positive_inputs = self.memory_encoder(positive_inputs)
-            negative_inputs = self.memory_encoder(negative_inputs)
+            scores = torch.matmul(query_inputs, memory_inputs.transpose(0, 1))
+            loss = F.cross_entropy(scores, torch.LongTensor(targets), reduction="mean") 
             
 
-            loss, dp, dn = loss_fn(query_inputs, positive_inputs, negative_inputs)
-
-            self.logger.info(f"loss.item()={loss.item()};")
-            # self.logger.info(f"dp.item()={dp};")
-            # self.logger.info(f"dn.item()={dn};")
+            self.logger.info(f"loss.item()={loss.item()};") 
             losses.append(loss.item())
             loss.backward()
 
             optimizer.step() 
             scheduler.step() 
-            self.logger.info(f"Completed epoch with avg training loss {sum(losses)/len(losses)}.")
+            self.logger.info(f"---- Completed epoch with avg training loss {sum(losses)/len(losses)}.")
+
+            self.query_encoder.eval()
+            self.memory_encoder.eval()
+            updated_query_inputs = self.query_encoder(normalize(torch.Tensor(queries)))
+            updated_memory_inputs = self.memory_encoder(normalize(torch.Tensor(candidates)))  
+            updated_scores = torch.matmul(updated_query_inputs, updated_memory_inputs.transpose(0, 1))
+            updated_loss = F.cross_entropy(updated_scores, torch.LongTensor(targets), reduction="mean")
+
+            self.logger.info(f"updated_loss.item()={updated_loss.item()};")
 
 
-            self.logger.info(f"self.query_encoder.layers[0].weight = {self.query_encoder.layers[0].weight}")        
-            self.logger.info(f"self.memory_encoder.layers[0].weight = {self.memory_encoder.layers[0].weight}")        
+            # self.logger.info(f"self.query_encoder.layers[0].weight = {self.query_encoder.layers[0].weight}")        
+            # self.logger.info(f"self.memory_encoder.layers[0].weight = {self.memory_encoder.layers[0].weight}")        
 
             eval_acc = eval_func(biencoder_memory_module, eval_data, k=5)
             self.logger.info(f"Evaluation Top-5 acc: {eval_acc}")
@@ -234,7 +261,7 @@ def eval_func(biencoder, eval_data, k=5):
             # all_candidate_vectors.append([v-1 for v in vector]) # DEBUG: 
          
         query_vectors = np.array(query_vectors)
-        all_candidate_vectors = np.array(all_candidate_vectors) 
+        all_candidate_vectors = np.array(all_candidate_vectors)  
         
         biencoder.query_encoder.eval()
         biencoder.memory_encoder.eval()
@@ -264,37 +291,23 @@ if __name__ == '__main__':
     set_seeds(seed)
     ds_items = load_distant_supervision("exp_results/supervision_data/1006v3_dm_simple/", sample_size=3, logger=logger, 
                                         specified_names=["dm.29-5"])
-    
-    # ds_items = ds_items[:10] # DEBUG: testing
-    triplet_per_example = 1
+                                        # , "dm.29-4", "dm.29-3", "dm.29-2", "dm.29-1", "dm.29-0"])
+     
     all_groups = []
     for item in ds_items:
-        query_vectors = [v for k,v in item["query"].items()]
-        positive_vectors = [v for k,v in item["positive"].items()]
-        negative_vectors = [v for k,v in item["negative"].items()]
-        query_vectors = np.array(query_vectors)
-        positive_vectors = np.array(positive_vectors)
-        negative_vectors = np.array(negative_vectors)
-        # still unaligned now.
-        q, p, n = build_triplets(query_vectors, positive_vectors, negative_vectors, triplet_per_example)
-        all_groups.append(dict(q=q, p=p, n=n))
-    train_data = all_groups
-    group_size = all_groups[0]["q"].shape[0]
-    logger.info(f"group_size = {group_size};  num_groups = {len(all_groups)}")
+        q = item["query"].values()
+        p = item["positive"].values()
+        n = item["negative"].values()
+        # all_groups.append(dict(q=list(q)[:1], p=list(p)[:1], n=list(n)[:1]))
+        all_groups.append(dict(q=list(q), p=list(p), n=list(n)))
+    train_data = all_groups 
+    logger.info(f"num_groups = {len(all_groups)}")
 
     eval_data = load_distant_supervision("exp_results/supervision_data/1006v3_dm_simple/", sample_size=1, logger=logger, specified_names=["dm.29-5"])
 
     biencoder_memory_module = BiEncoderIndexManager(logger)
     biencoder_memory_module.init_biencoder_modules()  
     biencoder_memory_module.train_biencoder(train_data, eval_data)
-
-    
-    # To save the sampled vectors
-
-    # base_path = "exp_results/supervision_data/1006v3_dm_simple/"
-    # np.save(os.path.join(base_path, "all_query_vectors.npy"), all_query_vectors)
-    # np.save(os.path.join(base_path, "all_pos_vectors.npy"), all_pos_vectors)
-    # np.save(os.path.join(base_path, "all_neg_vectors.npy"), all_neg_vectors)
-    
+ 
 
 
