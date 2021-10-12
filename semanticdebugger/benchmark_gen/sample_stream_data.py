@@ -7,7 +7,7 @@ import numpy as np
 
 
 
-def generate_bugs(predictions, truth_data, results_all):
+def generate_bugs(predictions, truth_data, results_all, f1_upper_bound=0.5):
     assert len(predictions) == len(truth_data) == len(
         results_all["EM"]) == len(results_all["QA-F1"])
     bug_lines = []
@@ -19,7 +19,7 @@ def generate_bugs(predictions, truth_data, results_all):
         item["id"] =  t[2]
         item["mistake"] = p.strip()
         item["score"] = {"EM": int(em == True), "QA-F1": float(f1)}
-        if em == False and f1 < 0.5:  # decide later about the threshold of f1 score
+        if em == False and f1 <= f1_upper_bound:  # decide later about the threshold of f1 score
             bug_lines.append(item)
             item["init_status"] = "error"
         if em == True: 

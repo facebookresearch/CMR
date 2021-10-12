@@ -193,8 +193,10 @@ if __name__ == '__main__':
         logger.info(f"Starting Round {_rid} ....")
         seeds = list(range(100000))
         random.shuffle(seeds)
-        set_seeds(seeds[args.seed])
-        initial_memory, sampled_train_stream = create_training_stream(args)           
+        selected_seed = seeds[args.seed]    # actually the index
+        logger.info(f"Active Seed = {selected_seed}")
+        set_seeds(selected_seed)
+        initial_memory, sampled_train_stream = create_training_stream(args, logger)           
         
 
         ## Init the RandomMemroy module ##    

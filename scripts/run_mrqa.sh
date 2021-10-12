@@ -16,12 +16,14 @@ lr=5e-5
 train_bsz=64
 pred_bsz=64
 
-output_dir="out/${task}_bart-${modelsize}_0617v4"
+output_dir="out/${task}_bart-${modelsize}_1011"
 
 warmup=100
 max_input_length=888
 
-logname="train_bart-${modelsize}_0617v4"
+# 0617v4
+
+logname="train_bart-${modelsize}_1011"
 
 if [[ -f "data/${task}/${task}_dev.mini.jsonl" ]]
 then
@@ -46,7 +48,7 @@ python semanticdebugger/cli_bart.py \
         --train_batch_size ${train_bsz} \
         --predict_batch_size ${pred_bsz} \
         --eval_period 500 \
-        --num_train_epochs 10 \
+        --num_train_epochs 5 \
         --max_input_length ${max_input_length} \
         --max_output_length 50 \
         --num_beams 3 \

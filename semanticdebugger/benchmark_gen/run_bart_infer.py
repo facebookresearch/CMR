@@ -114,3 +114,10 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+"""
+python semanticdebugger/benchmark_gen/run_bart_infer.py \
+    --
+
+"""

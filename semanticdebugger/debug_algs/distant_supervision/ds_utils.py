@@ -7,7 +7,7 @@ from semanticdebugger.task_manager.eval_metrics import evaluate_func
 
 
 
-def create_training_stream(args):
+def create_training_stream(args, logger):
     # setattr(data_args, "data_stream_json_path", args.data_stream_json_path)
     # setattr(data_args, "replay_stream_json_path", args.replay_stream_json_path)
 
@@ -26,12 +26,17 @@ def create_training_stream(args):
     with open(args.upstream_data_prediction_file, "r") as f:
         M0_predictions = json.load(f)  
 
-    print(f"len(predictions): {len(M0_predictions)}")
-    print(f"len(upstream_truth_data]): {len(upstream_truth_data)}")
+    logger.info(f"len(predictions): {len(M0_predictions)}")
+    logger.info(f"len(upstream_truth_data]): {len(upstream_truth_data)}")
     results, results_all = evaluate_func(
         M0_predictions, upstream_truth_data , "EM|QA-F1", return_all=True)
-    print(f"Upstream evaluation results: {results}")
-    bug_pool, pass_pool = sample_stream_data.generate_bugs(M0_predictions, upstream_truth_data, results_all)
+    logger.info(f"Upstream evaluation results: {results}")
+    bug_pool, pass_pool = sample_stream_data.generate_bugs(M0_predictions, upstream_truth_data, results_all, f1_upper_bound=1.0)
+    
+    logger.info(f"len(bug_pool)={len(bug_pool)}")
+    logger.info(f"len(pass_pool)={len(pass_pool)}")
+
+    # TODO: add some pass_pool examples in bug pool?
 
     sampled_M0_errors = random.sample(bug_pool, args.train_stream_length * args.train_stream_episode_size)
     sampled_init_memory = random.sample(pass_pool, args.init_memory_size)
