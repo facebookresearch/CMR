@@ -172,8 +172,13 @@ show_result_stat("exp_results/dynamic_stream/index_based/results/0930_MixedAllEr
 
 show_result_stat("exp_results/dynamic_stream/index_based/results/1001_MixedAllErrors_T=100_index_M=U+I_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json", "Index-similar-mir=no-top_each", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
 
-show_result_stat("exp_results/dynamic_stream/index_based/results/1001v2_MixedAllErrors_T=100_index_M=U+I_rs=32_rq=3_rank=most_different_mir=no(0)_seed=$seed_result.json", "Index-different-mir=no-top_each", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+# show_result_stat("exp_results/dynamic_stream/index_based/results/1001v2_MixedAllErrors_T=100_index_M=U+I_rs=32_rq=3_rank=most_different_mir=no(0)_seed=$seed_result.json", "Index-different-mir=no-top_each", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
 
 
-show_result_stat("exp_results/dynamic_stream/index_based/results/1001v2_MixedAllErrors_T=100_index_M=U+I_rs=32_rq=3_rank=most_similar_mir=yes(256)_seed=$seed_result.json", "Index-similar-mir=yes-top_each", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+# show_result_stat("exp_results/dynamic_stream/index_based/results/1001v2_MixedAllErrors_T=100_index_M=U+I_rs=32_rq=3_rank=most_similar_mir=yes(256)_seed=$seed_rdi'vhvlcufngfcehbkrddkeefekhlbkhcesult.json", "Index-similar-mir=yes-top_each", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"])
+# 
+# 
+
+
+show_result_stat("exp_results/dynamic_stream/index_based/results/1012_MixedAllErrors_T=100_biencoder_M=U+I_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json", "Biencoder-similar-mir=no-top_each", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
 
