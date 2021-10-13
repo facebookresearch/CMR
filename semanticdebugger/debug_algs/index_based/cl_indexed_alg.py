@@ -1,4 +1,5 @@
 from semanticdebugger.debug_algs.cl_utils import get_top_interfered_examples
+from semanticdebugger.debug_algs.index_based.biencoder import BiEncoderIndexManager
 from semanticdebugger.debug_algs.index_based.index_manager import BartIndexManager
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
@@ -17,6 +18,7 @@ from semanticdebugger.models.utils import (convert_model_to_single_gpu,
                                            freeze_embeds, trim_batch)
 from argparse import Namespace
 import more_itertools
+import json
 
 
 class IndexBasedCL(ContinualFinetuning):
@@ -44,10 +46,23 @@ class IndexBasedCL(ContinualFinetuning):
         super().debugger_setup(debugger_args)
 
         # Initializing the BartIndexManager
-        self.memroy_module = BartIndexManager(self.logger)
-        self.memroy_module.set_up_data_args(self.data_args)
-        self.memroy_module.data_args.predict_batch_size = 4
-        self.memroy_module.load_encoder_model(self.base_model_args)
+        if debugger_args.indexing_method == "bart_index":
+            self.memroy_module = BartIndexManager(self.logger)
+            self.memroy_module.set_up_data_args(self.data_args)
+            self.memroy_module.data_args.predict_batch_size = 4
+            self.memroy_module.load_encoder_model(self.base_model_args)
+        elif debugger_args.indexing_method == "biencoder":
+            with open(debugger_args.indexing_args_path) as f:
+                train_args_dict = json.load(f)
+            self.memroy_module = BiEncoderIndexManager(self.logger)
+            self.memroy_module.train_args = Namespace(**train_args_dict)
+            self.memroy_module.set_up_data_args(self.data_args)
+            self.memroy_module.data_args.predict_batch_size = 4
+            self.memroy_module.load_encoder_model(
+                self.base_model_args,
+                self.memroy_module.train_args.memory_encoder_path,
+                self.memroy_module.train_args.query_encoder_path)
+
         if debugger_args.init_memory_cache_path:
             self.memroy_module.load_memory_from_path(debugger_args.init_memory_cache_path)
         else:
@@ -88,7 +103,8 @@ class IndexBasedCL(ContinualFinetuning):
                 self.logger.info(f"Current memory size: {self.memroy_module.get_memory_size()}.")
                 if self.debugger_args.use_mir:
                     assert self.debugger_args.replay_candidate_size >= self.debugger_args.replay_size
-                    each_sample_size=int(self.debugger_args.replay_candidate_size/self.debugger_args.replay_size)*2
+                    each_sample_size = int(
+                        self.debugger_args.replay_candidate_size/self.debugger_args.replay_size)*2
                     self.logger.info(f"each_sample_size={each_sample_size}")
                     retrieved_examples_candidates = self.memroy_module.retrieve_from_memory(
                         query_examples=formatted_bug_examples,
@@ -103,7 +119,7 @@ class IndexBasedCL(ContinualFinetuning):
                 else:
                     retrieved_examples = self.memroy_module.retrieve_from_memory(
                         query_examples=formatted_bug_examples,
-                        sample_size=self.debugger_args.replay_size, 
+                        sample_size=self.debugger_args.replay_size,
                         agg_method="each_topk_then_random",
                         rank_method=self.debugger_args.index_rank_method,
                         each_sample_size=5)

@@ -140,6 +140,9 @@ def setup_args(args):
             if args.cl_method_name == "index_cl":
                 setattr(debugger_args, "use_mir", args.use_mir)  
                 setattr(debugger_args, "index_rank_method", args.index_rank_method)  
+                setattr(debugger_args, "indexing_method", args.indexing_method)  
+                setattr(debugger_args, "indexing_args_path", args.indexing_args_path)                
+                
         elif args.cl_method_name in ["hyper_cl"]:
             setattr(debugger_args, "adapter_dim", args.adapter_dim)
             setattr(debugger_args, "example_encoder_name", args.example_encoder_name)
@@ -157,10 +160,9 @@ def run(args):
         setattr(data_args, "replay_stream_json_path", args.replay_stream_json_path)
         debugging_alg.load_data(data_args)
     
-
         debugging_alg.load_base_model(base_model_args)
         debugging_alg.debugger_setup(debugger_args)
-        
+
         if args.cl_method_name in ["offline_debug"]:
             debugging_alg.offline_debug()
             offline_bound_results = debugging_alg.single_timecode_eval(timecode=-1)
@@ -175,7 +177,6 @@ def run(args):
         output_info["data_args"] = str(debugging_alg.data_args)
         output_info["online_eval_results"] = debugging_alg.online_eval_results
         output_info["final_eval_results"] = debugging_alg.overall_eval_results
- 
         
         if args.cl_method_name in ["offline_debug"]:
             output_info["offline_bound_results"] = offline_bound_results
@@ -213,8 +214,6 @@ def run(args):
 
 def get_cli_parser():
     parser = argparse.ArgumentParser()
-
-    
 
     # base_model_args
     parser.add_argument("--base_model_type",
@@ -305,6 +304,9 @@ def get_cli_parser():
     # Indexbased CL abalation options
     parser.add_argument('--use_mir', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     parser.add_argument('--index_rank_method', type=str, default="most_similar")
+    parser.add_argument('--indexing_method', type=str, default="bart_index")    # bart_index, biencoder 
+    parser.add_argument('--indexing_args_path', type=str, default="exp_results/supervision_data/1012_dm_simple.train_args.json")    # bart_index, biencoder 
+    
     
 
 

@@ -157,7 +157,7 @@ class BartIndexManager(BaseMemoryManager):
 
     def save_memory_to_path(self, memory_pkl_path):
         memory_cache = {}
-        memory_cache["memory_index_sorted_ids"] = self.memory_index_soroted_ids
+        memory_cache["memory_index_sorted_ids"] = self.memory_index_sorted_ids
         memory_cache["memory_index"] = self.memory_index
         memory_cache["memory_examples"] = self.memory_examples
 
@@ -170,8 +170,11 @@ class BartIndexManager(BaseMemoryManager):
         retrieved_example_ids = [self.memory_index_sorted_ids[int(eid)] for eid in I[0]]
         return retrieved_example_ids
 
+    def get_query_representation(self, query_examples):
+        return self.get_representation(query_examples)
+
     def retrieve_from_memory(self, query_examples, sample_size, **kwargs):
-        input_vectors = self.get_representation(query_examples)
+        input_vectors = self.get_query_representation(query_examples)
         agg_method = kwargs.get("agg_method", "mean")
         rank_method = kwargs.get("rank_method", "most_similar")
         if agg_method == "mean":
