@@ -1,12 +1,13 @@
 import argparse
 from logging import Logger
 import logging
+from torch.cuda import memory
 
 from tqdm.utils import disp_trim
 from semanticdebugger.debug_algs.index_based.index_manager import BartIndexManager
 
 import torch
-from torch import Tensor, normal
+from torch import Tensor, combinations, normal
 import torch.nn as nn
 from torch.nn import functional as F
 from torch.nn import Module
@@ -18,6 +19,7 @@ from tqdm import tqdm
 import numpy as np
 import faiss
 import json
+import wandb
 
 from semanticdebugger.models.utils import set_seeds
 
@@ -38,20 +40,60 @@ def load_distant_supervision(folder_name, sample_size=1, logger=None, specified_
         with open(pkl_path, "rb") as f:
             ds_items += pickle.load(f)
 
+    # np.random.seed(42)
+    # # # For Debugging the data-distribution #
+    # print("generating random data")
+    # for item in ds_items:
+    #     for q in item["query"]:
+    #         item["query"][q] = np.random.normal(0, 0.1, 768*2*2) 
+    #     for q in item["positive"]:
+    #         item["positive"][q] = np.random.normal(0, 0.1, 768*2) 
+    #     for q in item["negative"]:
+    #         item["negative"][q] = np.random.normal(0.6, 0.1, 768*2) 
+    #     pass
+
+    # if exclude_files:
+    #     np.random.seed(45)
+    #     print("generating purturbs on the test data")
+    #     for item in ds_items:
+    #         for q in item["query"]:  
+    #             item["query"][q] += np.random.normal(0, 5e-2, 768*2*2)
+    #         for q in item["positive"]:  
+    #             item["positive"][q] += np.random.normal(0, 5e-2, 768*2)
+    #         for q in item["negative"]:  
+    #             item["negative"][q] += np.random.normal(0, 5e-2, 768*2)
     return ds_items, pkl_files
 
 
 class MLP(Module):
     def __init__(self, input_dim, output_dim, hidden_dim, droprate=0.01):
         super().__init__()
-        self.layers = torch.nn.Sequential(
-            #   torch.nn.Flatten(),
-            torch.nn.Linear(input_dim, hidden_dim),
-            torch.nn.Sigmoid(),
-            nn.Dropout(droprate),
-            torch.nn.Linear(hidden_dim, output_dim),
-            #   torch.nn.Linear(input_dim, output_dim)
-        )
+        if hidden_dim > 0:
+            self.layers = torch.nn.Sequential(
+                # torch.nn.Flatten(),
+                # nn.BatchNorm1d(input_dim),
+                # nn.LayerNorm(input_dim),
+                nn.Linear(input_dim, hidden_dim),
+                # nn.LayerNorm(hidden_dim),
+                # nn.Sigmoid(),
+                # nn.Dropout(droprate),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, output_dim), 
+            )
+        else:
+            self.layers = torch.nn.Sequential(
+                # torch.nn.Flatten(),
+                # nn.BatchNorm1d(input_dim),
+                # nn.Linear(input_dim, hidden_dim),
+                # nn.BatchNorm1d(hidden_dim),
+                # nn.ReLU(),
+                # nn.Sigmoid(),
+                # nn.Dropout(droprate),
+                # nn.Linear(hidden_dim, output_dim),
+                # nn.BatchNorm1d(input_dim),
+                nn.LayerNorm(input_dim),
+                nn.Linear(input_dim, output_dim), 
+            )
         self.init_weights()
 
     def init_weights(self):
@@ -84,13 +126,20 @@ def create_batch_from_groups(groups, qry_size=1, pos_size=1, neg_size=1, seen_qu
         
         queries += random.choices(list(group["query"].values()), k=qry_size)
         target = len(candidates)
-        candidates.append(random.choice(list(group["positive"].values())))  # a single positive
+        candidates += random.choices(list(group["positive"].values()), k=pos_size)  # for training, it must be a single positive
         candidates += random.choices(list(group["negative"].values()), k=neg_size)
-        targets += [target] * qry_size
+        if pos_size > 1:
+            targets += [list(range(target, target+pos_size))] * qry_size    # N*C
+        elif pos_size == 1:
+            targets += [target] * qry_size # N*1
 
     assert len(queries) == len(targets) == len(groups) * qry_size
-    assert len(candidates) == len(groups) * (1+neg_size)
-    return np.array(queries), np.array(candidates), np.array(targets)
+    assert len(candidates) == len(groups) * (pos_size + neg_size)
+
+    if pos_size > 1:
+        return np.array(queries), np.array(candidates), targets
+    else:
+        return np.array(queries), np.array(candidates), np.array(targets)
 
 
 class BiEncoderIndexManager(BartIndexManager):
@@ -123,7 +172,7 @@ class BiEncoderIndexManager(BartIndexManager):
         self.memory_encoder = MLP(self.memory_input_dim, self.dim_vector,
                                   self.hidden_dim, droprate=self.train_args.droprate)
         self.query_encoder = MLP(self.query_input_dim, self.dim_vector,
-                                 self.hidden_dim*2, droprate=self.train_args.droprate)
+                                 self.hidden_dim, droprate=self.train_args.droprate)
 
     def get_representation(self, examples):
         """only for the memory encoding now"""
@@ -136,15 +185,27 @@ class BiEncoderIndexManager(BartIndexManager):
     def train_biencoder(self, train_data, eval_data):
         trainable_params = list(self.query_encoder.parameters()) + \
             list(self.memory_encoder.parameters())
+        def count_parameters(model):
+            return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+        self.logger.info(f"# params of query_encoder = {count_parameters(self.query_encoder)}")
+        self.logger.info(f"# params of memory_encoder = {count_parameters(self.memory_encoder)}")
+
         optimizer = torch.optim.Adam(trainable_params, lr=self.train_args.lr)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1000, gamma=0.1, last_epoch=-1)
         gradient_acc_steps = 1
 
+        if self.train_args.use_cuda:
+            self.query_encoder.to(torch.device("cuda"))
+            self.memory_encoder.to(torch.device("cuda"))
+
         seen_query_ids = set()
         seen_memory_ids = set()
-        best_eval_acc = self.eval_func(
-            eval_data, k=8, seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
-        self.logger.info(f"Zero-Training Evaluation Top-k acc: {best_eval_acc}")
+        eval_at_K = 8
+        best_eval_acc = self.eval_func_v1(
+            eval_data, k=eval_at_K, seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
+        self.logger.info(f"Valid Acc @ 0: Top-{eval_at_K} acc: {best_eval_acc}")
+
 
         losses = []
         for _step in tqdm(range(self.train_args.n_steps), desc="Training steps"):
@@ -154,33 +215,114 @@ class BiEncoderIndexManager(BartIndexManager):
 
             sampled_groups = random.choices(train_data, k=self.train_args.batch_size)
             queries, candidates, targets = create_batch_from_groups(
-                sampled_groups, qry_size=self.train_args.qry_size, neg_size=self.train_args.neg_size, seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
+                sampled_groups, 
+                qry_size=self.train_args.qry_size,
+                pos_size=self.train_args.pos_size, 
+                neg_size=self.train_args.neg_size, 
+                seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
             optimizer.zero_grad()
 
-            query_inputs = self.query_encoder(torch.Tensor(queries))
-            memory_inputs = self.memory_encoder(torch.Tensor(candidates))
+
+            qry_tensors = torch.Tensor(queries)
+            mem_tensors = torch.Tensor(candidates)
+            if self.train_args.use_cuda:
+                qry_tensors = qry_tensors.to(torch.device("cuda"))
+                mem_tensors = mem_tensors.to(torch.device("cuda"))
+            query_inputs = self.query_encoder(qry_tensors)
+            memory_inputs = self.memory_encoder(mem_tensors)
 
             scores = torch.matmul(query_inputs, memory_inputs.transpose(0, 1))
-            loss = F.cross_entropy(scores, torch.LongTensor(targets), reduction="mean")
+            if self.train_args.pos_size == 1:
+                tgt_tensors = torch.LongTensor(targets)
+                if self.train_args.use_cuda:
+                    tgt_tensors = tgt_tensors.to(torch.device("cuda"))
+                loss = F.cross_entropy(scores, tgt_tensors, reduction="mean")
+            elif self.train_args.pos_size > 1:
+                multi_hot_targets = []
+                for target in targets:
+                    labels = torch.LongTensor(target)
+                    labels = labels.unsqueeze(0)
+                    multi_hot_targets.append(torch.zeros(labels.size(0), len(candidates)).scatter_(1, labels, 1.))
+                multi_hot_targets = torch.stack(multi_hot_targets, dim=1)
+                multi_hot_targets = multi_hot_targets.view(scores.size())
+                tgt_tensors = torch.Tensor(multi_hot_targets)
+                criterion = torch.nn.BCEWithLogitsLoss(reduction="mean") 
+                if self.train_args.use_cuda:
+                    tgt_tensors = tgt_tensors.to(torch.device("cuda"))
+                loss = criterion(scores, tgt_tensors)
 
             # self.logger.info(f"loss.item()={loss.item()};")
             losses.append(loss.item())
             loss.backward()
+            if self.train_args.wandb:
+                wandb.log({"loss": float(loss)}, step=_step)
+                wandb.log({"avg_loss": float(sum(losses)/len(losses))}, step=_step)    
+
+            # clip 
+            torch.nn.utils.clip_grad_norm_(trainable_params, 1.0)
 
             optimizer.step()
             scheduler.step()
-            self.logger.info(
-                f"---- Completed epoch with avg training loss {sum(losses)/len(losses)}.")
             # self.logger.info(f"self.query_encoder.layers[0].weight = {self.query_encoder.layers[0].weight}")
             # self.logger.info(f"self.memory_encoder.layers[0].weight = {self.memory_encoder.layers[0].weight}")
-            if _step % self.train_args.eval_per_steps == 0:
-                eval_acc = self.eval_func(
-                    eval_data, k=8, seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
-                best_eval_acc = max(best_eval_acc, eval_acc)
-                self.logger.info(
-                    f"Evaluation Top-8 acc @ {_step}: {eval_acc} | best_eval_acc={best_eval_acc}")
+            if _step > 0 and _step % self.train_args.eval_per_steps == 0:
+                self.logger.info(f"---- Completed epoch with avg training loss {sum(losses)/len(losses)}.")
+                train_acc = self.eval_func_v1(train_data[:], k=eval_at_K)
+                valid_acc = self.eval_func_v1(eval_data, k=eval_at_K)
 
-    def eval_func(self, eval_data, k=5, seen_query_ids=None, seen_memory_ids=None, filter=False):
+                if self.train_args.wandb:
+                    wandb.log({"train_accuracy": train_acc}, step=_step)
+                    wandb.log({"valid_accuracy": valid_acc}, step=_step)
+                
+                best_eval_acc = max(best_eval_acc, valid_acc)
+
+                self.logger.info(
+                    f"Train Acc: Top-{eval_at_K} acc @ {_step}: {train_acc} | ")
+                self.logger.info(
+                    f"Valid ACc: Top-{eval_at_K} acc @ {_step}: {valid_acc} | best_eval_acc={best_eval_acc}")
+
+
+
+    def eval_func_v2(self, eval_data, k=None, seen_query_ids=None, seen_memory_ids=None, filter=False):
+        # based on pair-wise comparisions 
+        self.query_encoder.eval()
+        self.memory_encoder.eval()
+        eval_scores = []
+        for group in eval_data:
+            queries, candidates, targets = create_batch_from_groups([group], qry_size=16, pos_size=8, neg_size=8)
+            
+            
+            # query_inputs = self.query_encoder(torch.Tensor(queries))
+            # memory_inputs = self.memory_encoder(torch.Tensor(candidates))
+
+            qry_tensors = torch.Tensor(queries)
+            mem_tensors = torch.Tensor(candidates)
+            if self.train_args.use_cuda:
+                qry_tensors = qry_tensors.to(torch.device("cuda"))
+                mem_tensors = mem_tensors.to(torch.device("cuda"))
+            query_inputs = self.query_encoder(qry_tensors)
+            memory_inputs = self.memory_encoder(mem_tensors)
+
+            scores = torch.matmul(query_inputs, memory_inputs.transpose(0, 1))
+            querywise_scores = []
+            for qid in range(len(queries)):
+                pairwise_comp = []
+                pos_start = 0   # always 0
+                pos_end = pos_start + 8
+                neg_start = pos_end
+                neg_end = neg_start + 8
+                for pos_ind in range(pos_start, pos_end):
+                    for neg_ind in range(neg_start, neg_end):
+                        score_pos = scores[qid][pos_ind]
+                        score_neg = scores[qid][neg_ind]
+                        pairwise_comp.append(int(score_pos > score_neg))
+                pairwise_score = np.mean(pairwise_comp)
+                querywise_scores.append(pairwise_score)
+            group_score = np.mean(querywise_scores)
+            eval_scores.append(group_score)
+        return np.mean(eval_scores)
+ 
+    def eval_func_v1(self, eval_data, k=5, seen_query_ids=None, seen_memory_ids=None, filter=False):
         top_k_accs = []
         tested_query_ids = set()
         tested_memory_ids = set()
@@ -201,15 +343,15 @@ class BiEncoderIndexManager(BartIndexManager):
             positive_ids = set()
             all_candidaites = []
             all_candidate_vectors = []
-            for ex_id, vector in item["positive"].items():
-                if filter and seen_memory_ids is not None and ex_id in seen_memory_ids:
-                    # Remove the seen memory ids
-                    continue
+            for ex_id, vector in item["positive"].items(): 
                 positive_ids.add(ex_id)
+            
+            memory_items = list(item["negative"].items()) + list(item["positive"].items())
+            random.shuffle(memory_items)    # to avoid the case where they have the same scores
+            for ex_id, vector in memory_items:
                 all_candidaites.append(ex_id)
                 tested_memory_ids.add(ex_id)
                 all_candidate_vectors.append(vector)
-            for ex_id, vector in item["negative"].items():
                 if filter and seen_memory_ids is not None and ex_id in seen_memory_ids:
                     # Remove the seen memory ids
                     continue
@@ -219,13 +361,18 @@ class BiEncoderIndexManager(BartIndexManager):
                 # all_candidate_vectors.append([v-1 for v in vector]) # DEBUG:
 
             query_vectors = np.array(query_vectors)
-
             all_candidate_vectors = np.array(all_candidate_vectors)
 
             self.query_encoder.eval()
             self.memory_encoder.eval()
-            q = self.query_encoder(torch.Tensor(query_vectors)).detach().numpy()
-            m = self.memory_encoder(torch.Tensor(all_candidate_vectors)).detach().numpy()
+            q_inputs = torch.Tensor(query_vectors)
+            m_inputs = torch.Tensor(all_candidate_vectors)
+            if self.train_args.use_cuda:
+                q_inputs = q_inputs.to(torch.device("cuda"))
+                m_inputs = m_inputs.to(torch.device("cuda"))
+
+            q = self.query_encoder(q_inputs).detach().cpu().numpy()
+            m = self.memory_encoder(m_inputs).detach().cpu().numpy()
             memory_index = faiss.IndexFlatL2(m.shape[1])
             memory_index.add(m)
             Ds, Is = memory_index.search(q, k)
@@ -236,11 +383,11 @@ class BiEncoderIndexManager(BartIndexManager):
             del memory_index
         if seen_query_ids is not None:
             coverage = len(tested_query_ids & seen_query_ids)/len(tested_query_ids)
-            print(f"#tested_query_ids={len(tested_query_ids)}; coverage={coverage}")
+            self.logger.info(f"#tested_query_ids={len(tested_query_ids)}; coverage={coverage}")
         if seen_memory_ids is not None:
             coverage = len(tested_memory_ids & seen_memory_ids)/len(tested_memory_ids)
-            print(f"#tested_memory_ids={len(tested_memory_ids)}; coverage={coverage}")
-        # print(f"top_k_accs = {top_k_accs}; ")
+            self.logger.info(f"#tested_memory_ids={len(tested_memory_ids)}; coverage={coverage}")
+        # self.logger.info(f"top_k_accs = {top_k_accs}; ")
         return np.mean(top_k_accs)
 
     def save_biencoder(self, query_encoder_path, memory_encoder_path):
@@ -258,11 +405,11 @@ def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ds_dir_path",
                         default="exp_results/supervision_data/1012_dm_simple/")
-    parser.add_argument("--num_ds_train_file", type=int, default=100)
-    parser.add_argument("--num_ds_dev_file", type=int, default=28)
+    parser.add_argument("--num_ds_train_file", type=int, default=10)
+    parser.add_argument("--num_ds_dev_file", type=int, default=3)
     parser.add_argument("--seed", type=int, default=42)
 
-    parser.add_argument("--run_mode", type=str, default="index")    # TODO:
+    parser.add_argument("--run_mode", type=str, default="train")    # TODO:
 
     parser.add_argument("--query_encoder_path", type=str,
                         default="exp_results/supervision_data/1012_dm_simple.qry_encoder.pt")
@@ -277,16 +424,20 @@ def get_parser():
 
     parser.add_argument("--query_input_dim", type=int, default=768*2*2)
     parser.add_argument("--memory_input_dim", type=int, default=768*2)
-    parser.add_argument("--hidden_dim", type=int, default=512)
-    parser.add_argument("--dim_vector", type=int, default=256)
+    parser.add_argument("--hidden_dim", type=int, default=-1) # -1 means no hidden layer; 256 for example
+    parser.add_argument("--dim_vector", type=int, default=128)
 
-    parser.add_argument("--lr", type=float, default=2e-2)
-    parser.add_argument("--n_steps", type=int, default=300)
+    parser.add_argument("--lr", type=float, default=1e-2)
+    parser.add_argument("--n_steps", type=int, default=10000)
     parser.add_argument("--eval_per_steps", type=int, default=10)
-    parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--qry_size", type=int, default=8)
-    parser.add_argument("--neg_size", type=int, default=8)
-    parser.add_argument("--droprate", type=float, default=0.1)
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--qry_size", type=int, default=8)  # 1-16
+    parser.add_argument("--pos_size", type=int, default=8)  # 1-8
+    parser.add_argument("--neg_size", type=int, default=8)  # 1-8
+    parser.add_argument("--droprate", type=float, default=0)
+
+    parser.add_argument('--use_cuda', default=True, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    parser.add_argument('--wandb', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     return parser
 
 
@@ -303,6 +454,11 @@ if __name__ == '__main__':
     set_seeds(biencoder_args.seed)
 
     if biencoder_args.run_mode == "train":
+        if biencoder_args.wandb:
+            run = wandb.init(reinit=True, project="FAIR_Biencoder")
+            run_name = wandb.run.name
+            logger.info(f"run_name = {run_name}")
+
         train_data, train_files = load_distant_supervision(
             biencoder_args.ds_dir_path, sample_size=biencoder_args.num_ds_train_file, logger=logger)
 
@@ -317,6 +473,7 @@ if __name__ == '__main__':
         biencoder_memory_module.train_biencoder(train_data, eval_data)
         biencoder_memory_module.save_biencoder(
             biencoder_args.query_encoder_path, biencoder_args.memory_encoder_path)
+        run.finish()
 
     elif biencoder_args.run_mode == "index":
 
@@ -339,3 +496,5 @@ if __name__ == '__main__':
         index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
         index_manager.set_up_initial_memory(index_manager.initial_memory_path)
         index_manager.save_memory_to_path("exp_results/data_streams/1012_biencoder_init_memory.pkl")
+
+

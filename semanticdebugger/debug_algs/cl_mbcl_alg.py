@@ -93,6 +93,7 @@ class MemoryBasedCL(ContinualFinetuning):
                     assert self.debugger_args.replay_candidate_size >= self.debugger_args.replay_size
                     retrieved_examples_candidates = self.memroy_module.retrieve_from_memory(
                         sample_size=self.debugger_args.replay_candidate_size)
+                    result_dict["mir_buffer_ids"] = [_id for (_input, _truth, _id) in retrieved_examples_candidates]
                     retrieved_examples = get_top_interfered_examples(self,
                         K=self.debugger_args.replay_size, candidate_examples=retrieved_examples_candidates, query_data_loader=bug_train_loader)
                     self.logger.info(f"retrieved_examples (mir)={retrieved_examples}") 
@@ -102,6 +103,7 @@ class MemoryBasedCL(ContinualFinetuning):
 
                 self.base_model.train()
 
+                result_dict["retrieved_ids"] = [_id for (_input, _truth, _id) in retrieved_examples]
                 
                 if self.debugger_args.use_replay_mix:
                     examples_to_train += retrieved_examples

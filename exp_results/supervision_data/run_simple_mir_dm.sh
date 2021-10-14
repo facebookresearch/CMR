@@ -6,7 +6,7 @@ cd ~/SemanticDebugger/
 index=$1
 num_rounds=$2
 gpu=0
-pprefix=1012_dm_simple
+pprefix=1013_mean_dm_simple
 prefix=${pprefix}_${index}
 log_file=exp_results/supervision_data/logs/run_${prefix}.log
 mkdir exp_results/supervision_data/${pprefix}/

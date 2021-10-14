@@ -5,6 +5,16 @@ from transformers.tokenization_utils import trim_batch
 import numpy as np
 from semanticdebugger.debug_algs.cl_utils import _keep_first_answer
 
+
+def masked_mean(reps, masks):
+    masks = masks.view(reps.size()[0], reps.size()[1], 1) 
+    masked_reps = reps * masks 
+    masked_reps_sum = masked_reps.sum(dim=1) 
+    length_reps = masks.sum(dim=1).view(masked_reps_sum.size()[0], 1)  
+    mean_reps = masked_reps_sum / length_reps 
+    return mean_reps
+
+
 def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, examples):
     examples_with_single_ans = _keep_first_answer(examples)
     data_manager, _ = cl_trainer.get_dataloader(data_args,
@@ -31,7 +41,9 @@ def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, e
         encoder_outputs = bart_model.model.encoder(
             input_ids, input_attention_mask)
         x = encoder_outputs[0]
-        x = x[:, 0, :]
+        # x = x[:, 0, :]
+        x = masked_mean(x, input_attention_mask)   # use the mean instead of the first
+
         input_vectors = x.detach().cpu().numpy()
 
         # self.logger.info(f"input_vectors.shape = {input_vectors.shape}")
@@ -58,7 +70,9 @@ def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, e
             use_cache=False
         )
         y = decoder_outputs[0]
-        y = y[:, 0, :]
+        # y = y[:, 0, :]
+        y = masked_mean(y, output_attention_mask)   # use the mean instead of the first
+
         output_vectors = y.detach().cpu().numpy()
 
         del batch
