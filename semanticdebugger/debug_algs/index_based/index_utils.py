@@ -15,7 +15,7 @@ def masked_mean(reps, masks):
     return mean_reps
 
 
-def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, examples):
+def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, examples, return_all_hidden=False):
     examples_with_single_ans = _keep_first_answer(examples)
     data_manager, _ = cl_trainer.get_dataloader(data_args,
                                                     examples_with_single_ans,
@@ -24,6 +24,7 @@ def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, e
     all_vectors = []
     bart_model = bart_model if cl_trainer.n_gpu == 1 else bart_model.module
     bart_model.eval()
+    all_hiddens = {"input_reps":[], "input_masks": [], "output_reps": [] , "output_masks": []}
     for batch in tqdm(data_manager.dataloader):
         # self.logger.info(f"len(batch)={len(batch)}")
         if cl_trainer.use_cuda:
@@ -74,15 +75,26 @@ def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, e
         y = masked_mean(y, output_attention_mask)   # use the mean instead of the first
 
         output_vectors = y.detach().cpu().numpy()
-
-        del batch
-        del encoder_outputs
-        del decoder_outputs
+ 
         # self.logger.info(f"output_vectors.shape = {output_vectors.shape}")
 
         # concatenate the vectors
         vectors = np.concatenate([input_vectors, output_vectors], axis=1)
+        if return_all_hidden:
+            all_hiddens["input_reps"] += list(encoder_outputs[0].detach().cpu().numpy())
+            all_hiddens["output_reps"] += list(decoder_outputs[0].detach().cpu().numpy())
 
+            all_hiddens["input_masks"] += list(input_attention_mask.detach().cpu().numpy())
+            all_hiddens["output_masks"] += list(output_attention_mask.detach().cpu().numpy())
+            
+            
         # self.logger.info(f"vectors.shape = {vectors.shape}")
         all_vectors += list(vectors)
-    return all_vectors
+        
+        del batch
+        del encoder_outputs
+        del decoder_outputs
+    if return_all_hidden:    
+        return all_hiddens
+    else:
+        return all_vectors

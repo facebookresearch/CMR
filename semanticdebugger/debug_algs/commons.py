@@ -214,28 +214,34 @@ class OnlineDebuggingMethod():
             return bug_train_loader
 
     def _log_episode_result(self, result_dict, data_eval_loader):
-        self.logger.info(
-            f"Evaluating again to analyze the performance .... Timecode: {self.timecode}")
-        after_predictions, after_results, after_results_all = self.evaluate(
-            data_eval_loader)
-        result_dict["after_eval"] = _pack_as_dict(
-            after_predictions, after_results, after_results_all)
-        
-        self.logger.info(f"After Error Fixing: {after_results['EM']}")
+        if not self.debugger_args.skip_instant_eval:
+            self.logger.info(
+                f"Evaluating again to analyze the performance .... Timecode: {self.timecode}")
+            after_predictions, after_results, after_results_all = self.evaluate(
+                data_eval_loader)
+            result_dict["after_eval"] = _pack_as_dict(
+                after_predictions, after_results, after_results_all)
+            
+            self.logger.info(f"After Error Fixing: {after_results['EM']}")
 
-        forgotten_examples, retained_ids, fixed_ids, unfixed_ids = self._eval_forget_and_fix(
-            data_eval_loader.data, result_dict["before_eval"], result_dict["after_eval"])
-        instant_fixing_rate = len(fixed_ids) / (len(fixed_ids) + len(unfixed_ids))
-        instant_retention_rate = len(retained_ids)/(len(retained_ids) + len(forgotten_examples) + 1e-8)
-        self.logger.info(f"Instant Fixing Rate: {instant_fixing_rate}")
-        self.logger.info(f"Instant Retention Rate: {instant_retention_rate}")
-        # Start the logging.        
-        result_dict["forgotten_examples"] = forgotten_examples
-        result_dict["retained_ids"] = retained_ids
-        result_dict["fixed_ids"] = fixed_ids
-        result_dict["unfixed_ids"] = unfixed_ids
-        result_dict["instant_fixing_rate"] = instant_fixing_rate
-        result_dict["instant_retention_rate"] = instant_retention_rate
+            forgotten_examples, retained_ids, fixed_ids, unfixed_ids = self._eval_forget_and_fix(
+                data_eval_loader.data, result_dict["before_eval"], result_dict["after_eval"])
+            instant_fixing_rate = len(fixed_ids) / (len(fixed_ids) + len(unfixed_ids))
+            instant_retention_rate = len(retained_ids)/(len(retained_ids) + len(forgotten_examples) + 1e-8)
+            self.logger.info(f"Instant Fixing Rate: {instant_fixing_rate}")
+            self.logger.info(f"Instant Retention Rate: {instant_retention_rate}")
+            # Start the logging.        
+            result_dict["forgotten_examples"] = forgotten_examples
+            result_dict["retained_ids"] = retained_ids
+            result_dict["fixed_ids"] = fixed_ids
+            result_dict["unfixed_ids"] = unfixed_ids
+            result_dict["instant_fixing_rate"] = instant_fixing_rate
+            result_dict["instant_retention_rate"] = instant_retention_rate
+        else:
+            self.logger.info(
+                f"Skip re-evaluating for instant error-fixing rate .... Timecode: {self.timecode}")
+            result_dict["instant_fixing_rate"] = 0.0
+            result_dict["instant_retention_rate"] = 0.0
         # result_dict["model0_instant_EM"] = self.instant_doing_nothing_EM[self.timecode]
         self.seen_stream_data += data_eval_loader.data
         # result_dict["doing-nothing_accmulative_EM"] = self.accumulate_doing_nothing_EM[self.timecode]
@@ -279,6 +285,9 @@ class OnlineDebuggingMethod():
 
         #### Final evaluation ####
         self.final_evaluation()
+
+        #### Save the final model ####
+        self._save_base_model()
 
     def final_evaluation(self):
         self.logger.info("Start the final evaluation.")

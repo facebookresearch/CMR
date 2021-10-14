@@ -1,4 +1,4 @@
-from semanticdebugger.debug_algs.cl_utils import get_top_interfered_examples
+from semanticdebugger.debug_algs.cl_utils import get_top_interfered_examples, get_virtual_updated_model
 from semanticdebugger.debug_algs.index_based.biencoder import BiEncoderIndexManager
 from semanticdebugger.debug_algs.index_based.index_manager import BartIndexManager
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
@@ -84,6 +84,8 @@ class IndexBasedCL(ContinualFinetuning):
         self.seen_stream_data = []
         last_steps = 0
 
+        initial_model = copy.deepcopy(self.base_model) # for the use of query
+
         for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):
 
             result_dict = {"timecode": self.timecode}   # start with 0
@@ -112,18 +114,21 @@ class IndexBasedCL(ContinualFinetuning):
                         rank_method=self.debugger_args.index_rank_method,
                         agg_method="each_topk_then_random",
                         each_sample_size=each_sample_size)
-                    self.logger.info(f"retrieved_examples (index)={retrieved_examples_candidates}")
+                    # self.logger.info(f"retrieved_examples (index)={retrieved_examples_candidates}")
                     retrieved_examples = get_top_interfered_examples(self,
                                                                      K=self.debugger_args.replay_size, candidate_examples=retrieved_examples_candidates, query_data_loader=bug_train_loader)
-                    self.logger.info(f"retrieved_examples (mir)={retrieved_examples}")
+                    # self.logger.info(f"retrieved_examples (mir)={retrieved_examples}")
                 else:
+                    if self.debugger_args.indexing_method == "biencoder":
+                        self.memroy_module.before_model = initial_model 
+                        self.memroy_module.after_model = get_virtual_updated_model(self, bug_train_loader)
                     retrieved_examples = self.memroy_module.retrieve_from_memory(
                         query_examples=formatted_bug_examples,
                         sample_size=self.debugger_args.replay_size,
                         agg_method="each_topk_then_random",
                         rank_method=self.debugger_args.index_rank_method,
                         each_sample_size=5)
-                    self.logger.info(f"retrieved_examples (index)={retrieved_examples}")
+                    # self.logger.info(f"retrieved_examples (index)={retrieved_examples}")
 
                 if self.debugger_args.use_replay_mix:
                     examples_to_train += retrieved_examples
@@ -167,6 +172,9 @@ class IndexBasedCL(ContinualFinetuning):
             self.logger.info("-"*50)
         #### Final evaluation ####
         self.final_evaluation()
+        
+        #### Save the final model ####
+        self._save_base_model()
 
         # Save to path
         self.memroy_module.save_memory_to_path(self.debugger_args.memory_path)

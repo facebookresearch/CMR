@@ -179,6 +179,23 @@ show_result_stat("exp_results/dynamic_stream/index_based/results/1001_MixedAllEr
 # 
 # 
 
+print("-"*20+"1012"+"-"*20)
 
 show_result_stat("exp_results/dynamic_stream/index_based/results/1012_MixedAllErrors_T=100_biencoder_M=U+I_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json", "Biencoder-similar-mir=no-top_each", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+print("-"*20+"1014"+"-"*20)
+
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=50_er_M=U+I_rs=32_rq=1_seed=$seed_result.json", "ER-T50-F1", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=50_mir_M=U+I_rs=32_rq=1_candidate=256_mode=none_seed=$seed_result.json", "MIR-C256-T50-F1", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+show_result_stat("exp_results/dynamic_stream/index_based/results/1014_MixedAllErrors_T=50_biencoder_M=U+I_rs=32_rq=1_rank=most_similar_mir=no(0)_seed=$seed_result.json", "BIENCODER-T50-F1", random_seeds=["42", "0212", "1213", "2021", "123", "456", "567", "789"]) 
+
+
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=$seed_result.json","ER-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json","MIR-C256-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])  #  "1213",
 

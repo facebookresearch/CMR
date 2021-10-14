@@ -79,28 +79,54 @@ class MiningSupervision(ContinualFinetuning):
         tokenizer = self.tokenizer
         data_args = copy.deepcopy(self.data_args)
         data_args.predict_batch_size = 4
-        query_vectors_before = get_bart_dual_representation(cl_trainer, before_model, tokenizer, data_args, query_examples)
-        query_vectors_after = get_bart_dual_representation(cl_trainer, after_model, tokenizer, data_args, query_examples)
-        assert len(query_vectors_before) == len(query_vectors_after) == len(query_examples)
+        # TODO: two options here:
+
+
+
+        if self.all_args.long_term_delta:
+            # Optional: using the delta versus the init model
+            before_model = self.init_model
+        
         supervision = {}
-        supervision["query"] = {}
+        supervision["mode"] = "all_hiddens" if self.all_args.save_all_hiddens else "mean_reps"
+        
         supervision["positive"] = {}
         supervision["negative"] = {}
+ 
+        if self.all_args.save_all_hiddens:
+            supervision["query_before"] = {}
+            supervision["query_after"] = {}
+            query_hiddens_before = get_bart_dual_representation(cl_trainer, before_model, tokenizer, data_args, query_examples, return_all_hidden=True)    
+            query_hiddens_after = get_bart_dual_representation(cl_trainer, after_model, tokenizer, data_args, query_examples, return_all_hidden=True)
+            positive_hiddens = get_bart_dual_representation(cl_trainer, self.init_model, tokenizer, data_args, positive_results, return_all_hidden=True)    
+            negative_hiddens = get_bart_dual_representation(cl_trainer, self.init_model, tokenizer, data_args, negative_results, return_all_hidden=True)
+            for ind, example in enumerate(query_examples):
+                supervision["query_before"][example[2]] = {k: v[ind] for k, v in query_hiddens_before.items()}
+                supervision["query_after"][example[2]] = {k: v[ind] for k, v in query_hiddens_after.items()}             
+            for ind, example in enumerate(positive_results):
+                supervision["positive"][example[2]] = {k: v[ind] for k, v in positive_hiddens.items()}
+            
+            for ind, example in enumerate(negative_hiddens):
+                supervision["negative"][example[2]] = {k: v[ind] for k, v in negative_hiddens.items()} 
+        else:
+            supervision["query"] = {}
+            query_vectors_before = get_bart_dual_representation(cl_trainer, before_model, tokenizer, data_args, query_examples)    
+            query_vectors_after = get_bart_dual_representation(cl_trainer, after_model, tokenizer, data_args, query_examples)        
+            assert len(query_vectors_before) == len(query_vectors_after) == len(query_examples)
+            for example, q1, q2 in zip(query_examples, query_vectors_before, query_vectors_after):
+                supervision["query"][example[2]] = list(q1) + list(q2) # concat 
+            positive_vectors = get_bart_dual_representation(cl_trainer, self.init_model, tokenizer, data_args, positive_results)
+            negative_vectors = get_bart_dual_representation(cl_trainer, self.init_model, tokenizer, data_args, negative_results)
+            for example, vector in zip(positive_results, positive_vectors):
+                supervision["positive"][example[2]] = list(vector)
+            for example, vector in zip(negative_results, negative_vectors):
+                supervision["negative"][example[2]] = list(vector)
 
-        for example, q1, q2 in zip(query_examples, query_vectors_before, query_vectors_after):
-            supervision["query"][example[2]] = list(q1) + list(q2) # concat 
-
-        positive_vectors = get_bart_dual_representation(cl_trainer, self.init_model, tokenizer, data_args, positive_results)
-        negative_vectors = get_bart_dual_representation(cl_trainer, self.init_model, tokenizer, data_args, negative_results)
-        for example, vector in zip(positive_results, positive_vectors):
-            supervision["positive"][example[2]] = list(vector)
-
-        for example, vector in zip(negative_results, negative_vectors):
-            supervision["negative"][example[2]] = list(vector)
         return supervision
 
 
-    def mine_supervision(self, memory_manager=None):
+    def mine_supervision(self, memory_manager=None, all_args=None):
+        self.all_args = all_args
         self.logger.info("Start Mining Distant Supervision (as online debugging).")
         
         sub_stream_dataloaders = self.data_eval_loaders
@@ -126,7 +152,7 @@ class MiningSupervision(ContinualFinetuning):
 
             updated_model = self.base_model
 
-            sampled_examples = memory_manager.retrieve_from_memory(sample_size=256) # TODO: set an arg.
+            sampled_examples = memory_manager.retrieve_from_memory(sample_size=all_args.mir_buffer_size) # TODO: set an arg.
             MIR_scores = self.compute_MIR_scores(model_copy, updated_model, sampled_examples)
 
             self.timecode += 1
@@ -169,6 +195,13 @@ if __name__ == '__main__':
 
     parser.add_argument('--num_rounds', type=int, default=1)
 
+    parser.add_argument('--mir_buffer_size', type=int, default=256)
+
+
+    parser.add_argument('--long_term_delta', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+
+    parser.add_argument('--save_all_hiddens', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+
     args = parser.parse_args()
 
 
@@ -207,7 +240,7 @@ if __name__ == '__main__':
         
         cl_supervision_miner.load_data(data_args, given_data_stream=sampled_train_stream)
         cl_supervision_miner.debugger_setup(debugger_args)
-        mined_supervision = cl_supervision_miner.mine_supervision(memory_manager)  
+        mined_supervision = cl_supervision_miner.mine_supervision(memory_manager, all_args=args)  
         path_to_save = args.output_supervision.replace(".pkl", f"-{_rid}.pkl")
         with open(path_to_save, "wb") as f:
             logger.info(f"Saving {f.name}")

@@ -20,14 +20,15 @@ import numpy as np
 import faiss
 import json
 import wandb
+from semanticdebugger.debug_algs.index_based.index_utils import get_bart_dual_representation
+from semanticdebugger.models.run_bart import train
 
 from semanticdebugger.models.utils import set_seeds
 
 
-def load_distant_supervision(folder_name, sample_size=1, logger=None, specified_names=None, exclude_files=[]):
+def load_distant_supervision(folder_name, sample_size=1, logger=None, specified_names=None, exclude_files=[], train_args=None):
     pkl_files = glob.glob(os.path.join(folder_name, '*.pkl'))[:]
-    pkl_files = [f for f in pkl_files if f not in exclude_files]
-    
+    pkl_files = [f for f in pkl_files if f not in exclude_files] 
     if specified_names:
         pkl_files = [p for p in pkl_files if p.split(
             "/")[-1].replace(".pkl", "") in specified_names]
@@ -39,6 +40,19 @@ def load_distant_supervision(folder_name, sample_size=1, logger=None, specified_
     for pkl_path in tqdm(pkl_files, desc="loading pkl files"):
         with open(pkl_path, "rb") as f:
             ds_items += pickle.load(f)
+    
+
+    for item in ds_items:
+        for q in item["query"]:
+            original_dim = len(item["query"][q])
+            if train_args.query_only_after:
+                item["query"][q] = item["query"][q][original_dim//2:]
+            if train_args.query_only_before:
+                item["query"][q] = item["query"][q][:original_dim//2]
+            if train_args.query_delta:
+                before = item["query"][q][original_dim//2:]
+                after = item["query"][q][:original_dim//2]
+                item["query"][q] = before + [i-j for i, j in zip(before, after)]
 
     # np.random.seed(42)
     # # # For Debugging the data-distribution #
@@ -155,6 +169,10 @@ class BiEncoderIndexManager(BartIndexManager):
         self.query_encoder = None
         self.train_args = None
 
+        # cl
+        before_model = None 
+        after_model = None 
+
     def load_encoder_model(self, base_model_args, memory_encoder_path, query_encoder_path):
         super().load_encoder_model(base_model_args)
         if self.memory_encoder is None:
@@ -175,7 +193,7 @@ class BiEncoderIndexManager(BartIndexManager):
                                  self.hidden_dim, droprate=self.train_args.droprate)
 
     def get_representation(self, examples):
-        """only for the memory encoding now"""
+        """only for the memory encoding here"""
         bart_reps = super().get_representation(examples)
         bart_reps = np.array(bart_reps)
         self.memory_encoder.eval()
@@ -268,7 +286,7 @@ class BiEncoderIndexManager(BartIndexManager):
             if _step > 0 and _step % self.train_args.eval_per_steps == 0:
                 self.logger.info(f"---- Completed epoch with avg training loss {sum(losses)/len(losses)}.")
                 train_acc = self.eval_func_v1(train_data[:], k=eval_at_K)
-                valid_acc = self.eval_func_v1(eval_data, k=eval_at_K)
+                valid_acc = self.eval_func_v1(eval_data, k=eval_at_K, seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
 
                 if self.train_args.wandb:
                     wandb.log({"train_accuracy": train_acc}, step=_step)
@@ -401,10 +419,32 @@ class BiEncoderIndexManager(BartIndexManager):
         save_module(self.memory_encoder, memory_encoder_path)
 
 
+
+    def get_query_representation(self, query_examples):
+        """Using the concatenation"""
+        before_all_vectors = get_bart_dual_representation(cl_trainer=self.cl_utils, 
+                                                    bart_model=self.before_model, 
+                                                    tokenizer=self.tokenizer, 
+                                                    data_args=self.data_args, 
+                                                    examples=query_examples)
+        after_all_vectors = get_bart_dual_representation(cl_trainer=self.cl_utils, 
+                                                    bart_model=self.after_model, 
+                                                    tokenizer=self.tokenizer, 
+                                                    data_args=self.data_args, 
+                                                    examples=query_examples)
+        bart_reps = []
+        for b, a in zip(before_all_vectors, after_all_vectors):
+            bart_reps.append(list(b)+list(a))
+        bart_reps = np.array(bart_reps)
+        self.query_encoder.eval()
+        all_vectors = self.query_encoder(torch.Tensor(bart_reps)).detach().numpy()
+        return all_vectors
+
+
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ds_dir_path",
-                        default="exp_results/supervision_data/1012_dm_simple/")
+                        default="exp_results/supervision_data/1014_init_mean_dm_simple/")
     parser.add_argument("--num_ds_train_file", type=int, default=10)
     parser.add_argument("--num_ds_dev_file", type=int, default=3)
     parser.add_argument("--seed", type=int, default=42)
@@ -412,13 +452,13 @@ def get_parser():
     parser.add_argument("--run_mode", type=str, default="train")    # TODO:
 
     parser.add_argument("--query_encoder_path", type=str,
-                        default="exp_results/supervision_data/1012_dm_simple.qry_encoder.pt")
+                        default="exp_results/supervision_data/1014_init_mean_dm_simple.qry_encoder.pt")
     parser.add_argument("--memory_encoder_path", type=str,
-                        default="exp_results/supervision_data/1012_dm_simple.mem_encoder.pt")
+                        default="exp_results/supervision_data/1014_init_mean_dm_simple.mem_encoder.pt")
     parser.add_argument("--memory_index_path", type=str,
-                        default="exp_results/supervision_data/1012_dm_simple.memory.index")
+                        default="exp_results/supervision_data/1014_init_mean_dm_simple.memory.index")
     parser.add_argument("--train_args_path", type=str,
-                        default="exp_results/supervision_data/1012_dm_simple.train_args.json")
+                        default="exp_results/supervision_data/1014_init_mean_dm_simple.train_args.json")
 
     # train_args
 
@@ -427,9 +467,9 @@ def get_parser():
     parser.add_argument("--hidden_dim", type=int, default=-1) # -1 means no hidden layer; 256 for example
     parser.add_argument("--dim_vector", type=int, default=128)
 
-    parser.add_argument("--lr", type=float, default=1e-2)
+    parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--n_steps", type=int, default=10000)
-    parser.add_argument("--eval_per_steps", type=int, default=10)
+    parser.add_argument("--eval_per_steps", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--qry_size", type=int, default=8)  # 1-16
     parser.add_argument("--pos_size", type=int, default=8)  # 1-8
@@ -438,6 +478,11 @@ def get_parser():
 
     parser.add_argument('--use_cuda', default=True, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     parser.add_argument('--wandb', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    parser.add_argument('--query_only_after', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    parser.add_argument('--query_only_before', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    parser.add_argument('--query_delta', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+
+    
     return parser
 
 
@@ -457,15 +502,21 @@ if __name__ == '__main__':
         if biencoder_args.wandb:
             run = wandb.init(reinit=True, project="FAIR_Biencoder")
             run_name = wandb.run.name
+            wandb.config.update(biencoder_args)
             logger.info(f"run_name = {run_name}")
+            
+
+        if biencoder_args.query_only_after or biencoder_args.query_only_before:
+            #  or biencoder_args.query_delta
+            biencoder_args.query_input_dim = biencoder_args.query_input_dim // 2
 
         train_data, train_files = load_distant_supervision(
-            biencoder_args.ds_dir_path, sample_size=biencoder_args.num_ds_train_file, logger=logger)
+            biencoder_args.ds_dir_path, sample_size=biencoder_args.num_ds_train_file, logger=logger, train_args=biencoder_args)
 
         logger.info(f"num_groups = {len(train_data)}")
 
         eval_data, eval_files = load_distant_supervision(
-            biencoder_args.ds_dir_path, sample_size=biencoder_args.num_ds_dev_file, logger=logger, exclude_files=train_files)
+            biencoder_args.ds_dir_path, sample_size=biencoder_args.num_ds_dev_file, logger=logger, exclude_files=train_files, train_args=biencoder_args)
 
         biencoder_memory_module = BiEncoderIndexManager(logger)
         biencoder_memory_module.train_args = biencoder_args
@@ -475,11 +526,10 @@ if __name__ == '__main__':
             biencoder_args.query_encoder_path, biencoder_args.memory_encoder_path)
         run.finish()
 
-    elif biencoder_args.run_mode == "index":
-
+    elif biencoder_args.run_mode == "index": 
         from semanticdebugger.debug_algs import run_lifelong_finetune
         parser = run_lifelong_finetune.get_cli_parser()
-        cl_args = parser.parse_args()
+        cl_args = parser.parse_args("")
 
         debugging_alg, data_args, base_model_args, debugger_args, logger = run_lifelong_finetune.setup_args(
             cl_args)
@@ -493,8 +543,8 @@ if __name__ == '__main__':
 
             
 
-        index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
+        index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"   # TODO: all examples?
         index_manager.set_up_initial_memory(index_manager.initial_memory_path)
-        index_manager.save_memory_to_path("exp_results/data_streams/1012_biencoder_init_memory.pkl")
+        index_manager.save_memory_to_path("exp_results/data_streams/1014_init_mean_biencoder_init_memory.pkl")
 
 

@@ -118,7 +118,8 @@ def setup_args(args):
             gradient_accumulation_steps=args.gradient_accumulation_steps,
             max_grad_norm=args.max_grad_norm,
             save_all_ckpts=args.save_all_ckpts,
-            overtime_ckpt_dir=args.overtime_ckpt_dir
+            overtime_ckpt_dir=args.overtime_ckpt_dir,
+            skip_instant_eval=args.skip_instant_eval,
         )
         if args.cl_method_name == "online_ewc":
             setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
@@ -184,7 +185,7 @@ def run(args):
             logger.info(f"eval_results_overall_forget: {offline_bound_results['eval_results_overall_forget']['metric_results']}")
         with open(args.result_file, "w") as f:
             json.dump(output_info, f)
-
+        logger.info(f'output_info["final_eval_results"]={output_info["final_eval_results"]}')
         logger.info(f"Finished. Results saved to {args.result_file}")
     else:
         # Parallel offline evaluation mode 
@@ -252,6 +253,8 @@ def get_cli_parser():
     parser.add_argument("--freeze_embeds", action='store_true', default=False)
     parser.add_argument('--max_input_length', type=int, default=888)
     parser.add_argument('--max_output_length', type=int, default=50)
+
+    parser.add_argument('--skip_instant_eval', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
 
     parser.add_argument("--append_another_bos", type=int,
                         default=1)  # should be true (1)

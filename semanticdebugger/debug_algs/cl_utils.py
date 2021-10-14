@@ -11,6 +11,17 @@ from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from tqdm import tqdm
 import more_itertools
 
+
+def get_virtual_updated_model(cl_trainer, query_data_loader):
+    before_model = copy.deepcopy(cl_trainer.base_model)
+    virtual_adapt_args = copy.deepcopy(cl_trainer.data_args)
+    virtual_adapt_args.train_batch_size = 4
+    # change the batch size for the training.
+    query_data_loader, _ = cl_trainer.get_dataloader(virtual_adapt_args, query_data_loader.data, mode="train") # fix of the order
+    after_model = local_adaptation(cl_trainer, before_model, query_data_loader, diff_loss_weight=0)  
+    del before_model
+    return after_model
+
 def get_top_interfered_examples(cl_trainer, K, candidate_examples, query_data_loader):
     """
     This is for the MIR method. 
@@ -62,7 +73,8 @@ def get_top_interfered_examples(cl_trainer, K, candidate_examples, query_data_lo
         # cl_trainer.logger.info(
         #     f"len(before_losses)={len(before_losses)}; len(after_losses)={len(after_losses)};")
         assert len(before_losses) == len(after_losses) == len(candidate_examples)
-    cl_trainer.logger.info(f"candidate_examples IDs: {[x[2] for x in candidate_examples]}")
+    # cl_trainer.logger.info(f"candidate_examples IDs: {[x[2] for x in candidate_examples]}")
+
     # it's a virtual update and we need to recover it.
     # del cl_trainer.base_model
     # del after_model
@@ -97,6 +109,7 @@ def get_top_interfered_examples(cl_trainer, K, candidate_examples, query_data_lo
 
     del before_model 
     del before_losses
+    del after_model
     del after_losses
     del memory_buffer_loader
     return top_K_examples
