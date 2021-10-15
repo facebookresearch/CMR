@@ -1,13 +1,33 @@
 import json
 import numpy as np
+ 
 
-model0_instream_test = 0 
-model0_replay_test = 0
-def show_result(path, prefix, return_data=False):
-    # global model0_instream_test, model0_replay_test
+upstream_ex_ids = set()
+
+def show_memory_ratio(path, prefix, ): 
+    if len(upstream_ex_ids) == 0:
+        with open("exp_results/data_streams/mrqa.nq_train.memory.jsonl") as f:
+            lines = f.read().splitlines()
+            for line in lines:
+                item = json.loads(line)
+                upstream_ex_ids.add(item["id"]) 
+
+    data = json.load(open(path)) 
+    ratios = []
+    for time_item in  data["online_eval_results"]:
+        if "retrieved_ids" in time_item:
+            retrieved_ids = set(time_item["retrieved_ids"])
+            upstream_ratio = len(retrieved_ids.intersection(upstream_ex_ids)) / len(retrieved_ids)
+            ratios.append({"timecode": time_item["timecode"], "upstream_ratio": upstream_ratio, "online_ratio": 1-upstream_ratio})
+    print(ratios)
+     
+    
+
+
+
+def show_result(path, prefix, return_data=False): 
     data = json.load(open(path))
-    all_results = data["final_eval_results"]
-    # model0_instream_test = all_results["model0_instream_test"]["EM"]
+    all_results = data["final_eval_results"] 
     overall_perf = all_results["overall_oncoming_test"]["EM"]
     final_instream_test = all_results["final_instream_test"]["EM"]
 
@@ -17,23 +37,18 @@ def show_result(path, prefix, return_data=False):
 
 
     overall_error_number = all_results["overall_error_number"]
-    overall_instant_fixing_rate = all_results["overall_instant_fixing_rate"]
-    # final_fixing_rate = all_results["final_fixing_rate"]["EM"] 
+    overall_instant_fixing_rate = all_results["overall_instant_fixing_rate"] 
     final_fixing_rate = -1
 
 
     final_upstream_test = all_results["final_upstream_test"]["EM"]
     final_upstream_test_f1 = all_results["final_upstream_test"]["QA-F1"]
 
-    overall_replay_test = all_results['overall_replay_test']["EM"] if 'overall_replay_test' in all_results else 0.0
-    # model0_replay_test = all_results['model0_replay_test']["EM"] if 'model0_replay_test' in all_results else 0.0
-
-    # f1 = 2*overall_replay_test*overall_perf/(overall_replay_test+overall_perf)
+    overall_replay_test = all_results['overall_replay_test']["EM"] if 'overall_replay_test' in all_results else 0.0 
 
     train_steps = data["model_update_steps"]
 
-    
-    # res = [prefix, f1, overall_replay_test, overall_perf, final_instream_test, overall_error_number, overall_instant_fixing_rate, final_fixing_rate, final_upstream_test, train_steps]
+     
     res = [prefix, overall_perf, overall_perf_f1, final_instream_test, final_instream_test_f1, overall_error_number, overall_instant_fixing_rate, final_fixing_rate, final_upstream_test, final_upstream_test_f1, train_steps]
     if return_data:
         return res
@@ -199,3 +214,14 @@ show_result_stat("exp_results/dynamic_stream/memory_based/results/1014_MixedAllE
 
 show_result_stat("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json","MIR-C256-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])  #  "1213",
 
+show_result_stat("exp_results/dynamic_stream/index_based/results/1014v4_MixedAllErrors_T=100_biencoder_M=U+I_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BIENCODER-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])  #  "1213",
+
+
+
+show_result_stat("exp_results/dynamic_stream/index_based/results/1001v2_MixedAllErrors_T=100_index_M=U+I_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BartIndex-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])  #  "1213",
+
+
+
+
+# show_memory_ratio("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=42_result.json", "ER-T100-F3",)
+# show_memory_ratio("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=42_result.json", "MIR-C256-T100-F3",)

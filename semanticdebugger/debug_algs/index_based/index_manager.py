@@ -228,21 +228,22 @@ if __name__ == '__main__':
     index_manager.set_up_data_args(args)
     index_manager.load_encoder_model(base_model_args)
     index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
-    # index_manager.set_up_initial_memory()
+    index_manager.set_up_initial_memory(index_manager.initial_memory_path)
 
-    # index_manager.save_memory_to_path("exp_results/data_streams/init_memory.pkl")
+    index_manager.save_memory_to_path("exp_results/data_streams/bart_index.init_memory.pkl")
 
-    index_manager.load_memory_from_path("exp_results/data_streams/init_memory.pkl")
+    
 
-    # sanity check
-    query_ids = index_manager.memory_index_sorted_ids[:1]
-    print(query_ids)
-    retrieved_ids = index_manager.retrieve_from_memory(query_examples=[
-                                                       index_manager.memory_examples[qid] for qid in query_ids], sample_size=5, rank_method="most_different")
-    print(retrieved_ids)
-    for rid in retrieved_ids:
-        item = index_manager.memory_examples[rid]
-        print("-"*50)
-        print(item[2])
-        print(item[0])
-        print(item[1])
+    # sanity check #
+    # index_manager.load_memory_from_path("exp_results/data_streams/bart_index.init_memory.pkl")
+    # query_ids = index_manager.memory_index_sorted_ids[:1]
+    # print(query_ids)
+    # retrieved_ids = index_manager.retrieve_from_memory(query_examples=[
+    #                                                    index_manager.memory_examples[qid] for qid in query_ids], sample_size=5, rank_method="most_different")
+    # print(retrieved_ids)
+    # for rid in retrieved_ids:
+    #     item = index_manager.memory_examples[rid]
+    #     print("-"*50)
+    #     print(item[2])
+    #     print(item[0])
+    #     print(item[1])

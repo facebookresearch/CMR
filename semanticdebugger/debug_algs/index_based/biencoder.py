@@ -294,10 +294,15 @@ class BiEncoderIndexManager(BartIndexManager):
                 
                 best_eval_acc = max(best_eval_acc, valid_acc)
 
+
                 self.logger.info(
                     f"Train Acc: Top-{eval_at_K} acc @ {_step}: {train_acc} | ")
                 self.logger.info(
                     f"Valid ACc: Top-{eval_at_K} acc @ {_step}: {valid_acc} | best_eval_acc={best_eval_acc}")
+                
+                if best_eval_acc == valid_acc:
+                    self.logger.info("new record; saving the biencoder ckpts.")
+                    self.save_biencoder()
 
 
 
@@ -408,7 +413,12 @@ class BiEncoderIndexManager(BartIndexManager):
         # self.logger.info(f"top_k_accs = {top_k_accs}; ")
         return np.mean(top_k_accs)
 
-    def save_biencoder(self, query_encoder_path, memory_encoder_path):
+    def save_biencoder(self, query_encoder_path=None, memory_encoder_path=None):
+        if not query_encoder_path:
+            query_encoder_path = self.train_args.query_encoder_path
+        if not memory_encoder_path:
+            memory_encoder_path = self.train_args.memory_encoder_path
+
         def save_module(module, path):
             model_state_dict = {k: v.cpu() for (
                 k, v) in module.state_dict().items()}
@@ -444,7 +454,7 @@ class BiEncoderIndexManager(BartIndexManager):
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ds_dir_path",
-                        default="exp_results/supervision_data/1014_init_mean_dm_simple/")
+                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple/")
     parser.add_argument("--num_ds_train_file", type=int, default=10)
     parser.add_argument("--num_ds_dev_file", type=int, default=3)
     parser.add_argument("--seed", type=int, default=42)
@@ -452,13 +462,13 @@ def get_parser():
     parser.add_argument("--run_mode", type=str, default="train")    # TODO:
 
     parser.add_argument("--query_encoder_path", type=str,
-                        default="exp_results/supervision_data/1014_init_mean_dm_simple.qry_encoder.pt")
+                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple.qry_encoder.pt")
     parser.add_argument("--memory_encoder_path", type=str,
-                        default="exp_results/supervision_data/1014_init_mean_dm_simple.mem_encoder.pt")
+                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple.mem_encoder.pt")
     parser.add_argument("--memory_index_path", type=str,
-                        default="exp_results/supervision_data/1014_init_mean_dm_simple.memory.index")
+                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple.memory.index")
     parser.add_argument("--train_args_path", type=str,
-                        default="exp_results/supervision_data/1014_init_mean_dm_simple.train_args.json")
+                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple.train_args.json")
 
     # train_args
 
@@ -468,7 +478,7 @@ def get_parser():
     parser.add_argument("--dim_vector", type=int, default=128)
 
     parser.add_argument("--lr", type=float, default=1e-3)
-    parser.add_argument("--n_steps", type=int, default=10000)
+    parser.add_argument("--n_steps", type=int, default=3000)
     parser.add_argument("--eval_per_steps", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--qry_size", type=int, default=8)  # 1-16
@@ -545,6 +555,6 @@ if __name__ == '__main__':
 
         index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"   # TODO: all examples?
         index_manager.set_up_initial_memory(index_manager.initial_memory_path)
-        index_manager.save_memory_to_path("exp_results/data_streams/1014_init_mean_biencoder_init_memory.pkl")
+        index_manager.save_memory_to_path("exp_results/data_streams/1014v4_same_mean_biencoder_init_memory.pkl")
 
 

@@ -6,14 +6,14 @@ cd ~/SemanticDebugger/
 index=$1
 num_rounds=$2
 gpu=0
-pprefix=1014v2_hiddens_dm_simple
+pprefix=1014v4_same_mean_dm_simple
 prefix=${pprefix}_${index}
 log_file=exp_results/supervision_data/logs/run_${prefix}.log
 mkdir exp_results/supervision_data/${pprefix}/
 CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervision/data_collection.py \
-    --save_all_hiddens True \
-    --base_model_path "out/mrqa_naturalquestions_bart-base_1011/best-model.pt" \
-    --upstream_data_prediction_file "bug_data/1011_mrqa_naturalquestions_train.meta.predictions.json" \
+    --save_all_hiddens False \
+    --base_model_path "out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt" \
+    --upstream_data_prediction_file "bug_data/mrqa_naturalquestions_train.predictions.jsonl" \
     --cl_method_name "simple_ds_mine" \
     --seed ${index} \
     --max_input_length 512 --max_output_length 64 \
@@ -24,10 +24,13 @@ CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervisi
     --stream_mode dynamic \
     --replay_stream_json_path "" \
     --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
-    --save_all_ckpts 0  > ${log_file} 2>&1
-# echo $log_file 
+    --save_all_ckpts 0  > ${log_file}
+    #  2>&1
+echo $log_file 
 
 
-# --base_model_path "out/mrqa_naturalquestions_bart-base_1011/best-model.pt" \
-# --upstream_data_prediction_file "bug_data/1011_mrqa_naturalquestions_train.meta.predictions.json" \
+# --base_model_path "out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt" \
+# --upstream_data_prediction_file "bug_data/mrqa_naturalquestions_train.predictions.jsonl" \
 
+    # --base_model_path "out/mrqa_naturalquestions_bart-base_1011/best-model.pt" \
+    # --upstream_data_prediction_file "bug_data/1011_mrqa_naturalquestions_train.meta.predictions.json" \
