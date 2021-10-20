@@ -105,7 +105,7 @@ def get_top_interfered_examples(cl_trainer, K, candidate_examples, query_data_lo
     
     top_K_examples = [x[0] for x in interference_scores][:K]
 
-    cl_trainer.logger.info(f"retrieved candidates ids = {[x[2] for x in top_K_examples]}")
+    # cl_trainer.logger.info(f"retrieved candidates ids = {[x[2] for x in top_K_examples]}")
 
     del before_model 
     del before_losses

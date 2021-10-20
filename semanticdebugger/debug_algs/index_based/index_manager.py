@@ -197,6 +197,7 @@ class BartIndexManager(BaseMemoryManager):
             # retrieved_example_ids = random.sample(retrieved_example_ids, sample_size)
             # TODO: random sample and then rank by scores
         retrieved_examples = self.get_examples_by_ids(retrieved_example_ids)
+        retrieved_examples = random.sample(retrieved_examples, sample_size) # TODO: consider ranking 
         return retrieved_examples
 
     def store_examples(self, examples):
@@ -239,22 +240,22 @@ if __name__ == '__main__':
     # index_manager.save_memory_to_path("exp_results/data_streams/bart_index.init_memory.pkl")
 
 
-    copy_item = [0,0,0]
-    copy_item[2] = "mrqa_naturalquestions-train-10-copy"
-    copy_item[0] = "Context: The movie was shot in LA and the Hawaiian islands of Bologno and Kologno between March 3 , 2020 and May 25 , 2020 . The movie is deliberately vague about which Hawaiian island its latter portion depicts ; thus , the characters hike across a rope bridge on Bologno and arrive in the next scene at a spectacular waterfall on Kologno , rather than the ordinary irrigation dam and pond on Bologno where the actual trail terminates . | Question: which did they hike in just go with it ?"
-    copy_item[1] = ['xxa xzcvxzcv q234er2314', 'adsfasdf sad fgcxbv dsafv adsf .']
+    # copy_item = [0,0,0]
+    # copy_item[2] = "mrqa_naturalquestions-train-10-copy"
+    # copy_item[0] = "Context: The movie was shot in LA and the Hawaiian islands of Bologno and Kologno between March 3 , 2020 and May 25 , 2020 . The movie is deliberately vague about which Hawaiian island its latter portion depicts ; thus , the characters hike across a rope bridge on Bologno and arrive in the next scene at a spectacular waterfall on Kologno , rather than the ordinary irrigation dam and pond on Bologno where the actual trail terminates . | Question: which did they hike in just go with it ?"
+    # copy_item[1] = ['xxa xzcvxzcv q234er2314', 'adsfasdf sad fgcxbv dsafv adsf .']
     
-    index_manager.store_examples([copy_item])
+    # index_manager.store_examples([copy_item])
 
-    # sanity check #
-    # index_manager.load_memory_from_path("exp_results/data_streams/bart_index.init_memory.pkl")
-    query_ids = ["mrqa_naturalquestions-train-10"]
-    print(index_manager.memory_examples[query_ids[0]])
-    retrieved_exmaples = index_manager.retrieve_from_memory(query_examples=[
-                                                       index_manager.memory_examples[qid] for qid in query_ids], sample_size=10, each_sample_size=10, rank_method="most_different", agg_method="each_topk_then_random")
+    # # sanity check #
+    # # index_manager.load_memory_from_path("exp_results/data_streams/bart_index.init_memory.pkl")
+    # query_ids = ["mrqa_naturalquestions-train-10"]
+    # print(index_manager.memory_examples[query_ids[0]])
+    # retrieved_exmaples = index_manager.retrieve_from_memory(query_examples=[
+    #                                                    index_manager.memory_examples[qid] for qid in query_ids], sample_size=10, each_sample_size=10, rank_method="most_different", agg_method="each_topk_then_random")
     
-    for item in retrieved_exmaples: 
-        print("-"*50)
-        print(item[2])
-        print(item[0])
-        print(item[1])
+    # for item in retrieved_exmaples: 
+    #     print("-"*50)
+    #     print(item[2])
+    #     print(item[0])
+    #     print(item[1])
