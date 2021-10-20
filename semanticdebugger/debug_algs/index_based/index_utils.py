@@ -15,7 +15,7 @@ def masked_mean(reps, masks):
     return mean_reps
 
 
-def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, examples, return_all_hidden=False):
+def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, examples, return_all_hidden=False, agg_method="mean"):
     examples_with_single_ans = _keep_first_answer(examples)
     data_manager, _ = cl_trainer.get_dataloader(data_args,
                                                     examples_with_single_ans,
@@ -42,8 +42,11 @@ def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, e
         encoder_outputs = bart_model.model.encoder(
             input_ids, input_attention_mask)
         x = encoder_outputs[0]
-        # x = x[:, 0, :]
-        x = masked_mean(x, input_attention_mask)   # use the mean instead of the first
+        # 
+        if agg_method == "mean":
+            x = masked_mean(x, input_attention_mask)   # use the mean instead of the first
+        elif agg_method == "first":
+            x = x[:, 0, :]
 
         input_vectors = x.detach().cpu().numpy()
 
@@ -71,8 +74,11 @@ def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, e
             use_cache=False
         )
         y = decoder_outputs[0]
-        # y = y[:, 0, :]
-        y = masked_mean(y, output_attention_mask)   # use the mean instead of the first
+        
+        if agg_method == "mean":
+            y = masked_mean(y, output_attention_mask)   # use the mean instead of the first
+        elif agg_method == "first":
+            y = y[:, 0, :]
 
         output_vectors = y.detach().cpu().numpy()
  

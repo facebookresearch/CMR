@@ -20,7 +20,7 @@ Key logic:
 import copy
 import pickle
 from semanticdebugger.debug_algs.cl_utils import _keep_first_answer
-from semanticdebugger.debug_algs.distant_supervision.ds_utils import create_training_stream
+from semanticdebugger.debug_algs.distant_supervision.ds_utils import create_training_stream, create_training_stream_with_dev
 from semanticdebugger.debug_algs.index_based.index_manager import RandomMemoryManger
 from semanticdebugger.debug_algs.index_based.index_utils import get_bart_dual_representation
 from semanticdebugger.models import run_bart
@@ -92,7 +92,9 @@ class MiningSupervision(ContinualFinetuning):
         
         supervision["positive"] = {}
         supervision["negative"] = {}
- 
+        
+        top_examples = []
+
         if self.all_args.save_all_hiddens:
             supervision["query_before"] = {}
             supervision["query_after"] = {}
@@ -119,10 +121,11 @@ class MiningSupervision(ContinualFinetuning):
             negative_vectors = get_bart_dual_representation(cl_trainer, self.init_model, tokenizer, data_args, negative_results)
             for example, vector in zip(positive_results, positive_vectors):
                 supervision["positive"][example[2]] = list(vector)
+                top_examples.append(example)
             for example, vector in zip(negative_results, negative_vectors):
                 supervision["negative"][example[2]] = list(vector)
 
-        return supervision
+        return supervision, top_examples
 
 
     def mine_supervision(self, memory_manager=None, all_args=None):
@@ -157,11 +160,19 @@ class MiningSupervision(ContinualFinetuning):
 
             self.timecode += 1
             positive_results, negative_results = self.get_pos_neg_results(sampled_examples, 
-                                                                    MIR_scores, positive_size=8, negative_size=8)
-            supervision = self.wrap_supervision(model_copy, updated_model, episode_data, positive_results, negative_results)
+                                                                    MIR_scores, positive_size=all_args.positive_size, negative_size=all_args.negative_size)
+            supervision, top_examples = self.wrap_supervision(model_copy, updated_model, episode_data, positive_results, negative_results)
             self.logger.info(f"Get an instance for supervision at {self.timecode}")
             mined_supervision.append(supervision)
             memory_manager.store_examples(episode_data)
+
+            # update with the sampled examples 
+            self.base_model = model_copy
+            mixed_data = episode_data + top_examples
+            mixed_bug_train_loader, _ = self.get_dataloader(
+                self.data_args, mixed_data, mode="train")
+            self.fix_bugs(mixed_bug_train_loader)   # for debugging
+            
             del model_copy
 
         return mined_supervision
@@ -176,12 +187,21 @@ class MiningSupervision(ContinualFinetuning):
 if __name__ == '__main__':
     parser = run_lifelong_finetune.get_cli_parser()
 
+    
     parser.add_argument("--upstream_data_file", type=str,
                         default="data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl",
                         help="the path to upstream data")
     
     parser.add_argument("--upstream_data_prediction_file", type=str,    # by the initial model M_0
                         default="bug_data/mrqa_naturalquestions_train.predictions.jsonl",
+                        help="the path to initial model's predictions on the upstream data")
+
+    parser.add_argument("--dev_memory", type=str,    # by the initial model M_0
+                        default="exp_results/data_streams/mrqa.nq_train.memory.jsonl",
+                        help="the path to initial model's predictions on the upstream data")
+
+    parser.add_argument("--dev_stream", type=str,    # by the initial model M_0
+                        default="exp_results/data_streams/mrqa.mixed.data_stream.test.json",
                         help="the path to initial model's predictions on the upstream data")
 
     parser.add_argument("--output_supervision", type=str,
@@ -195,15 +215,31 @@ if __name__ == '__main__':
 
     parser.add_argument('--num_rounds', type=int, default=1)
 
+    parser.add_argument('--positive_size', type=int, default=8)
+
+    parser.add_argument('--negative_size', type=int, default=8)
+
+    
+
     parser.add_argument('--mir_buffer_size', type=int, default=256)
 
+
+    parser.add_argument('--use_dev_stream', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
 
     parser.add_argument('--long_term_delta', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
 
     parser.add_argument('--save_all_hiddens', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
 
+    parser.add_argument('--debug_mode', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    
     args = parser.parse_args()
 
+    # debuggging
+    args.cl_method_name = "simple_ds_mine"
+
+    if args.debug_mode:        
+        args.use_dev_stream = True
+        args.long_term_delta = True
 
     assert args.cl_method_name == "simple_ds_mine" 
 
@@ -229,7 +265,10 @@ if __name__ == '__main__':
         selected_seed = seeds[args.seed]    # actually the index
         logger.info(f"Active Seed = {selected_seed}")
         set_seeds(selected_seed)
-        initial_memory, sampled_train_stream = create_training_stream(args, logger)           
+        if not args.use_dev_stream:
+            initial_memory, sampled_train_stream = create_training_stream(args, logger)           
+        else:
+            initial_memory, sampled_train_stream = create_training_stream_with_dev(args, logger)
         
 
         ## Init the RandomMemroy module ##    

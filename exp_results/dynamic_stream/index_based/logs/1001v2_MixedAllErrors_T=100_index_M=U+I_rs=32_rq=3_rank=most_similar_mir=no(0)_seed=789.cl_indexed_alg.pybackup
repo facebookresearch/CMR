@@ -1,4 +1,5 @@
 from semanticdebugger.debug_algs.cl_utils import get_top_interfered_examples, get_virtual_updated_model
+from semanticdebugger.debug_algs.index_based.IO_each_index import BartIOIndexManager
 from semanticdebugger.debug_algs.index_based.biencoder import BiEncoderIndexManager
 from semanticdebugger.debug_algs.index_based.index_manager import BartIndexManager
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
@@ -48,6 +49,11 @@ class IndexBasedCL(ContinualFinetuning):
         # Initializing the BartIndexManager
         if debugger_args.indexing_method == "bart_index":
             self.memroy_module = BartIndexManager(self.logger)
+            self.memroy_module.set_up_data_args(self.data_args)
+            self.memroy_module.data_args.predict_batch_size = 4
+            self.memroy_module.load_encoder_model(self.base_model_args)
+        elif debugger_args.indexing_method == "bart_io_index":
+            self.memroy_module = BartIOIndexManager(self.logger)
             self.memroy_module.set_up_data_args(self.data_args)
             self.memroy_module.data_args.predict_batch_size = 4
             self.memroy_module.load_encoder_model(self.base_model_args)
@@ -108,12 +114,20 @@ class IndexBasedCL(ContinualFinetuning):
                     each_sample_size = int(
                         self.debugger_args.replay_candidate_size/self.debugger_args.replay_size)*2
                     self.logger.info(f"each_sample_size={each_sample_size}")
+
+                    if self.debugger_args.indexing_method == "biencoder":
+                        # self.memroy_module.before_model = initial_model   # if for longer-delta
+                        self.memroy_module.before_model = self.base_model
+                        self.memroy_module.after_model = get_virtual_updated_model(self, bug_train_loader)
+                        
                     retrieved_examples_candidates = self.memroy_module.retrieve_from_memory(
                         query_examples=formatted_bug_examples,
                         sample_size=self.debugger_args.replay_size,
                         rank_method=self.debugger_args.index_rank_method,
+                        each_sim_sample_size=30,
                         agg_method="each_topk_then_random",
                         each_sample_size=each_sample_size)
+
                     # self.logger.info(f"retrieved_examples (index)={retrieved_examples_candidates}")
                     retrieved_examples = get_top_interfered_examples(self,
                                                                      K=self.debugger_args.replay_size, candidate_examples=retrieved_examples_candidates, query_data_loader=bug_train_loader)
@@ -128,7 +142,7 @@ class IndexBasedCL(ContinualFinetuning):
                         sample_size=self.debugger_args.replay_size,
                         agg_method="each_topk_then_random",
                         rank_method=self.debugger_args.index_rank_method,
-                        each_sample_size=3)
+                        each_sample_size=5, each_sim_sample_size=30)
                     # self.logger.info(f"retrieved_examples (index)={retrieved_examples}")
                 
                 result_dict["retrieved_ids"] = [_id for (_input, _truth, _id) in retrieved_examples]
@@ -170,7 +184,7 @@ class IndexBasedCL(ContinualFinetuning):
                 self.logger.info(
                     f"Saving the current error examples (len={len(formatted_bug_examples)}) to the memory.")
                 self.logger.info(f"Current memory size: {self.memroy_module.get_memory_size()}.")
-                self.memroy_module.store_exampls(formatted_bug_examples)
+                self.memroy_module.store_examples(formatted_bug_examples)
                 self.logger.info("Finished.")
             self.logger.info("-"*50)
         #### Final evaluation ####

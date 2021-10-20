@@ -90,7 +90,7 @@ class MLP(Module):
                 nn.Linear(input_dim, hidden_dim),
                 # nn.LayerNorm(hidden_dim),
                 # nn.Sigmoid(),
-                # nn.Dropout(droprate),
+                nn.Dropout(droprate),
                 nn.ReLU(),
                 nn.Linear(hidden_dim, output_dim), 
             )
@@ -219,7 +219,7 @@ class BiEncoderIndexManager(BartIndexManager):
 
         seen_query_ids = set()
         seen_memory_ids = set()
-        eval_at_K = 8
+        eval_at_K = 16
         best_eval_acc = self.eval_func_v1(
             eval_data, k=eval_at_K, seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
         self.logger.info(f"Valid Acc @ 0: Top-{eval_at_K} acc: {best_eval_acc}")
@@ -454,7 +454,7 @@ class BiEncoderIndexManager(BartIndexManager):
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ds_dir_path",
-                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple/")
+                        default="exp_results/supervision_data/1019_same_mean_dm_simple/")
     parser.add_argument("--num_ds_train_file", type=int, default=10)
     parser.add_argument("--num_ds_dev_file", type=int, default=3)
     parser.add_argument("--seed", type=int, default=42)
@@ -462,13 +462,13 @@ def get_parser():
     parser.add_argument("--run_mode", type=str, default="train")    # TODO:
 
     parser.add_argument("--query_encoder_path", type=str,
-                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple.qry_encoder.pt")
+                        default="exp_results/supervision_data/1019_same_mean_dm_simple.qry_encoder.pt")
     parser.add_argument("--memory_encoder_path", type=str,
-                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple.mem_encoder.pt")
+                        default="exp_results/supervision_data/1019_same_mean_dm_simple.mem_encoder.pt")
     parser.add_argument("--memory_index_path", type=str,
-                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple.memory.index")
+                        default="exp_results/supervision_data/1019_same_mean_dm_simple.memory.index")
     parser.add_argument("--train_args_path", type=str,
-                        default="exp_results/supervision_data/1014v4_same_mean_dm_simple.train_args.json")
+                        default="exp_results/supervision_data/1019_same_mean_dm_simple.train_args.json")
 
     # train_args
 
@@ -480,13 +480,13 @@ def get_parser():
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--n_steps", type=int, default=3000)
     parser.add_argument("--eval_per_steps", type=int, default=100)
-    parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--qry_size", type=int, default=8)  # 1-16
-    parser.add_argument("--pos_size", type=int, default=8)  # 1-8
-    parser.add_argument("--neg_size", type=int, default=8)  # 1-8
+    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--qry_size", type=int, default=16)  # 1-16
+    parser.add_argument("--pos_size", type=int, default=16)  # 1-8
+    parser.add_argument("--neg_size", type=int, default=1)  # 1-8
     parser.add_argument("--droprate", type=float, default=0)
 
-    parser.add_argument('--use_cuda', default=True, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    parser.add_argument('--use_cuda', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     parser.add_argument('--wandb', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     parser.add_argument('--query_only_after', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     parser.add_argument('--query_only_before', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
@@ -555,6 +555,6 @@ if __name__ == '__main__':
 
         index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"   # TODO: all examples?
         index_manager.set_up_initial_memory(index_manager.initial_memory_path)
-        index_manager.save_memory_to_path("exp_results/data_streams/1014v4_same_mean_biencoder_init_memory.pkl")
+        index_manager.save_memory_to_path("exp_results/data_streams/1019_same_mean_biencoder_init_memory.pkl")
 
 

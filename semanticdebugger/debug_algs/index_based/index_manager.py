@@ -26,7 +26,7 @@ class BaseMemoryManager():
     def get_memory_size(self):
         return len(self.memory_examples)
 
-    def _load_init_memory_examples(self, initial_memory_path="", formatted_examples=None):
+    def _load_init_memory_examples(self, initial_memory_path="", formatted_examples=None, cut_off=None):
         assert len(self.memory_examples) == 0
         if initial_memory_path:
             with open(initial_memory_path) as f:
@@ -52,7 +52,7 @@ class BaseMemoryManager():
     def retrieve_from_memory(self, query_examples, sample_size, **kwargs):
         raise NotImplementedError
 
-    def store_exampls(self, examples):
+    def store_examples(self, examples):
         raise NotImplementedError
 
 
@@ -65,8 +65,8 @@ class RandomMemoryManger(BaseMemoryManager):
         self.name = "random_memory_manager"
         self.memory_examples = {}
 
-    def set_up_initial_memory(self, initial_memory_path="", formatted_examples=None):
-        self._load_init_memory_examples(initial_memory_path, formatted_examples)
+    def set_up_initial_memory(self, initial_memory_path="", formatted_examples=None, cut_off=None):
+        self._load_init_memory_examples(initial_memory_path, formatted_examples, cut_off=None)
 
     def load_memory_from_path(self, init_memory_cache_path):
         with open(init_memory_cache_path, "rb") as f:
@@ -121,11 +121,11 @@ class BartIndexManager(BaseMemoryManager):
             predict_batch_size=args.predict_batch_size,
         )
 
-    def set_up_initial_memory(self, initial_memory_path="", formatted_examples=None):
+    def set_up_initial_memory(self, initial_memory_path="", formatted_examples=None, cut_off=None):
         assert self.bart_model is not None
         self._load_init_memory_examples(initial_memory_path, formatted_examples)
         # build index
-        initial_memory_example_ids = sorted(list(self.memory_examples.keys()))
+        initial_memory_example_ids = sorted(list(self.memory_examples.keys()))[:cut_off]
         examples = self.get_examples_by_ids(initial_memory_example_ids)
         vectors = self.get_representation(examples)
         self.update_index(initial_memory_example_ids, vectors)
@@ -135,6 +135,9 @@ class BartIndexManager(BaseMemoryManager):
         if not self.memory_index:
             self.memory_index = faiss.IndexFlatL2(self.dim_vector)
         self.memory_index_sorted_ids += example_ids
+        # for ex_id in example_ids: 
+        #     self.memory_examples[ex_id]["memory_index_id"] = len(self.memory_index_sorted_ids)
+        #     self.memory_index_sorted_ids.append(ex_id)
         vectors = np.array(vectors)
         self.memory_index.add(vectors)
 
@@ -146,7 +149,7 @@ class BartIndexManager(BaseMemoryManager):
 
     def get_examples_by_ids(self, example_ids):
         return [self.memory_examples[eid] for eid in example_ids]
-
+    
     def load_memory_from_path(self, init_memory_cache_path):
         with open(init_memory_cache_path, "rb") as f:
             memory_cache = pickle.load(f)
@@ -188,14 +191,15 @@ class BartIndexManager(BaseMemoryManager):
             retrieved_example_ids = []
             for query_vector in input_vectors:
                 if rank_method == "most_different":
-                    query_vector = -query_vector
+                    query_vector = np.append(query_vector[:self.dim_vector//2], query_vector[self.dim_vector//2:])
                 retrieved_example_ids += self.search_index(query_vector, each_sample_size)
             # retrieved_example_ids = set(retrieved_example_ids) # TODO: decide later.
-            retrieved_example_ids = random.sample(retrieved_example_ids, sample_size)
+            # retrieved_example_ids = random.sample(retrieved_example_ids, sample_size)
+            # TODO: random sample and then rank by scores
         retrieved_examples = self.get_examples_by_ids(retrieved_example_ids)
         return retrieved_examples
 
-    def store_exampls(self, examples):
+    def store_examples(self, examples):
         example_ids = []
         for item in examples:
             self.memory_examples[item[2]] = item
@@ -208,7 +212,8 @@ class BartIndexManager(BaseMemoryManager):
                                                     bart_model=self.bart_model, 
                                                     tokenizer=self.tokenizer, 
                                                     data_args=self.data_args, 
-                                                    examples=examples)
+                                                    examples=examples,
+                                                    agg_method="mean")
         return all_vectors
 
     def load_encoder_model(self, base_model_args):
@@ -227,23 +232,29 @@ if __name__ == '__main__':
     index_manager = BartIndexManager(logger=logger)
     index_manager.set_up_data_args(args)
     index_manager.load_encoder_model(base_model_args)
-    index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
-    index_manager.set_up_initial_memory(index_manager.initial_memory_path)
+    # index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
+    index_manager.initial_memory_path = "data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl"
+    index_manager.set_up_initial_memory(index_manager.initial_memory_path, cut_off=1000)
 
-    index_manager.save_memory_to_path("exp_results/data_streams/bart_index.init_memory.pkl")
+    # index_manager.save_memory_to_path("exp_results/data_streams/bart_index.init_memory.pkl")
 
+
+    copy_item = [0,0,0]
+    copy_item[2] = "mrqa_naturalquestions-train-10-copy"
+    copy_item[0] = "Context: The movie was shot in LA and the Hawaiian islands of Bologno and Kologno between March 3 , 2020 and May 25 , 2020 . The movie is deliberately vague about which Hawaiian island its latter portion depicts ; thus , the characters hike across a rope bridge on Bologno and arrive in the next scene at a spectacular waterfall on Kologno , rather than the ordinary irrigation dam and pond on Bologno where the actual trail terminates . | Question: which did they hike in just go with it ?"
+    copy_item[1] = ['xxa xzcvxzcv q234er2314', 'adsfasdf sad fgcxbv dsafv adsf .']
     
+    index_manager.store_examples([copy_item])
 
     # sanity check #
     # index_manager.load_memory_from_path("exp_results/data_streams/bart_index.init_memory.pkl")
-    # query_ids = index_manager.memory_index_sorted_ids[:1]
-    # print(query_ids)
-    # retrieved_ids = index_manager.retrieve_from_memory(query_examples=[
-    #                                                    index_manager.memory_examples[qid] for qid in query_ids], sample_size=5, rank_method="most_different")
-    # print(retrieved_ids)
-    # for rid in retrieved_ids:
-    #     item = index_manager.memory_examples[rid]
-    #     print("-"*50)
-    #     print(item[2])
-    #     print(item[0])
-    #     print(item[1])
+    query_ids = ["mrqa_naturalquestions-train-10"]
+    print(index_manager.memory_examples[query_ids[0]])
+    retrieved_exmaples = index_manager.retrieve_from_memory(query_examples=[
+                                                       index_manager.memory_examples[qid] for qid in query_ids], sample_size=10, each_sample_size=10, rank_method="most_different", agg_method="each_topk_then_random")
+    
+    for item in retrieved_exmaples: 
+        print("-"*50)
+        print(item[2])
+        print(item[0])
+        print(item[1])

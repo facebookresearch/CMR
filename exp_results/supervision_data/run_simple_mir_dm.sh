@@ -6,12 +6,18 @@ cd ~/SemanticDebugger/
 index=$1
 num_rounds=$2
 gpu=0
-pprefix=1014v4_same_mean_dm_simple
+pprefix=1019_same_mean_dm_simple
 prefix=${pprefix}_${index}
 log_file=exp_results/supervision_data/logs/run_${prefix}.log
 mkdir exp_results/supervision_data/${pprefix}/
 CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervision/data_collection.py \
+    --long_term_delta True \
     --save_all_hiddens False \
+    --use_dev_stream True \
+    --mir_buffer_size 512 --positive_size 16 --negative_size 16 \
+    --train_stream_length 30 \
+    --dev_memory "exp_results/data_streams/mrqa.nq_train.memory.jsonl" \
+    --dev_stream "exp_results/data_streams/mrqa.mixed.data_stream.test.json" \
     --base_model_path "out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt" \
     --upstream_data_prediction_file "bug_data/mrqa_naturalquestions_train.predictions.jsonl" \
     --cl_method_name "simple_ds_mine" \
