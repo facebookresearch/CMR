@@ -100,27 +100,31 @@ class ContinualFinetuning(OnlineDebuggingMethod):
 
         return train_bug_dataloader, eval_bug_dataloader
 
+ 
+    def reset_optimizer(self):
+        no_decay = ['bias', 'LayerNorm.weight']
+        self.optimizer_grouped_parameters = [
+            {'params': [p for n, p in self.base_model.named_parameters() if not any(
+                nd in n for nd in no_decay)], 'weight_decay': self.debugger_args.weight_decay},
+            {'params': [p for n, p in self.base_model.named_parameters() if any(
+                nd in n for nd in no_decay)], 'weight_decay': 0.0}
+        ]
+        self.optimizer = AdamW(self.optimizer_grouped_parameters,
+                               lr=self.debugger_args.learning_rate, eps=self.debugger_args.adam_epsilon)
+
+        # TODO: double check the decision about warm up for fine-tuning
+        self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
+                                                         num_warmup_steps=self.debugger_args.warmup_steps,
+                                                         num_training_steps=self.debugger_args.total_steps)
+        self.logger.info(f"optimizer & scheduler Setup ...... Done!")
+
     def debugger_setup(self, debugger_args):
         self.debugger_args = debugger_args
         self._check_debugger_args()
         self.logger.info(f"Debugger Setup ......")
         self.logger.info(f"debugger_args: {debugger_args} ......")
-
-        no_decay = ['bias', 'LayerNorm.weight']
-        self.optimizer_grouped_parameters = [
-            {'params': [p for n, p in self.base_model.named_parameters() if not any(
-                nd in n for nd in no_decay)], 'weight_decay': debugger_args.weight_decay},
-            {'params': [p for n, p in self.base_model.named_parameters() if any(
-                nd in n for nd in no_decay)], 'weight_decay': 0.0}
-        ]
-        self.optimizer = AdamW(self.optimizer_grouped_parameters,
-                               lr=debugger_args.learning_rate, eps=debugger_args.adam_epsilon)
-
-        # TODO: double check the decision about warm up for fine-tuning
-        self.scheduler = get_linear_schedule_with_warmup(self.optimizer,
-                                                         num_warmup_steps=debugger_args.warmup_steps,
-                                                         num_training_steps=debugger_args.total_steps)
-
+        self.reset_optimizer()
+        
         self.logger.info(f"Debugger Setup ...... Done!")
         return
 

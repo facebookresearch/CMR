@@ -25,7 +25,7 @@ def get_bart_dual_representation(cl_trainer, bart_model, tokenizer, data_args, e
     bart_model = bart_model if cl_trainer.n_gpu == 1 else bart_model.module
     bart_model.eval()
     all_hiddens = {"input_reps":[], "input_masks": [], "output_reps": [] , "output_masks": []}
-    for batch in tqdm(data_manager.dataloader):
+    for batch in tqdm(data_manager.dataloader, desc="Computing BART representation"):
         # self.logger.info(f"len(batch)={len(batch)}")
         if cl_trainer.use_cuda:
             # print(type(batch[0]), batch[0])

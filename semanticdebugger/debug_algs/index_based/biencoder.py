@@ -24,6 +24,7 @@ from semanticdebugger.debug_algs.index_based.index_utils import get_bart_dual_re
 from semanticdebugger.models.run_bart import train
 
 from semanticdebugger.models.utils import set_seeds
+from faiss import normalize_L2
 
 
 def load_distant_supervision(folder_name, sample_size=1, logger=None, specified_names=None, exclude_files=[], train_args=None):
@@ -80,7 +81,7 @@ def load_distant_supervision(folder_name, sample_size=1, logger=None, specified_
 
 
 class MLP(Module):
-    def __init__(self, input_dim, output_dim, hidden_dim, droprate=0.01):
+    def __init__(self, input_dim, output_dim, hidden_dim, droprate=0):
         super().__init__()
         if hidden_dim > 0:
             self.layers = torch.nn.Sequential(
@@ -104,8 +105,8 @@ class MLP(Module):
                 # nn.Sigmoid(),
                 # nn.Dropout(droprate),
                 # nn.Linear(hidden_dim, output_dim),
-                # nn.BatchNorm1d(input_dim),
-                nn.LayerNorm(input_dim),
+                nn.BatchNorm1d(input_dim),
+                # nn.LayerNorm(input_dim),
                 nn.Linear(input_dim, output_dim), 
             )
         self.init_weights()
@@ -126,7 +127,13 @@ class MLP(Module):
         return X
 
 
-def create_batch_from_groups(groups, qry_size=1, pos_size=1, neg_size=1, seen_query_ids=None, seen_memory_ids=None):
+def create_batch_from_groups(groups, qry_size=1, pos_size=1, neg_size=1, seen_query_ids=None, seen_memory_ids=None, query_mean=True):
+    if query_mean:
+        qry_sample_size = qry_size
+        qry_size = 1 # effective qry size
+    else:
+        qry_sample_size = qry_size
+
     queries, candidates, targets = [], [], []
     for group in groups:
         # TODO: this is overly recorded..
@@ -138,7 +145,12 @@ def create_batch_from_groups(groups, qry_size=1, pos_size=1, neg_size=1, seen_qu
         
         # queries.append(random.choice(list(group["query"].values())))
         
-        queries += random.choices(list(group["query"].values()), k=qry_size)
+        selected_queries = random.choices(list(group["query"].values()), k=qry_sample_size)
+        if query_mean:
+            selected_queries = np.array(selected_queries)
+            queries.append(np.mean(selected_queries, axis=0))
+        else:
+            queries += selected_queries
         target = len(candidates)
         candidates += random.choices(list(group["positive"].values()), k=pos_size)  # for training, it must be a single positive
         candidates += random.choices(list(group["negative"].values()), k=neg_size)
@@ -170,8 +182,8 @@ class BiEncoderIndexManager(BartIndexManager):
         self.train_args = None
 
         # cl
-        before_model = None 
-        after_model = None 
+        self.before_model = None 
+        self.after_model = None 
 
     def load_encoder_model(self, base_model_args, memory_encoder_path, query_encoder_path):
         super().load_encoder_model(base_model_args)
@@ -210,7 +222,7 @@ class BiEncoderIndexManager(BartIndexManager):
         self.logger.info(f"# params of memory_encoder = {count_parameters(self.memory_encoder)}")
 
         optimizer = torch.optim.Adam(trainable_params, lr=self.train_args.lr)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1000, gamma=0.1, last_epoch=-1)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1000, gamma=0.99, last_epoch=-1)
         gradient_acc_steps = 1
 
         if self.train_args.use_cuda:
@@ -224,8 +236,12 @@ class BiEncoderIndexManager(BartIndexManager):
             eval_data, k=eval_at_K, seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
         self.logger.info(f"Valid Acc @ 0: Top-{eval_at_K} acc: {best_eval_acc}")
 
+        if self.train_args.wandb: 
+            wandb.log({"valid_accuracy": best_eval_acc}, step=0)
+            wandb.log({"best_valid_acc": best_eval_acc}, step=0)
 
         losses = []
+        no_up = 0
         for _step in tqdm(range(self.train_args.n_steps), desc="Training steps"):
             self.memory_encoder.train()
             self.query_encoder.train()
@@ -237,7 +253,8 @@ class BiEncoderIndexManager(BartIndexManager):
                 qry_size=self.train_args.qry_size,
                 pos_size=self.train_args.pos_size, 
                 neg_size=self.train_args.neg_size, 
-                seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
+                seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids,
+                query_mean=self.train_args.use_query_mean)
             optimizer.zero_grad()
 
 
@@ -273,6 +290,7 @@ class BiEncoderIndexManager(BartIndexManager):
             losses.append(loss.item())
             loss.backward()
             if self.train_args.wandb:
+                wandb.log({"lr": float(optimizer.param_groups[0]['lr'])}, step=_step)
                 wandb.log({"loss": float(loss)}, step=_step)
                 wandb.log({"avg_loss": float(sum(losses)/len(losses))}, step=_step)    
 
@@ -286,23 +304,32 @@ class BiEncoderIndexManager(BartIndexManager):
             if _step > 0 and _step % self.train_args.eval_per_steps == 0:
                 self.logger.info(f"---- Completed epoch with avg training loss {sum(losses)/len(losses)}.")
                 train_acc = self.eval_func_v1(train_data[:], k=eval_at_K)
-                valid_acc = self.eval_func_v1(eval_data, k=eval_at_K, seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
-
-                if self.train_args.wandb:
-                    wandb.log({"train_accuracy": train_acc}, step=_step)
-                    wandb.log({"valid_accuracy": valid_acc}, step=_step)
-                
-                best_eval_acc = max(best_eval_acc, valid_acc)
-
 
                 self.logger.info(
                     f"Train Acc: Top-{eval_at_K} acc @ {_step}: {train_acc} | ")
+
+                valid_acc = self.eval_func_v1(eval_data, k=eval_at_K, seen_query_ids=seen_query_ids, seen_memory_ids=seen_memory_ids)
+
+                best_eval_acc = max(best_eval_acc, valid_acc)
+                
+                if self.train_args.wandb:
+                    wandb.log({"train_accuracy": train_acc}, step=_step)
+                    wandb.log({"valid_accuracy": valid_acc}, step=_step)
+                    wandb.log({"best_valid_acc": best_eval_acc}, step=_step)
                 self.logger.info(
                     f"Valid ACc: Top-{eval_at_K} acc @ {_step}: {valid_acc} | best_eval_acc={best_eval_acc}")
                 
+
+
                 if best_eval_acc == valid_acc:
                     self.logger.info("new record; saving the biencoder ckpts.")
-                    self.save_biencoder()
+                    no_up = 0
+                elif best_eval_acc > valid_acc:
+                    no_up += 1
+                    if no_up >= self.train_args.patience:
+                        break
+                    if self.train_args.save_ckpt:
+                        self.save_biencoder()
 
 
 
@@ -395,7 +422,7 @@ class BiEncoderIndexManager(BartIndexManager):
                 m_inputs = m_inputs.to(torch.device("cuda"))
 
             q = self.query_encoder(q_inputs).detach().cpu().numpy()
-            m = self.memory_encoder(m_inputs).detach().cpu().numpy()
+            m = self.memory_encoder(m_inputs).detach().cpu().numpy() 
             memory_index = faiss.IndexFlatL2(m.shape[1])
             memory_index.add(m)
             Ds, Is = memory_index.search(q, k)
@@ -454,21 +481,21 @@ class BiEncoderIndexManager(BartIndexManager):
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ds_dir_path",
-                        default="exp_results/supervision_data/1019_same_mean_dm_simple/")
-    parser.add_argument("--num_ds_train_file", type=int, default=10)
-    parser.add_argument("--num_ds_dev_file", type=int, default=3)
+                        default="exp_results/supervision_data/1020_dm_simple/")
+    parser.add_argument("--num_ds_train_file", type=int, default=24)
+    parser.add_argument("--num_ds_dev_file", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
 
     parser.add_argument("--run_mode", type=str, default="train")    # TODO:
 
     parser.add_argument("--query_encoder_path", type=str,
-                        default="exp_results/supervision_data/1019_same_mean_dm_simple.qry_encoder.pt")
+                        default="exp_results/supervision_data/$prefix.qry_encoder.pt")
     parser.add_argument("--memory_encoder_path", type=str,
-                        default="exp_results/supervision_data/1019_same_mean_dm_simple.mem_encoder.pt")
+                        default="exp_results/supervision_data/$prefix.mem_encoder.pt")
     parser.add_argument("--memory_index_path", type=str,
-                        default="exp_results/supervision_data/1019_same_mean_dm_simple.memory.index")
+                        default="exp_results/supervision_data/$prefix.memory.index")
     parser.add_argument("--train_args_path", type=str,
-                        default="exp_results/supervision_data/1019_same_mean_dm_simple.train_args.json")
+                        default="exp_results/supervision_data/$prefix.train_args.json")
 
     # train_args
 
@@ -478,15 +505,19 @@ def get_parser():
     parser.add_argument("--dim_vector", type=int, default=128)
 
     parser.add_argument("--lr", type=float, default=1e-3)
-    parser.add_argument("--n_steps", type=int, default=3000)
+    parser.add_argument("--n_steps", type=int, default=8000)
     parser.add_argument("--eval_per_steps", type=int, default=100)
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--qry_size", type=int, default=16)  # 1-16
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--qry_size", type=int, default=8)  # 1-16
     parser.add_argument("--pos_size", type=int, default=16)  # 1-8
     parser.add_argument("--neg_size", type=int, default=1)  # 1-8
+    parser.add_argument("--patience", type=int, default=8)  
     parser.add_argument("--droprate", type=float, default=0)
 
-    parser.add_argument('--use_cuda', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    parser.add_argument('--use_query_mean', default=True, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    parser.add_argument('--run_name', default="1020_dm_simple", type=str)
+    parser.add_argument('--save_ckpt', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    parser.add_argument('--use_cuda', default=True, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     parser.add_argument('--wandb', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     parser.add_argument('--query_only_after', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     parser.add_argument('--query_only_before', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
@@ -499,23 +530,33 @@ def get_parser():
 if __name__ == '__main__':
 
     biencoder_args = get_parser().parse_args()
-    json.dump(vars(biencoder_args), open(biencoder_args.train_args_path, "w"))
-
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S',
                         level=logging.INFO)
     logger = logging.getLogger(__name__)
 
+    
+
+    if biencoder_args.wandb and biencoder_args.run_mode == "train":
+        run = wandb.init(reinit=True, project="FAIR_Biencoder", settings=wandb.Settings(start_method="fork"))
+        run_name = wandb.run.name
+        biencoder_args.run_name = run_name
+        
+        logger.info(f"run_name = {run_name}")
+
+    biencoder_args.query_encoder_path = biencoder_args.query_encoder_path.replace("$prefix", biencoder_args.run_name)
+    biencoder_args.memory_encoder_path = biencoder_args.memory_encoder_path.replace("$prefix", biencoder_args.run_name)
+    biencoder_args.memory_index_path = biencoder_args.memory_index_path.replace("$prefix", biencoder_args.run_name)
+    biencoder_args.train_args_path = biencoder_args.train_args_path.replace("$prefix", biencoder_args.run_name)
+
+
     set_seeds(biencoder_args.seed)
 
     if biencoder_args.run_mode == "train":
+        with open(biencoder_args.train_args_path, "w") as f:
+            json.dump(vars(biencoder_args), f)
         if biencoder_args.wandb:
-            run = wandb.init(reinit=True, project="FAIR_Biencoder")
-            run_name = wandb.run.name
             wandb.config.update(biencoder_args)
-            logger.info(f"run_name = {run_name}")
-            
-
         if biencoder_args.query_only_after or biencoder_args.query_only_before:
             #  or biencoder_args.query_delta
             biencoder_args.query_input_dim = biencoder_args.query_input_dim // 2
@@ -532,11 +573,23 @@ if __name__ == '__main__':
         biencoder_memory_module.train_args = biencoder_args
         biencoder_memory_module.init_biencoder_modules()
         biencoder_memory_module.train_biencoder(train_data, eval_data)
-        biencoder_memory_module.save_biencoder(
-            biencoder_args.query_encoder_path, biencoder_args.memory_encoder_path)
+        if biencoder_args.save_ckpt:
+            biencoder_memory_module.save_biencoder(
+                biencoder_args.query_encoder_path, biencoder_args.memory_encoder_path)
         run.finish()
 
     elif biencoder_args.run_mode == "index": 
+        # json.dump(vars(biencoder_args), open(biencoder_args.train_args_path, "w"))
+        with open(biencoder_args.train_args_path, "r") as f:
+            backup_args = json.load(f)
+        biencoder_args.hidden_dim = backup_args["hidden_dim"]
+        biencoder_args.query_input_dim = backup_args["query_input_dim"]
+        biencoder_args.memory_input_dim = backup_args["memory_input_dim"]
+        biencoder_args.hidden_dim = backup_args["hidden_dim"]
+        biencoder_args.dim_vector = backup_args["dim_vector"]
+        biencoder_args.use_query_mean = backup_args["use_query_mean"]
+        
+
         from semanticdebugger.debug_algs import run_lifelong_finetune
         parser = run_lifelong_finetune.get_cli_parser()
         cl_args = parser.parse_args("")
@@ -553,8 +606,8 @@ if __name__ == '__main__':
 
             
 
-        index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"   # TODO: all examples?
+        index_manager.initial_memory_path = "data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl"
         index_manager.set_up_initial_memory(index_manager.initial_memory_path)
-        index_manager.save_memory_to_path("exp_results/data_streams/1019_same_mean_biencoder_init_memory.pkl")
+        index_manager.save_memory_to_path("exp_results/data_streams/1021_biencoder_init_memory.pkl")
 
 

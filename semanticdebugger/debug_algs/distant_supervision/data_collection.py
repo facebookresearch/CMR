@@ -85,6 +85,7 @@ class MiningSupervision(ContinualFinetuning):
 
         if self.all_args.long_term_delta:
             # Optional: using the delta versus the init model
+            self.logger.info("Using initial model as the before model for computing query vecs.")
             before_model = self.init_model
         
         supervision = {}
@@ -155,7 +156,7 @@ class MiningSupervision(ContinualFinetuning):
 
             updated_model = self.base_model
 
-            sampled_examples = memory_manager.retrieve_from_memory(sample_size=all_args.mir_buffer_size) # TODO: set an arg.
+            sampled_examples = memory_manager.retrieve_from_memory(sample_size=all_args.mir_buffer_size)
             MIR_scores = self.compute_MIR_scores(model_copy, updated_model, sampled_examples)
 
             self.timecode += 1
@@ -168,12 +169,13 @@ class MiningSupervision(ContinualFinetuning):
 
             # update with the sampled examples 
             self.base_model = model_copy
+            self.reset_optimizer()
             mixed_data = episode_data + top_examples
             mixed_bug_train_loader, _ = self.get_dataloader(
                 self.data_args, mixed_data, mode="train")
             self.fix_bugs(mixed_bug_train_loader)   # for debugging
             
-            del model_copy
+            # del model_copy
 
         return mined_supervision
 
@@ -230,7 +232,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--save_all_hiddens', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
 
-    parser.add_argument('--debug_mode', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+    parser.add_argument('--debug_mode', default=True, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
     
     args = parser.parse_args()
 

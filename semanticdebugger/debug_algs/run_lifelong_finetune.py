@@ -133,6 +133,7 @@ def setup_args(args):
             setattr(debugger_args, "init_memory_cache_path", args.init_memory_cache_path)
             setattr(debugger_args, "memory_key_encoder", args.memory_key_encoder)
             setattr(debugger_args, "memory_store_rate", args.memory_store_rate)
+            setattr(debugger_args, "upstream_sample_ratio", args.upstream_sample_ratio) 
             setattr(debugger_args, "num_adapt_epochs", args.num_adapt_epochs)
             setattr(debugger_args, "inference_query_size", args.inference_query_size)
             setattr(debugger_args, "local_adapt_lr", args.local_adapt_lr)
@@ -294,6 +295,7 @@ def get_cli_parser():
     parser.add_argument('--memory_key_encoder', type=str, default="facebook/bart-base")
     parser.add_argument('--memory_path', type=str, default="")    
     parser.add_argument('--init_memory_cache_path', type=str, default="bug_data/memory_key_cache.pkl")
+    parser.add_argument('--upstream_sample_ratio', type=float, default=-1)   #  
     parser.add_argument('--memory_store_rate', type=float, default=1.0)   # 1= always store all examples to the memory. 
     parser.add_argument('--num_adapt_epochs', type=int, default=1) #
     parser.add_argument('--inference_query_size', type=int, default=1) #

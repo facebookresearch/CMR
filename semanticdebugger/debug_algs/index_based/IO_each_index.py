@@ -69,17 +69,9 @@ class BartIOIndexManager(BartIndexManager):
         input_vectors = self.get_query_representation(query_examples)
         agg_method = kwargs.get("agg_method", "each_topk_then_random")
         rank_method = kwargs.get("rank_method", "most_similar")
-        if agg_method == "mean":
-            # input_vectors = np.array(input_vectors)
-            # query_vector = np.mean(input_vectors, axis=0)
-            # if rank_method == "most_different":
-            #     # query_vector = -query_vector
-            #     pass
-            # retrieved_example_ids = self.search_index(query_vector, sample_size)
-            pass
-        elif agg_method == "each_topk_then_random":
+        if agg_method == "each_topk_then_random":
             each_sample_size = kwargs.get("each_sample_size", 5)
-            each_sim_sample_size = kwargs.get("each_sample_size", 30)
+            each_sim_sample_size = kwargs.get("each_sim_sample_size", 30)
             retrieved_example_ids = []
             for query_vector in input_vectors: 
                 sim_input_index_ids = self.search_index(query_vector, each_sim_sample_size, partition="input", return_index_ids=True)
@@ -88,6 +80,7 @@ class BartIOIndexManager(BartIndexManager):
                 distances = [distance.cosine(query_output_vector, s) for s in sim_output_vectors]
                 retrieved_ids = [int(x) for _, x in sorted(zip(distances, sim_input_index_ids), reverse=True)]
                 retrieved_example_ids += [self.memory_index_sorted_ids[int(eid)] for eid in retrieved_ids][:each_sample_size]
+        self.logger.info(f"IO index -- retrieved_example_ids={len(retrieved_example_ids)}")
         retrieved_examples = self.get_examples_by_ids(retrieved_example_ids)
         retrieved_examples = random.sample(retrieved_examples, sample_size) # TODO: consider ranking 
         return retrieved_examples
@@ -103,10 +96,12 @@ if __name__ == '__main__':
     index_manager = BartIOIndexManager(logger=logger)
     index_manager.set_up_data_args(args)
     index_manager.load_encoder_model(base_model_args)
-    index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
-    # index_manager.initial_memory_path = "data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl"
+    # index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
+    # index_manager.set_up_initial_memory(index_manager.initial_memory_path, cut_off=None)
+    # index_manager.save_memory_to_path("exp_results/data_streams/bart_io_index.sample_init_memory.pkl")
+    
+    index_manager.initial_memory_path = "data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl"
     index_manager.set_up_initial_memory(index_manager.initial_memory_path, cut_off=None)
-
     index_manager.save_memory_to_path("exp_results/data_streams/bart_io_index.init_memory.pkl")
 
     # item = [0,0,0]

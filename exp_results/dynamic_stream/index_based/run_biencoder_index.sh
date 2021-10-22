@@ -11,13 +11,14 @@ replay_freq=$3
 rank_method=$4
 use_mir=$5
 mir_cand_size=$6
-seed=$7
+upstream_ratio=$7
+seed=$8
 gpu=0 
 # declare -a seeds=("42" "0212" "1213")
 # for seed in "${seeds[@]}"
 # do
 memory_store_rate=1.0
-prefix="1014v4_MixedAllErrors_T=${max_timecode}_biencoder_M=U+I_rs=${replay_size}_rq=${replay_freq}_rank=${rank_method}_mir=${use_mir}(${mir_cand_size})_seed=${seed}"
+prefix="1021v4_MixedAllErrors_T=${max_timecode}_biencoder_UR=${upstream_ratio}_rs=${replay_size}_rq=${replay_freq}_rank=${rank_method}_mir=${use_mir}(${mir_cand_size})_seed=${seed}"
 log_file=exp_results/dynamic_stream/index_based/logs/run_${prefix}.log
 mkdir exp_results/dynamic_stream/index_based/ckpt_dir/${prefix}_ckpts/
 tmp_script_copy=exp_results/dynamic_stream/index_based/logs/${prefix}.run_mir.sh
@@ -35,7 +36,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --max_timecode ${max_timecode} \
     --cl_method_name "index_cl" \
     --indexing_method "biencoder" \
-    --indexing_args_path "exp_results/supervision_data/1014v4_same_mean_dm_simple.train_args.json" \
+    --indexing_args_path "exp_results/supervision_data/1020_dm_simple.train_args.json" \
     --use_mir ${use_mir} \
     --replay_candidate_size ${mir_cand_size} \
     --mir_abalation_args "none" \
@@ -49,16 +50,17 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --prefix ${prefix} \
     --stream_mode dynamic \
     --use_sampled_upstream \
+    --upstream_sample_ratio ${upstream_ratio} \
     --sampled_upstream_json_path exp_results/data_streams/mrqa.nq_train.memory.jsonl \
     --data_stream_json_path exp_results/data_streams/mrqa.mixed.data_stream.test.json \
     --pass_pool_jsonl_path exp_results/data_streams/mrqa.mixed.upstream_eval.jsonl \
     --replay_stream_json_path "" \
     --save_all_ckpts 0 \
-    --init_memory_cache_path "exp_results/data_streams/1014v4_same_mean_biencoder_init_memory.pkl" \
+    --init_memory_cache_path "exp_results/data_streams/1021_biencoder_init_memory.pkl" \
     --memory_path "exp_results/dynamic_stream/index_based/ckpt_dir/${prefix}_ckpts/memory_dict.pkl" \
     --overtime_ckpt_dir exp_results/dynamic_stream/index_based/ckpt_dir/${prefix}_ckpts/ \
     --skip_instant_eval True \
-    --result_file exp_results/dynamic_stream/index_based/results/${prefix}_result.json > ${log_file} 
+    --result_file exp_results/dynamic_stream/index_based/results/${prefix}_result.json > ${log_file}  2>&1
     # 2>&1
     #  2>&1 &
 # gpu=$((gpu+1))
