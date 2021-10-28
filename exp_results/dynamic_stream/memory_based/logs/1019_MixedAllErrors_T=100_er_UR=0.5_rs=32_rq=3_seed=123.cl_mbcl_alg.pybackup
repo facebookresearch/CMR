@@ -50,16 +50,15 @@ class MemoryBasedCL(ContinualFinetuning):
             self.upstream_memroy_module = RandomMemoryManger(self.logger) 
             self.memroy_module = RandomMemoryManger(self.logger) 
             self.logger.info("Prepare the sampled upstream data as the initial memory for the ER and MIR;")
-            if self.debugger_args.upstream_sample_ratio > 0:
-                # upstream possible 
-                self.upstream_memroy_module.set_up_initial_memory(formatted_examples=self.sampled_upstream_examples)
-            elif self.debugger_args.upstream_sample_ratio == 0:
-                # online only 
-                pass
-            else:
+            
+            # upstream possible 
+            self.upstream_memroy_module.set_up_initial_memory(formatted_examples=self.sampled_upstream_examples)
+             
+            if self.debugger_args.upstream_sample_ratio < 0: 
                 # mix 
-                self.memroy_module.set_up_initial_memory(formatted_examples=self.sampled_upstream_examples)
-            self.logger.info(f"Initial memory size: {self.memroy_module.get_memory_size()}")
+                self.memroy_module = self.upstream_memroy_module
+            self.logger.info(f"Initial memroy_module size: {self.memroy_module.get_memory_size()}")
+            self.logger.info(f"Initial upstream_memroy_module size: {self.upstream_memroy_module.get_memory_size()}")
         elif self.name in ["mbpa", "mbpa++"]:
             # TODO: prepare the Memory module for it
             pass 
@@ -98,35 +97,45 @@ class MemoryBasedCL(ContinualFinetuning):
                     and self.timecode > 0:
                 # sparse experience replay
                 self.logger.info("Triggering Sampling from Memory and starting to replay.")
-                self.logger.info(f"Current memory size: {self.memroy_module.get_memory_size()}.")
+                self.logger.info(f"Current memroy_module size: {self.memroy_module.get_memory_size()}.")
+                self.logger.info(f"Current upstream_memroy_module size: {self.upstream_memroy_module.get_memory_size()}.")
                 if self.name == "mir":
-                    def mir_retrieve(memory_module, sample_size):
+                    def mir_retrieve(mm, sample_size):
                         assert self.debugger_args.replay_candidate_size >= self.debugger_args.replay_size
-                        retrieved_examples_candidates = memory_module.retrieve_from_memory(
-                            sample_size=self.debugger_args.replay_candidate_size)
-                        result_dict["mir_buffer_ids"] = [_id for (_input, _truth, _id) in retrieved_examples_candidates]
+                        retrieved_examples_candidates = mm.retrieve_from_memory(
+                            sample_size=min(self.debugger_args.replay_candidate_size, mm.get_memory_size()))
+                        if "mir_buffer_ids" not in result_dict:
+                            result_dict["mir_buffer_ids"] = []    
+                        result_dict["mir_buffer_ids"] += [_id for (_input, _truth, _id) in retrieved_examples_candidates]
                         retrieved_examples = get_top_interfered_examples(self,
                             K=sample_size, candidate_examples=retrieved_examples_candidates, query_data_loader=bug_train_loader)
                         return retrieved_examples
                         # self.logger.info(f"retrieved_examples (mir)={retrieved_examples}") 
                     if self.debugger_args.upstream_sample_ratio > 0:
                         upstream_sample_budget = int(self.debugger_args.upstream_sample_ratio * self.debugger_args.replay_size)
-                        upstream_retrieved_examples = mir_retrieve(memory_module=self.upstream_memroy_module,
-                            sample_size=upstream_sample_budget)
-                        online_retrieved_examples = mir_retrieve(memory_module=self.memroy_module,
-                            sample_size=self.debugger_args.replay_size-upstream_sample_budget)
-                        retrieved_examples = upstream_retrieved_examples + online_retrieved_examples
+                        self.logger.info(f"Memory from upstream_memroy_module = {upstream_sample_budget}; ")
+                        self.logger.info(f"Memory from memroy_module = {self.debugger_args.replay_size-upstream_sample_budget}; ")
+                        retrieved_examples = []
+                        if upstream_sample_budget > 0:
+                            retrieved_examples += mir_retrieve(mm=self.upstream_memroy_module,
+                                sample_size=upstream_sample_budget)
+                        retrieved_examples += mir_retrieve(mm=self.memroy_module,
+                            sample_size=self.debugger_args.replay_size-upstream_sample_budget) 
                     else:
-                        retrieved_examples = mir_retrieve(memory_module=self.memroy_module,
+                        retrieved_examples = mir_retrieve(mm=self.memroy_module,
                             sample_size=self.debugger_args.replay_size)
                 else:
                     if self.debugger_args.upstream_sample_ratio > 0:
                         upstream_sample_budget = int(self.debugger_args.upstream_sample_ratio * self.debugger_args.replay_size)
-                        upstream_retrieved_examples = self.upstream_memroy_module.retrieve_from_memory(
-                            sample_size=upstream_sample_budget)
-                        online_retrieved_examples = self.memroy_module.retrieve_from_memory(
-                            sample_size=self.debugger_args.replay_size-upstream_sample_budget)
-                        retrieved_examples = upstream_retrieved_examples + online_retrieved_examples
+                        self.logger.info(f"Memory from upstream_memroy_module = {upstream_sample_budget}; ")
+                        self.logger.info(f"Memory from memroy_module = {self.debugger_args.replay_size-upstream_sample_budget}; ")
+                        
+                        retrieved_examples = []
+                        if upstream_sample_budget > 0:
+                            retrieved_examples += self.upstream_memroy_module.retrieve_from_memory(
+                                sample_size=upstream_sample_budget)
+                        retrieved_examples += self.memroy_module.retrieve_from_memory(
+                            sample_size=self.debugger_args.replay_size-upstream_sample_budget) 
                     else:
                         retrieved_examples = self.memroy_module.retrieve_from_memory(
                             sample_size=self.debugger_args.replay_size)
@@ -163,8 +172,9 @@ class MemoryBasedCL(ContinualFinetuning):
 
             # Store to memory
             _max = 1000000
-            flag_store_examples = bool(random.randrange(0, _max)/_max >=
-                                       1 - self.debugger_args.memory_store_rate)
+            # flag_store_examples = bool(random.randrange(0, _max)/_max >=
+            #                            1 - self.debugger_args.memory_store_rate)
+            flag_store_examples = True
             if flag_store_examples:
                 self.logger.info(f"Saving the current error examples (len={len(formatted_bug_examples)}) to the memory.")
                 self.logger.info(f"Current memory size: {self.memroy_module.get_memory_size()}.")

@@ -214,6 +214,7 @@ show_result_stat("exp_results/dynamic_stream/memory_based/results/1014_MixedAllE
 
 show_result_stat("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json","MIR-C256-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])  #  "1213",
 
+
 show_result_stat("exp_results/dynamic_stream/index_based/results/1014v4_MixedAllErrors_T=100_biencoder_M=U+I_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BIENCODER-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])  #  "1213",
 
 
@@ -231,10 +232,29 @@ show_result_stat("exp_results/dynamic_stream/index_based/results/1019v2_MixedAll
 show_result_stat("exp_results/dynamic_stream/index_based/results/1019v3_MixedAllErrors_T=100_IOindex_M=U+I_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BartIOIndex-v3-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])  #  "1213",
 show_result_stat("exp_results/dynamic_stream/index_based/results/1019v4_MixedAllErrors_T=100_IOindex_M=U+I_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BartIOIndex-v4-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])  #  "1213",
 
+print("*"*50)
 
 show_result_stat("exp_results/dynamic_stream/memory_based/results/1019_MixedAllErrors_T=100_er_UR=0.5_rs=32_rq=3_seed=$seed_result.json","ER-T100-F3 (UR=0.5)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])
-show_result_stat("exp_results/dynamic_stream/memory_based/results/1019_MixedAllErrors_T=100_mir_UR=0.5_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json","MIR-T100-F3 (UR=0.5)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1019_MixedAllErrors_T=100_mir_UR=0.5_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json","MIR-T100-F3 (UR=0.5; C256)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])
 
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1021_MixedAllErrors_T=100_mir_UR=0.5_rs=32_rq=3_candidate=512_mode=none_seed=$seed_result.json","MIR-T100-F3 (UR=0.5; C512)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"])
+
+print("*"*50)
+
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1022_MixedAllErrors_T=100_mir_UR=-1_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json","MIR-T100-F3 (UR=-1; C256)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1022_MixedAllErrors_T=100_mir_UR=0.2_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json","MIR-T100-F3 (UR=0.2; C256)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1022_MixedAllErrors_T=100_mir_UR=0.5_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json","MIR-T100-F3 (UR=0.5; C256)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1022_MixedAllErrors_T=100_mir_UR=0.8_rs=32_rq=3_candidate=256_mode=none_seed=$seed_result.json","MIR-T100-F3 (UR=0.8; C256)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"]) 
+
+
+# show_result_stat("exp_results/dynamic_stream/memory_based/results/1019_MixedAllErrors_T=100_er_UR=-1_rs=32_rq=3_seed=$seed_result.json","ER-T100-F3 (UR=-1)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1019_MixedAllErrors_T=100_er_UR=0.2_rs=32_rq=3_seed=$seed_result.json","ER-T100-F3 (UR=0.2)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1019_MixedAllErrors_T=100_er_UR=0.5_rs=32_rq=3_seed=$seed_result.json","ER-T100-F3 (UR=0.5)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"]) 
+show_result_stat("exp_results/dynamic_stream/memory_based/results/1019_MixedAllErrors_T=100_er_UR=0.8_rs=32_rq=3_seed=$seed_result.json","ER-T100-F3 (UR=0.8)", random_seeds=["42", "0212", "2021", "123", "456", "567", "789"]) 
+
+print("*"*50)
+
+exit()
 # show_result_stat("exp_results/dynamic_stream/index_based/results/1020_MixedAllErrors_T=100_IOindex_UR=0.5_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BartIOIndex-UR(0.5)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])  #  "1213",
 # show_result_stat("exp_results/dynamic_stream/index_based/results/1020v2_MixedAllErrors_T=100_IOindex_UR=0.5_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BartIOIndex_v2-UR(0.5)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])  #  "1213",
 # show_result_stat("exp_results/dynamic_stream/index_based/results/1020_MixedAllErrors_T=100_biencoder_UR=0.5_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BiIndex-UR(0.5)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])  #  "1213",
@@ -243,13 +263,17 @@ show_result_stat("exp_results/dynamic_stream/memory_based/results/1019_MixedAllE
 # show_result_stat("exp_results/dynamic_stream/index_based/results/1021v2_MixedAllErrors_T=100_biencoder_UR=0.5_rs=32_rq=3_rank=most_similar_mir=yes(256)_seed=$seed_result.json","BiIndex_v3-UR(0.5)-MIR-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])  #  "1213", 
 # show_result_stat("exp_results/dynamic_stream/index_based/results/1021v2_MixedAllErrors_T=100_IOindex_UR=0.5_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BartIOIndex-UR(0.5)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])  #  "1213",
 show_result_stat("exp_results/dynamic_stream/index_based/results/1021v3_MixedAllErrors_T=100_IOindex_UR=-1_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BartIOIndex-UR(-1)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])
+ 
 
-show_result_stat("/private/home/yuchenlin/tmp/1021v3_MixedAllErrors_T=100_IOindex_UR=-1_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","Old-BartIOIndex-UR(-1)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"]) # sim sample = 30
+# show_result_stat("/private/home/yuchenlin/tmp/1021v3_MixedAllErrors_T=100_IOindex_UR=-1_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","Old-BartIOIndex-UR(-1)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"]) # sim sample = 30
 
 
-show_result_stat("exp_results/dynamic_stream/index_based/results/1021v3_MixedAllErrors_T=100_IOindex_UR=-1_rs=32_rq=3_rank=most_similar_mir=yes(256)_seed=$seed_result.json","BartIOIndex-UR(-1)-MIR256-T100-F3", random_seeds=["42", "2021", "123", "456", "567",  "1213","789"])  # "0212", 
+# show_result_stat("exp_results/dynamic_stream/index_based/results/1021v3_MixedAllErrors_T=100_IOindex_UR=-1_rs=32_rq=3_rank=most_similar_mir=yes(256)_seed=$seed_result.json","BartIOIndex-UR(-1)-MIR256-T100-F3", random_seeds=["42", "2021", "123", "456", "567",  "1213","789"])  # "0212", 
 
-show_result_stat("exp_results/dynamic_stream/index_based/results/1021v3_MixedAllErrors_T=100_IOindex_UR=0.5_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BartIOIndex-UR(0.5)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])
+# show_result_stat("exp_results/dynamic_stream/index_based/results/1021v3_MixedAllErrors_T=100_IOindex_UR=0.5_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json","BartIOIndex-UR(0.5)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])
+
+
+show_result_stat("exp_results/dynamic_stream/index_based/results/1021v5_MixedAllErrors_T=100_IOindex_UR=0.5_rs=32_rq=3_rank=most_similar_mir=no(0)_esss=30_seed=$seed_result.json","BartIOIndex-UR(0.5)-esss=50-T100-F3", random_seeds=["42", "2021", "123", "456", "567", "0212", "1213","789"])  # "0212", 
 
 # show_result_stat("exp_results/dynamic_stream/index_based/results/1021v3_MixedAllErrors_T=100_IOindex_UR=-1_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=0212_result.json","BartIOIndex-UR(-1)-T100-F3", random_seeds=["42", "0212", "2021", "123", "456", "567",  "1213","789"])
 
@@ -260,3 +284,13 @@ show_result_stat("exp_results/dynamic_stream/index_based/results/1021v3_MixedAll
 
 # show_memory_ratio("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=100_er_M=U+I_rs=32_rq=3_seed=42_result.json", "ER-T100-F3",)
 # show_memory_ratio("exp_results/dynamic_stream/memory_based/results/1014_MixedAllErrors_T=100_mir_M=U+I_rs=32_rq=3_candidate=256_mode=none_seed=42_result.json", "MIR-C256-T100-F3",)
+
+show_result_stat("exp_results/dynamic_stream/index_based/results/1022_MixedAllErrors_T=100_index_UR=-1_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json", "BartIndex(-1)", random_seeds=["42", "2021", "123", "456", "567", "0212", "1213","789"])
+
+show_result_stat("exp_results/dynamic_stream/index_based/results/1022_MixedAllErrors_T=100_index_UR=0.5_rs=32_rq=3_rank=most_similar_mir=no(0)_seed=$seed_result.json", "BartIndex(0.5)", random_seeds=["42", "2021", "123", "456", "567", "0212", "1213","789"])
+
+show_result_stat("exp_results/dynamic_stream/index_based/results/1022_MixedAllErrors_T=100_index_UR=0.5_rs=32_rq=3_rank=most_similar_mir=yes(256)_seed=$seed_result.json", "BartIndex-MIR(0.5)", random_seeds=["42", "2021", "123", "456", "567", "0212", "1213","789"])
+
+show_result_stat("exp_results/dynamic_stream/index_based/results/1022_MixedAllErrors_T=100_index_UR=-1_rs=32_rq=3_rank=most_similar_mir=yes(256)_seed=$seed_result.json", "BartIndex-MIR(-1)", random_seeds=["42", "2021", "123", "456", "567", "0212", "1213","789"])
+
+

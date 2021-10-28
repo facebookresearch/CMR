@@ -139,6 +139,7 @@ class BartIndexManager(BaseMemoryManager):
         #     self.memory_examples[ex_id]["memory_index_id"] = len(self.memory_index_sorted_ids)
         #     self.memory_index_sorted_ids.append(ex_id)
         vectors = np.array(vectors)
+        faiss.normalize_L2(vectors)
         self.memory_index.add(vectors)
 
     def set_up_model(self, model, tokenizer):
@@ -169,36 +170,34 @@ class BartIndexManager(BaseMemoryManager):
             self.logger.info(f"Saved the cache to {f.name}")
 
     def search_index(self, query_vector, k=5):
-        D, I = self.memory_index.search(np.array([query_vector]), k)
+        q = np.array([query_vector])
+        faiss.normalize_L2(q)
+        D, I = self.memory_index.search(q, k)
         retrieved_example_ids = [self.memory_index_sorted_ids[int(eid)] for eid in I[0]]
-        return retrieved_example_ids
+        scores = [float(s) for s in D[0]]
+        return retrieved_example_ids, scores
 
     def get_query_representation(self, query_examples):
         return self.get_representation(query_examples)
 
     def retrieve_from_memory(self, query_examples, sample_size, **kwargs):
         input_vectors = self.get_query_representation(query_examples)
-        agg_method = kwargs.get("agg_method", "mean")
-        rank_method = kwargs.get("rank_method", "most_similar")
-        if agg_method == "mean":
-            input_vectors = np.array(input_vectors)
-            query_vector = np.mean(input_vectors, axis=0)
-            if rank_method == "most_different":
-                query_vector = -query_vector
-            retrieved_example_ids = self.search_index(query_vector, sample_size)
-        elif agg_method == "each_topk_then_random":
+        agg_method = kwargs.get("agg_method", "each_topk_then_random")
+        rank_method = kwargs.get("rank_method", "most_similar") 
+        if agg_method == "each_topk_then_random":
             each_sample_size = kwargs.get("each_sample_size", 5)
             retrieved_example_ids = []
-            for query_vector in input_vectors:
-                if rank_method == "most_different":
-                    query_vector = np.append(query_vector[:self.dim_vector//2], query_vector[self.dim_vector//2:])
-                retrieved_example_ids += self.search_index(query_vector, each_sample_size)
+            retrieved_scores = []
+            for query_vector in input_vectors: 
+                ids, scores = self.search_index(query_vector, each_sample_size)
+                retrieved_example_ids += ids
+                retrieved_scores += scores
             # retrieved_example_ids = set(retrieved_example_ids) # TODO: decide later.
-            # retrieved_example_ids = random.sample(retrieved_example_ids, sample_size)
-            # TODO: random sample and then rank by scores
-        retrieved_examples = self.get_examples_by_ids(retrieved_example_ids)
-        retrieved_examples = random.sample(retrieved_examples, sample_size) # TODO: consider ranking 
-        return retrieved_examples
+            # retrieved_example_ids = random.sample(retrieved_example_ids, sample_size) 
+        sorted_retrieved_example_ids = [x for _, x in sorted(zip(retrieved_scores, retrieved_example_ids), reverse=False)]
+        retrieved_examples = self.get_examples_by_ids(sorted_retrieved_example_ids)
+        self.logger.info(f"index_manager.retrieve_from_memory --> len(retrieved_examples)={len(retrieved_examples)}")
+        return retrieved_examples[:sample_size]
 
     def store_examples(self, examples):
         example_ids = []
@@ -235,24 +234,24 @@ if __name__ == '__main__':
     index_manager.load_encoder_model(base_model_args)
     # index_manager.initial_memory_path = "exp_results/data_streams/mrqa.nq_train.memory.jsonl"
     index_manager.initial_memory_path = "data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl"
-    index_manager.set_up_initial_memory(index_manager.initial_memory_path, cut_off=1000)
-
-    # index_manager.save_memory_to_path("exp_results/data_streams/bart_index.init_memory.pkl")
+    index_manager.set_up_initial_memory(index_manager.initial_memory_path, cut_off=None)
+    index_manager.save_memory_to_path("exp_results/data_streams/bart_index.upstream_memory.full.pkl")
 
 
     # copy_item = [0,0,0]
     # copy_item[2] = "mrqa_naturalquestions-train-10-copy"
     # copy_item[0] = "Context: The movie was shot in LA and the Hawaiian islands of Bologno and Kologno between March 3 , 2020 and May 25 , 2020 . The movie is deliberately vague about which Hawaiian island its latter portion depicts ; thus , the characters hike across a rope bridge on Bologno and arrive in the next scene at a spectacular waterfall on Kologno , rather than the ordinary irrigation dam and pond on Bologno where the actual trail terminates . | Question: which did they hike in just go with it ?"
-    # copy_item[1] = ['xxa xzcvxzcv q234er2314', 'adsfasdf sad fgcxbv dsafv adsf .']
+    # copy_item[1] = ['Kauai ', 'Maui .']
     
     # index_manager.store_examples([copy_item])
 
     # # sanity check #
     # # index_manager.load_memory_from_path("exp_results/data_streams/bart_index.init_memory.pkl")
-    # query_ids = ["mrqa_naturalquestions-train-10"]
+    # query_ids = ["mrqa_naturalquestions-train-10", "mrqa_naturalquestions-train-10600"]
+    # print(query_ids)
     # print(index_manager.memory_examples[query_ids[0]])
     # retrieved_exmaples = index_manager.retrieve_from_memory(query_examples=[
-    #                                                    index_manager.memory_examples[qid] for qid in query_ids], sample_size=10, each_sample_size=10, rank_method="most_different", agg_method="each_topk_then_random")
+    #                                                    index_manager.memory_examples[qid] for qid in query_ids], sample_size=15, each_sample_size=10, rank_method="most_similar", agg_method="each_topk_then_random")
     
     # for item in retrieved_exmaples: 
     #     print("-"*50)
