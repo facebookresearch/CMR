@@ -124,7 +124,7 @@ class MRQA(TextToTextDataset):
             # _input = "Context: " + escape(datapoint["context"]) + \
             #     " | " + "Question: " + add_qmark(escape(datapoint["question"]))
             # TODO: need re-training 
-            _input = f'Question: {add_qmark(escape(datapoint["question"]))} | Context: escape(datapoint["context"])'
+            _input = f'Question: {add_qmark(escape(datapoint["question"]))} </s> Context: {escape(datapoint["context"])}'
             _output = [escape(a) for a in datapoint["answers"]]
             _id = f"{self.task_identifier}-{split_name}-{len(lines)}"
             instance = {"id": _id, "input": _input, "output": _output}
@@ -177,10 +177,10 @@ if len(sys.argv) >= 2:
 # format("kilt_triviaqa", path)
 # format("glue_qnli", path)
 
-# format("mrqa_SQuAD", path)
-# format("mrqa_TriviaQA", path)
-# format("mrqa_NaturalQuestions", path)
-# format("mrqa_HotpotQA", path)
+format("mrqa_SQuAD", path)
+format("mrqa_TriviaQA", path)
+format("mrqa_NaturalQuestions", path)
+format("mrqa_HotpotQA", path)
 format("mrqa_NewsQA", path)
 format("mrqa_SearchQA", path)
 
