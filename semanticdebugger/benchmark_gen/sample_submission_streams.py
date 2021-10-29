@@ -38,14 +38,18 @@ def load_QA_datasets(args):
     truth_paths = {
         "nq": "data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl", # V_0
         "squad": "data/mrqa_squad/mrqa_squad_dev.jsonl",   # V_1
-        "tqa": "data/mrqa_triviaqa/mrqa_triviaqa_dev.jsonl",  # V_2
-        "hpqa": "data/mrqa_hotpotqa/mrqa_hotpotqa_dev.jsonl",     # More 
+        "trivia": "data/mrqa_triviaqa/mrqa_triviaqa_dev.jsonl",  # V_2
+        "hotpot": "data/mrqa_hotpotqa/mrqa_hotpotqa_dev.jsonl",     # More 
+        "news": "data/mrqa_newsqa/mrqa_newsqa_dev.jsonl",     # More 
+        "search": "data/mrqa_searchqa/mrqa_searchqa_dev.jsonl",     # More 
     }
     prediction_paths = {
-        "nq": "bug_data/mrqa_naturalquestions_dev.predictions.jsonl", # V_0
-        "squad": "bug_data/mrqa_squad_dev.predictions.jsonl",   # V_1
-        "tqa": "bug_data/mrqa_triviaqa_dev.predictions.jsonl",  # V_2
-        "hpqa": "bug_data/mrqa_hotpotqa_dev.predictions.jsonl",     # More 
+        "nq": "upstream_resources/qa_upstream_preds/mrqa_naturalquestions_dev.predictions.json", # V_0
+        "squad": "upstream_resources/qa_upstream_preds/mrqa_squad_dev.predictions.json",   # V_1
+        "trivia": "upstream_resources/qa_upstream_preds/mrqa_triviaqa_dev.predictions.json",  # V_2
+        "hotpot": "upstream_resources/qa_upstream_preds/mrqa_hotpotqa_dev.predictions.json",     # More 
+        "news": "upstream_resources/qa_upstream_preds/mrqa_newsqa_dev.predictions.json", 
+        "search": "upstream_resources/qa_upstream_preds/mrqa_searchqa_dev.predictions.json", 
     }
 
     all_truth_data = {}
@@ -84,9 +88,11 @@ def generate_submission_stream(submission_data, args):
     configs = {}
     configs["QA"] = OrderedDict({
         "nq": dict(count=4000, a=1, b=1.3, upstream=True),
-        "tqa": dict(count=2000, a=5, b=5, upstream=False),
-        "hpqa": dict(count=2000, a=10, b=60, upstream=False),
-        "squad": dict(count=1500, a=300, b=400, upstream=False), 
+        "trivia": dict(count=1000, a=1.3, b=2, upstream=False),
+        "hotpot": dict(count=1000, a=30, b=60, upstream=False),
+        "squad": dict(count=1000, a=300, b=400, upstream=False), 
+        "news": dict(count=1000, a=5, b=2, upstream=False),
+        "search": dict(count=1000, a=4, b=1, upstream=False), 
     })
     
 

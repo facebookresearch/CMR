@@ -1,4 +1,4 @@
-task="mrqa_naturalquestions"
+task="mrqa_squad"
 
 # modelsize="large"
 # lr=1e-5
@@ -12,7 +12,7 @@ task="mrqa_naturalquestions"
 
 modelsize="base"
 lr=5e-5
-train_bsz=166
+train_bsz=64
 pred_bsz=64
 num_epochs=30
 output_dir="out/${task}_bart-${modelsize}_1029_upstream_model"
@@ -37,7 +37,7 @@ python semanticdebugger/cli_bart.py \
         --do_train \
         --output_dir ${output_dir} \
         --model facebook/bart-${modelsize} \
-        --dataset ${task} \
+        --dataset mrqa \
         --train_file data/${task}/${task}_train.jsonl \
         --dev_file data/${task}/${task}_dev.mini.2048.jsonl \
         --test_file data/${task}/${task}_dev.jsonl \
