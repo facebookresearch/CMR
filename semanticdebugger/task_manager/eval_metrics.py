@@ -7,29 +7,8 @@ from scipy.stats import pearsonr, spearmanr
 # from rouge import Rouge
 
 METRICS = {
-    'glue_cola': 'Matthew-Correlation',
-    'glue_mnli': 'ACC',
-    'glue_mrpc': 'ACC',
-    'glue_qnli': 'ACC',
-    'glue_qqp': 'ACC',
-    'glue_rte': 'ACC',
-    'glue_sst2': 'ACC',
-    'glue_wnli': 'ACC',
-    'kilt_ay2': 'EM',
-    'kilt_fever': 'ACC',
-    'kilt_hotpotqa': 'EM',
-    'kilt_nq': 'EM',
-    'kilt_triviaqa': 'EM',
-    'kilt_trex': 'EM',
-    'kilt_zsre': 'EM',
-    'lama_conceptnet': 'EM',
-    'lama_google_re': 'EM',
-    'lama_squad': 'EM',
-    'lama_trex': 'EM',
-    'mrqa_squad': 'EM|QA-F1',  # QA-F1
     'mrqa_naturalquestions': 'EM|QA-F1',
-    'mrqa_triviaqa': 'EM|QA-F1',
-    # 'mrqa_squad': 'EM',
+    'mrqa': 'EM|QA-F1',
 }
 
 
