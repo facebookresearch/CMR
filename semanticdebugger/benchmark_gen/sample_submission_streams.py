@@ -87,10 +87,10 @@ def generate_submission_stream(submission_data, args):
     # QA:
     configs = {}
     configs["QA"] = OrderedDict({
-        "nq": dict(count=4000, a=1, b=1.3, upstream=True),
+        "squad": dict(count=4000, a=1, b=1.3, upstream=True),
         "trivia": dict(count=1000, a=1.3, b=2, upstream=False),
         "hotpot": dict(count=1000, a=30, b=60, upstream=False),
-        "squad": dict(count=1000, a=300, b=400, upstream=False), 
+        "nq": dict(count=1000, a=300, b=400, upstream=False), 
         "news": dict(count=1000, a=5, b=2, upstream=False),
         "search": dict(count=1000, a=4, b=1, upstream=False), 
     })

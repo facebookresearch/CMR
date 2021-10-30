@@ -1,9 +1,9 @@
-# For the upstream-train
+################################# For the upstream-train #################################
 
 n_threads=8
 n_gpus=8
 start_gpuid=0
-declare -a data_names=("mrqa_naturalquestions")
+declare -a data_names=("mrqa_squad")
 
 for data_name in "${data_names[@]}"
 do
@@ -26,7 +26,7 @@ do
 done
 
 
-declare -a data_names=("mrqa_naturalquestions")
+declare -a data_names=("mrqa_squad")
 n_threads=8
 for data_name in "${data_names[@]}"
 do
@@ -39,7 +39,7 @@ do
         --range "range(${n_threads})" --mode json
 done 
 
-# For the downstream-dev
+################################# For the downstream-dev #################################
 
 n_threads=8
 n_gpus=8
