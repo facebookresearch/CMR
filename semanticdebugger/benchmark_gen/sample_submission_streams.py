@@ -36,24 +36,28 @@ def formatting_initial_status(data_name, predictions, truth_data, results_all, f
 def load_QA_datasets(args):
     all_data = {}
     truth_paths = {
-        "nq": "data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl", # V_0
-        "squad": "data/mrqa_squad/mrqa_squad_dev.jsonl",   # V_1
-        "trivia": "data/mrqa_triviaqa/mrqa_triviaqa_dev.jsonl",  # V_2
-        "hotpot": "data/mrqa_hotpotqa/mrqa_hotpotqa_dev.jsonl",     # More 
-        "news": "data/mrqa_newsqa/mrqa_newsqa_dev.jsonl",     # More 
-        "search": "data/mrqa_searchqa/mrqa_searchqa_dev.jsonl",     # More 
+        "squad-train": "data/mrqa_squad/mrqa_squad_train.jsonl",
+        "squad": "data/mrqa_squad/mrqa_squad_dev.jsonl",   
+        "nq": "data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl", #
+        "trivia": "data/mrqa_triviaqa/mrqa_triviaqa_dev.jsonl",  
+        "hotpot": "data/mrqa_hotpotqa/mrqa_hotpotqa_dev.jsonl",   
+        "news": "data/mrqa_newsqa/mrqa_newsqa_dev.jsonl",   
+        "search": "data/mrqa_searchqa/mrqa_searchqa_dev.jsonl",   
     }
     prediction_paths = {
-        "nq": "upstream_resources/qa_upstream_preds/mrqa_naturalquestions_dev.predictions.json", # V_0
-        "squad": "upstream_resources/qa_upstream_preds/mrqa_squad_dev.predictions.json",   # V_1
-        "trivia": "upstream_resources/qa_upstream_preds/mrqa_triviaqa_dev.predictions.json",  # V_2
-        "hotpot": "upstream_resources/qa_upstream_preds/mrqa_hotpotqa_dev.predictions.json",     # More 
+        "squad-train": "upstream_resources/qa_upstream_preds/mrqa_squad_train.predictions.json",   
+        "squad": "upstream_resources/qa_upstream_preds/mrqa_squad_dev.predictions.json",   
+        "nq": "upstream_resources/qa_upstream_preds/mrqa_naturalquestions_dev.predictions.json", 
+        "trivia": "upstream_resources/qa_upstream_preds/mrqa_triviaqa_dev.predictions.json",  
+        "hotpot": "upstream_resources/qa_upstream_preds/mrqa_hotpotqa_dev.predictions.json",   
         "news": "upstream_resources/qa_upstream_preds/mrqa_newsqa_dev.predictions.json", 
         "search": "upstream_resources/qa_upstream_preds/mrqa_searchqa_dev.predictions.json", 
     }
 
     all_truth_data = {}
     submission_data = {}
+    hidden_submission_data = {}
+    upstream_sampled_data = []
     for data_name, data_file in truth_paths.items():  
         truth_data = []
         with open(data_file) as fin:
@@ -63,6 +67,7 @@ def load_QA_datasets(args):
             d = json.loads(line)
             truth_data.append((d["input"], d["output"], d["id"]))
         all_truth_data[data_name] = truth_data
+
     for data_name, prediction_file in prediction_paths.items():
         with open(prediction_file, "r") as f:
             predictions = json.load(f)
@@ -71,13 +76,20 @@ def load_QA_datasets(args):
             predictions, all_truth_data[data_name], args.metric, return_all=True)
         print(f"{data_name} --- Evaluation results: {results}") 
         formatted_data = formatting_initial_status(data_name, predictions, all_truth_data[data_name], results_all)
-        submission_data[data_name] = formatted_data
+        if "train" in data_name:
+            upstream_sampled_data = random.sample(formatted_data, k=args.upstream_eval_size)
+        else:
+            random.shuffle(formatted_data)
+            hidden_submission_data[data_name] = formatted_data[args.hidden_submission_size:]    # held-out
+            submission_data[data_name] = formatted_data[:args.hidden_submission_size]
+
     for data_name, data in submission_data.items():
         num_examples = len(data) 
         error_nums = [1 for item in data if item["init_status"] == "error"]
         print(f"{data_name} -- # examples = {num_examples};  Error rate: {sum(error_nums)/num_examples}")
     
-    return submission_data
+    
+    return submission_data, hidden_submission_data, upstream_sampled_data
 
 
 
@@ -127,11 +139,15 @@ def generate_submission_stream(submission_data, args):
 
 def main():
     parser = argparse.ArgumentParser() 
+    parser.add_argument("--upstream_eval_size", type=int, default=1024, required=False)
+    parser.add_argument("--hidden_submission_size", type=int, default=256, required=False)
     parser.add_argument("--episode_size", type=int, default=64, required=False)
     parser.add_argument("--num_episodes", type=int, default=100, required=False)
     parser.add_argument("--seed", type=int, default=42, required=False)
     parser.add_argument("--metric", default="EM|QA-F1", required=False)
-    parser.add_argument("--submission_stream_file", default="exp_results/data_streams/mrqa.dynamic_stream.json", required=False)
+    parser.add_argument("--submission_stream_file", default="experiments/data_streams/mrqa.dynamic_submission_stream.v1.json", required=False)
+    parser.add_argument("--sampled_upstream_dataset", default="experiments/data_streams/mrqa.upstream_eval.v1.jsonl", required=False)
+    parser.add_argument("--heldout_submission_eval_file", default="experiments/data_streams/mrqa.heldout_eval.v1.jsonl", required=False)
     
 
     args = parser.parse_args()
@@ -139,10 +155,20 @@ def main():
     print(args)
 
     random.seed(args.seed)
-    QA_submission_data = load_QA_datasets(args)
+    QA_submission_data, QA_hidden_submission_data, QA_upstream_sampled_data = load_QA_datasets(args)
     submission_stream = generate_submission_stream(QA_submission_data, args)
+    
     with open(args.submission_stream_file, "w") as f:
         json.dump(submission_stream, f)
+
+    with open(args.sampled_upstream_dataset, "w") as f:
+        for item in QA_upstream_sampled_data:
+            f.write(json.dumps(item) + "\n")
+    
+    with open(args.heldout_submission_eval_file, "w") as f:
+        for item in QA_hidden_submission_data:
+            f.write(json.dumps(item) + "\n")
+    
 
 if __name__ == '__main__':
     main()
