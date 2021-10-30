@@ -139,15 +139,15 @@ def generate_submission_stream(submission_data, args):
 
 def main():
     parser = argparse.ArgumentParser() 
-    parser.add_argument("--upstream_eval_size", type=int, default=1024, required=False)
+    parser.add_argument("--upstream_eval_size", type=int, default=512, required=False)
     parser.add_argument("--hidden_submission_size", type=int, default=256, required=False)
     parser.add_argument("--episode_size", type=int, default=64, required=False)
     parser.add_argument("--num_episodes", type=int, default=100, required=False)
     parser.add_argument("--seed", type=int, default=42, required=False)
     parser.add_argument("--metric", default="EM|QA-F1", required=False)
-    parser.add_argument("--submission_stream_file", default="experiments/data_streams/mrqa.dynamic_submission_stream.v1.json", required=False)
-    parser.add_argument("--sampled_upstream_dataset", default="experiments/data_streams/mrqa.upstream_eval.v1.jsonl", required=False)
-    parser.add_argument("--heldout_submission_eval_file", default="experiments/data_streams/mrqa.heldout_eval.v1.jsonl", required=False)
+    parser.add_argument("--submission_stream_file", default="experiments/eval_data/qa/dynamic_submission_stream.v1.json", required=False)
+    parser.add_argument("--sampled_upstream_dataset", default="experiments/eval_data/qa/upstream_eval.v1.jsonl", required=False)
+    parser.add_argument("--heldout_submission_eval_file", default="experiments/eval_data/qa/heldout_eval.v1.jsonl", required=False)
     
 
     args = parser.parse_args()
