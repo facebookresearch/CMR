@@ -132,22 +132,19 @@ def visualize_stream(submission_stream, data_names, cfg):
 
 
 
-def generate_submission_stream_v2(submission_data, args):
-    # QA:
-    configs = {}
-    
-    # configs["QA"] = dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=1)
-    configs["QA"] = dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0.5, gamma=0.5)
+def generate_submission_stream_v2(submission_data, args, cfg):
     submission_stream = []
-    
-    cfg = configs["QA"]
     upstream = cfg["upstream"]; T = cfg["T"]; b = cfg["b"]
     alpha = cfg["alpha"]; beta = cfg["beta"]; gamma = cfg["gamma"]
     assert upstream in submission_data
     OODs = [data_name for data_name in submission_data if data_name != upstream]
     N = len(OODs) # except for the upstream data
     # TODO: assign weights for data clusters?
-    current_major_ood = random.choice(OODs)  # the initial major OOD cluster 
+    if beta == 1:
+        if args.task_name.lower() == "qa":
+            current_major_ood = "nq"
+    else:
+        current_major_ood = random.choice(OODs)  # the initial major OOD cluster 
     for t in range(1, T+1):
         S_t = []
         b_upstream = round(b * (alpha**(t-1))) 
@@ -173,14 +170,7 @@ def generate_submission_stream_v2(submission_data, args):
         submission_stream.append(S_t)
     data_names = [upstream] + OODs
     visualize_stream(submission_stream, data_names, cfg)
-    return submission_stream
-
-
-        
-
-
-    
-    
+    return submission_stream    
 
 def generate_submission_stream_v1(submission_data, args):
     # QA:
@@ -232,40 +222,51 @@ def main():
     parser.add_argument("--num_episodes", type=int, default=100, required=False)
     parser.add_argument("--seed", type=int, default=42, required=False)
     parser.add_argument("--metric", default="EM|QA-F1", required=False)
-    parser.add_argument("--submission_stream_file", default="experiments/eval_data/qa/dynamic_submission_stream.v2.json", required=False)
-    parser.add_argument("--sampled_upstream_dataset", default="experiments/eval_data/qa/upstream_eval.v2.jsonl", required=False)
-    parser.add_argument("--heldout_submission_eval_file", default="experiments/eval_data/qa/heldout_eval.v2.jsonl", required=False)
+    parser.add_argument("--submission_stream_file", default="experiments/eval_data/qa/submission_stream.#args.json", required=False)
+    parser.add_argument("--sampled_upstream_dataset", default="experiments/eval_data/qa/upstream_eval.jsonl", required=False)
+    parser.add_argument("--heldout_submission_eval_file", default="experiments/eval_data/qa/heldout_eval.jsonl", required=False)
+    parser.add_argument("--task_name", default="QA", required=False)
     
-
+    
     args = parser.parse_args()
-
     print(args)
-
     set_seeds(args.seed)
 
-    QA_submission_data, QA_heldout_submission_data, QA_upstream_sampled_data = load_QA_datasets(args)
-    submission_stream = generate_submission_stream_v2(QA_submission_data, args)
+
+     # QA:
+    configs = {}
+    # configs["QA"] = dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=1)
+    configs["QA"] = []
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0, gamma=0.5))
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0.5, gamma=0.5))
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0.7, gamma=0.5))
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=0.5))
+
     
-    with open(args.submission_stream_file, "w") as f:
-        json.dump(submission_stream, f)
- 
+
+    if args.task_name == "QA":
+        submission_data, heldout_submission_data, upstream_sampled_data = load_QA_datasets(args)
     
-    # with open(args.heldout_submission_eval_file, "w") as f:
-    #     for item in QA_heldout_submission_data:
-    #         f.write(json.dumps(item) + "\n")
 
     with open(args.heldout_submission_eval_file, "w") as f:
-        flat_QA_heldout_submission_data =  []
-        for v in list(QA_heldout_submission_data.values()):
-            flat_QA_heldout_submission_data += v 
-        for item in flat_QA_heldout_submission_data:
+        flat_heldout_submission_data =  []
+        for v in list(heldout_submission_data.values()):
+            flat_heldout_submission_data += v 
+        for item in flat_heldout_submission_data:
             f.write(json.dumps(item) + "\n")
-
 
     with open(args.sampled_upstream_dataset, "w") as f:
-        for item in QA_upstream_sampled_data:
+        for item in upstream_sampled_data:
             f.write(json.dumps(item) + "\n")
     
+
+    cfgs = configs[args.task_name]
+    for cfg in cfgs:    
+        submission_stream = generate_submission_stream_v2(submission_data, args, cfg)
+        title_str = f"T={cfg['T']},b={cfg['b']},alpha={cfg['alpha']},beta={cfg['beta']},gamma={cfg['gamma']}"
+        with open(args.submission_stream_file.replace("#args", title_str), "w") as f:
+            json.dump(submission_stream, f)
+            
     
     
 
