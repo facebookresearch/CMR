@@ -124,10 +124,10 @@ def visualize_stream(submission_stream, data_names, cfg):
     submission_stat_pd = pd.DataFrame(submission_stat)
     title_str = f"T={cfg['T']},b={cfg['b']},alpha={cfg['alpha']},beta={cfg['beta']},gamma={cfg['gamma']}"
     fig1 =  draw_stacked_bars(df=submission_stat_pd, fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples")
-    fig1.save(f'figures/mrqa.{title_str}.submission_stream.png')
+    fig1.save(f'figures/mrqa.submission.{title_str}.png')
     init_error_stat_pd = pd.DataFrame(init_error_stat)
     fig2 =  draw_stacked_bars(df=init_error_stat_pd, fig_title=f"Error Stream ({title_str}) of f_0", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Initial Errors")
-    fig2.save(f'figures/mrqa.{title_str}.init_error_stream.png')    
+    fig2.save(f'figures/mrqa.init_error.{title_str}.png')    
     return 
 
 
@@ -241,6 +241,7 @@ def main():
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0.5, gamma=0.5))
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0.7, gamma=0.5))
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=0.5))
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=1))
 
     
 
