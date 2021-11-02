@@ -15,6 +15,7 @@ import os
 import json
 from tqdm import tqdm
 import numpy as np
+import wandb
 
 class TqdmHandler(logging.Handler):
     def emit(self, record):
@@ -83,12 +84,13 @@ def setup_args(args):
     elif args.cl_method_name == "simple_ds_mine":
         debugging_alg = data_collection.MiningSupervision(logger=logger)
     
-    debugging_alg.stream_mode = args.stream_mode
     
     data_args = Namespace(
-        bug_stream_json_path=args.bug_stream_json_path,
-        pass_pool_jsonl_path=args.pass_pool_jsonl_path,
-        sampled_upstream_json_path=args.sampled_upstream_json_path,
+        submission_stream_data=args.submission_stream_data,
+        upstream_eval_data=args.upstream_eval_data,
+        heldout_submission_data=args.heldout_submission_data,
+        upstream_data_path=args.upstream_data_path,
+        # sampled_upstream_json_path=args.sampled_upstream_json_path,
         # pass_sample_size=args.pass_sample_size,
         do_lowercase=args.do_lowercase,
         append_another_bos=args.append_another_bos,
@@ -100,7 +102,7 @@ def setup_args(args):
         num_beams=args.num_beams,
         max_timecode=args.max_timecode,
         accumulate_eval_freq=-1,
-        use_sampled_upstream=args.use_sampled_upstream,
+        # use_sampled_upstream=args.use_sampled_upstream,
     )
 
     base_model_args = Namespace(
@@ -117,9 +119,15 @@ def setup_args(args):
             num_epochs=args.num_train_epochs,
             gradient_accumulation_steps=args.gradient_accumulation_steps,
             max_grad_norm=args.max_grad_norm,
-            save_all_ckpts=args.save_all_ckpts,
-            overtime_ckpt_dir=args.overtime_ckpt_dir,
+            save_ckpt_freq=args.save_ckpt_freq,
+            ckpt_dir=args.ckpt_dir,
             skip_instant_eval=args.skip_instant_eval,
+            kr_eval_freq=args.kr_eval_freq,
+            kr_eval_mode=args.kr_eval_mode,
+            okr_sample_size=args.okr_sample_size,
+            okr_sample_seed=args.okr_sample_seed,
+            kg_eval_freq=args.kg_eval_freq,
+            kg_eval_mode=args.kg_eval_mode,
         )
         if args.cl_method_name == "online_ewc":
             setattr(debugger_args, "ewc_lambda", args.ewc_lambda)
@@ -158,8 +166,8 @@ def run(args):
     if args.num_threads_eval <= 0:
         # The Online Debugging Mode + Computing offline debugging bounds.
         
-        setattr(data_args, "data_stream_json_path", args.data_stream_json_path)
-        setattr(data_args, "replay_stream_json_path", args.replay_stream_json_path)
+        # setattr(data_args, "data_stream_json_path", args.data_stream_json_path)
+        # setattr(data_args, "replay_stream_json_path", args.replay_stream_json_path)
         debugging_alg.load_data(data_args)
     
         debugging_alg.load_base_model(base_model_args)
@@ -177,8 +185,8 @@ def run(args):
         output_info["base_model_args"] = str(debugging_alg.base_model_args)
         output_info["debugger_args"] = str(debugging_alg.debugger_args)
         output_info["data_args"] = str(debugging_alg.data_args)
-        output_info["online_eval_results"] = debugging_alg.online_eval_results
-        output_info["final_eval_results"] = debugging_alg.overall_eval_results
+        # output_info["online_eval_results"] = debugging_alg.online_eval_results
+        # output_info["final_eval_results"] = debugging_alg.overall_eval_results
         
         if args.cl_method_name in ["offline_debug"]:
             output_info["offline_bound_results"] = offline_bound_results
@@ -186,7 +194,7 @@ def run(args):
             logger.info(f"eval_results_overall_forget: {offline_bound_results['eval_results_overall_forget']['metric_results']}")
         with open(args.result_file, "w") as f:
             json.dump(output_info, f)
-        logger.info(f'output_info["final_eval_results"]={output_info["final_eval_results"]}')
+        # logger.info(f'output_info["final_eval_results"]={output_info["final_eval_results"]}')
         logger.info(f"Finished. Results saved to {args.result_file}")
     else:
         # Parallel offline evaluation mode 
@@ -197,7 +205,7 @@ def run(args):
         for timecode in tqdm(timecodes, desc=f"Threads on {args.current_thread_id}"):
             logger.info(f"Starting the offline evaluation of {timecode}")
             timecode = int(timecode)
-            base_model_args.base_model_path = os.path.join(args.overtime_ckpt_dir, f"model_ckpt_{timecode:03d}.pt")
+            base_model_args.base_model_path = os.path.join(args.ckpt_dir, f"model_ckpt_{timecode:03d}.pt")
             debugging_alg.debugger_args = debugger_args
             debugging_alg.load_base_model(base_model_args, mode="offline_eval")
 
@@ -222,47 +230,58 @@ def get_cli_parser():
                         default="facebook/bart-base", required=False)
     parser.add_argument(
         "--base_model_path",
-        default="out/mrqa_naturalquestions_bart-base_0617v4/best-model.pt", type=str)
+        default="out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt", type=str)
 
     # data_args
 
-    parser.add_argument("--stream_mode",
-                        default="dynamic")
+    parser.add_argument("--submission_stream_data",
+                        default="experiments/eval_data/qa/dynamic_submission_stream.v1.json")    
 
-    parser.add_argument("--data_stream_json_path",
-                        default="bug_data/mrqa_naturalquestions_dev.data_stream.test.json")
-    
-    parser.add_argument("--replay_stream_json_path",
-                        default="bug_data/mrqa_naturalquestions_dev.replay_stream.test.json")
-
-
-    parser.add_argument("--bug_stream_json_path",
-                        default="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json")
     # this will be used for evaluating forgetting
-    parser.add_argument("--pass_pool_jsonl_path", 
-                        default="bug_data/mrqa_naturalquestions_dev.sampled_pass.jsonl")
-    parser.add_argument("--sampled_upstream_json_path",
-                        default="data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl")
+    parser.add_argument("--upstream_eval_data", 
+                        default="experiments/eval_data/qa/upstream_eval.v1.jsonl")
+                        
+    parser.add_argument("--heldout_submission_data", 
+                        default="experiments/eval_data/qa/heldout_eval.v1.json")
+
+    parser.add_argument("--upstream_data_path",
+                        default="data/mrqa_squad/mrqa_squad_train.jsonl")
                         # default="bug_data/mrqa_naturalquestions.sampled_upstream.jsonl")
 
-    parser.add_argument("--task_name", default="mrqa_naturalquestions")
+    parser.add_argument("--task_name", default="mrqa")
+
+    # base model args.
     parser.add_argument('--train_batch_size', type=int, default=8)
     parser.add_argument('--predict_batch_size', type=int, default=16)
-    parser.add_argument('--num_beams', type=int, default=4)
-
+    parser.add_argument('--num_beams', type=int, default=3)
     parser.add_argument("--do_lowercase", action='store_true', default=False)
     parser.add_argument("--freeze_embeds", action='store_true', default=False)
     parser.add_argument('--max_input_length', type=int, default=888)
     parser.add_argument('--max_output_length', type=int, default=50)
-
-    parser.add_argument('--skip_instant_eval', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
-
     parser.add_argument("--append_another_bos", type=int,
                         default=1)  # should be true (1)
 
+
+    # evalaution related
+    parser.add_argument('--skip_instant_eval', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+
+    parser.add_argument('--use_wandb', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
+
+    parser.add_argument('--kr_eval_freq', type=int, default=5)
+    parser.add_argument('--kr_eval_mode', default="loss") # loss or metric
+
+    parser.add_argument('--okr_sample_size', type=int, default=512)
+    parser.add_argument('--okr_sample_seed', type=int, default=1337)
+    
+    parser.add_argument('--kg_eval_freq', type=int, default=5)
+    parser.add_argument('--kg_eval_mode', default="loss") # loss or metric
+    
+    
+
+    # feiw-benchmark
     # debugger_args
 
-    parser.add_argument('--cl_method_name', type=str, default="simple_cl",
+    parser.add_argument('--cl_method_name', type=str, default="none_cl",
                         help="the method name of the continual learning method")
     
     ### The HPs for Simple Continual Fine-tuning Method. ###
@@ -286,7 +305,7 @@ def get_cli_parser():
     parser.add_argument("--ewc_gamma", default=1, type=float,
                         help="Max gradient norm.")                        
     
-    parser.add_argument("--use_sampled_upstream", action='store_true', default=False)
+    # parser.add_argument("--use_sampled_upstream", action='store_true', default=False)
  
     ### The HPs for replay-based methods and memory-based.
     parser.add_argument('--replay_size', type=int, default=8)
@@ -312,8 +331,6 @@ def get_cli_parser():
     parser.add_argument('--indexing_method', type=str, default="bart_index")    # bart_index, biencoder 
     parser.add_argument('--indexing_args_path', type=str, default="exp_results/supervision_data/1012_dm_simple.train_args.json")    # bart_index, biencoder 
     
-    
-
 
     ### The HPs for HyperCL
     parser.add_argument('--adapter_dim', type=int, default=32) # 1 means always replay for every steps, set to 10 means sample after 10 model updates.
@@ -322,21 +339,21 @@ def get_cli_parser():
 
 
     # To save all ckpts.
-    
-    parser.add_argument("--save_all_ckpts", type=int, default=0,
-                        help="set to 1 if we want all ckpts and eval offline")
+
 
     # I/O parameters
-    parser.add_argument('--prefix', type=str, default="nq_dev",
+    parser.add_argument('--prefix', type=str, default="",
                         help="Prefix for saving predictions")
     parser.add_argument('--seed', type=int, default=42,
                         help="random seed for initialization")
     parser.add_argument(
         "--result_file", default="bug_data/results.json", type=str)
     
-    parser.add_argument("--overtime_ckpt_dir", type=str,
+    parser.add_argument("--ckpt_dir", type=str, default="experiments/ckpt_dirs/qa/nonecl",
                         help="path to all ckpts for saving")
 
+    parser.add_argument("--save_ckpt_freq", type=int, default=5,    # 0 means no save for the intermidiate . but we always save the final model ckpt.
+                        help="set to 1 if we want all ckpts and eval offline")
     # Offline Evaluation Mode in Parallel 
 
     parser.add_argument("--num_threads_eval", type=int, default=0,
@@ -353,4 +370,12 @@ def get_cli_parser():
 
 if __name__ == '__main__':
     args = get_cli_parser().parse_args()
+
+    if args.use_wandb:
+        wandb_mode = "online"
+    else:
+        wandb_mode = "disabled"
+    wandb_run = wandb.init(reinit=True, project="error-nlp", mode=wandb_mode, settings=wandb.Settings(start_method="fork"), name=args.prefix)
+    run_name = wandb.run.name
+    wandb.config.update(args) 
     run(args)

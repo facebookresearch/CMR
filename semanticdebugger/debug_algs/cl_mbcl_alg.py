@@ -17,11 +17,20 @@ from semanticdebugger.models.utils import (convert_model_to_single_gpu,
                                            
 from argparse import Namespace
 import more_itertools
+import json
 
 class MemoryBasedCL(ContinualFinetuning):
     def __init__(self, logger):
         super().__init__(logger=logger)
         self.name = "tbd"  # can be er/mbpa/mbpa++
+        self.upstream_memory_examples = []
+
+    def load_data(self, data_args, given_data_stream=None):
+        super().load_data(data_args, given_data_stream=given_data_stream)
+        with open(data_args.upstream_data_path) as f:
+            upstream_memory_examples = [json.loads(line)for line in set(f.read().splitlines())]
+        self.upstream_memory_examples = self.upstream_data_formatter(upstream_memory_examples)
+        
 
     def _check_debugger_args(self):
         super()._check_debugger_args()
@@ -52,7 +61,7 @@ class MemoryBasedCL(ContinualFinetuning):
             self.logger.info("Prepare the sampled upstream data as the initial memory for the ER and MIR;")
             
             # upstream possible 
-            self.upstream_memroy_module.set_up_initial_memory(formatted_examples=self.sampled_upstream_examples)
+            self.upstream_memroy_module.set_up_initial_memory(formatted_examples=self.upstream_memory_examples)
              
             if self.debugger_args.upstream_sample_ratio < 0: 
                 # mix 
@@ -65,8 +74,7 @@ class MemoryBasedCL(ContinualFinetuning):
         return
 
     
-
-    # The new evaluation pipeline.
+ 
 
     def online_debug(self):
         self.logger.info("Start Online Debugging with Dynamic Error Mode")
@@ -74,21 +82,23 @@ class MemoryBasedCL(ContinualFinetuning):
         self.logger.info(f"Data Batch Size: {self.data_batch_size};")
         self.timecode = 0
 
-        if self.debugger_args.save_all_ckpts:
+        if self.debugger_args.save_ckpt_freq:
             # save the initial model as the 0-th model.
             self._save_base_model()
-
-        self.overall_errors = []
-        self.seen_stream_data = []
+ 
         last_steps = 0
  
-        for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):
+        for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (with Memory Replay)"):
 
             result_dict = {"timecode": self.timecode}   # start with 0
+            self.eval_knowledge_retention(result_dict)
+            self.eval_knowledge_generalization(result_dict)
 
-            self._replay_based_eval(result_dict)
+            ############### CORE ###############
+            # self._replay_based_eval(result_dict)
             formatted_bug_examples = self._get_dynamic_errors(
                 data_eval_loader, result_dict, return_raw_bug_examples=True)
+            _, bug_eval_loader = self.get_dataloader(self.data_args, formatted_bug_batch=formatted_bug_examples, mode="eval")
             
             examples_to_train = formatted_bug_examples[:]
             
@@ -156,19 +166,14 @@ class MemoryBasedCL(ContinualFinetuning):
             
             last_steps = self.model_update_steps
 
-            ############### CORE ###############
+            
             # Fix the bugs by mini-batch based "training"
-            self.logger.info(f"Start bug-fixing (len(examples_to_train)={len(examples_to_train)}) .... Timecode: {self.timecode}")
+            self.logger.info(f"Start error-fixing (len(examples_to_train)={len(examples_to_train)}) .... Timecode: {self.timecode}")
             bug_train_loader, _ = self.get_dataloader(
                 self.data_args, examples_to_train, mode="train")
             self.fix_bugs(bug_train_loader)   # for debugging
-            self.logger.info("Start bug-fixing .... Done!")
-            ############### CORE ###############
-            self._log_episode_result(result_dict, data_eval_loader)
-            self.timecode += 1
+            self.logger.info("Start error-fixing .... Done!")
 
-            if self.debugger_args.save_all_ckpts:
-                self._save_base_model()
 
             # Store to memory
             _max = 1000000
@@ -179,8 +184,20 @@ class MemoryBasedCL(ContinualFinetuning):
                 self.logger.info(f"Saving the current error examples (len={len(formatted_bug_examples)}) to the memory.")
                 self.logger.info(f"Current memory size: {self.memroy_module.get_memory_size()}.")
                 self.memroy_module.store_examples(formatted_bug_examples)
-                self.logger.info("Finished.")
+                self.logger.info(".................. Done.")
+            
+            
+            ############### CORE ###############
+            
+            
+            self.evaluate_error_fixing(result_dict, bug_eval_loader)
+            self.online_eval_results.append(result_dict) 
+            if self.debugger_args.save_ckpt_freq > 0 and self.timecode % self.debugger_args.save_ckpt_freq == 0:
+                self._save_base_model()
             self.logger.info("-"*50)
+            self.timecode += 1
+
+            
         #### Final evaluation ####
         self.final_evaluation()
 
@@ -201,7 +218,7 @@ class MemoryBasedCL(ContinualFinetuning):
 
 
         if not eval_dataloader:
-            eval_dataloader = self.bug_eval_loaders[self.timecode]
+            eval_dataloader = self.submission_eval_loaders[self.timecode]
 
         # TODO: reset the bsz for the local adaptation.
 

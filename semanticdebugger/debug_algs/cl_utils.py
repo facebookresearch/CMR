@@ -10,6 +10,8 @@ from semanticdebugger.models.utils import (convert_model_to_single_gpu,
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from tqdm import tqdm
 import more_itertools
+import pickle 
+import numpy as np
 
 
 def get_virtual_updated_model(cl_trainer, query_data_loader):
@@ -378,7 +380,7 @@ def KVMemory_init():
 
     parser.add_argument("--bug_stream_json_path",
                         default="bug_data/mrqa_naturalquestions_dev.static_bug_stream.json")
-    parser.add_argument("--pass_pool_jsonl_path",
+    parser.add_argument("--upstream_eval_data",
                         default="bug_data/mrqa_naturalquestions_dev.sampled_pass.jsonl")
     parser.add_argument("--sampled_upstream_json_path",
                         default="bug_data/mrqa_naturalquestions.sampled_upstream.jsonl")
@@ -406,7 +408,7 @@ def KVMemory_init():
             all_examples += formatted_bug_batch
 
     # Load pass cases
-    with open(args.pass_pool_jsonl_path) as f:
+    with open(args.upstream_eval_data) as f:
         pass_examples = [json.loads(line) for line in set(f.read().splitlines())]
         all_examples += cl_trainer.data_formatter(pass_examples)
     memory_module = KeyValueMemoryModule(logger)

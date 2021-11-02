@@ -80,7 +80,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         assert hasattr(bug_data_args, "predict_batch_size")
         train_bug_dataloader, eval_bug_dataloader = None, None
         if mode == "both" or mode == "train":
-            # for bug-fixing
+            # for error-fixing
             train_bug_dataloader = GeneralDataset(self.logger, bug_data_args, None,
                                                   data_type="train", is_training=True,
                                                   task_name=bug_data_args.task_name,

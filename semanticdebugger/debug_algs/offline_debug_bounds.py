@@ -23,6 +23,6 @@ class OfflineDebugger(ContinualFinetuning):
             assert self.bug_all_train_loader is not None 
             dl = self.bug_all_train_loader
         self.fix_bugs(dl, quiet=False)
-        if self.debugger_args.save_all_ckpts:
+        if self.debugger_args.save_ckpt_freq:
             self._save_base_model(ckpt_name="offline_debug")
         

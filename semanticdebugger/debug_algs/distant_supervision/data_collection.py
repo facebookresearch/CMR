@@ -149,9 +149,9 @@ class MiningSupervision(ContinualFinetuning):
             model_copy = copy.deepcopy(self.base_model)
             ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
-            self.logger.info(f"Start bug-fixing .... Timecode: {self.timecode}")
+            self.logger.info(f"Start error-fixing .... Timecode: {self.timecode}")
             self.fix_bugs(bug_train_loader)   # for debugging
-            self.logger.info("Start bug-fixing .... Done!")
+            self.logger.info("Start error-fixing .... Done!")
             ############### CORE ###############
 
             updated_model = self.base_model
@@ -179,7 +179,7 @@ class MiningSupervision(ContinualFinetuning):
 
         return mined_supervision
 
-        # if self.debugger_args.save_all_ckpts:
+        # if self.debugger_args.save_ckpt_freq:
         #     self._save_base_model()
 
 
@@ -302,8 +302,8 @@ CUDA_VISIBLE_DEVICES=${gpu} python semanticdebugger/debug_algs/distant_supervisi
     --prefix ${prefix} \
     --stream_mode dynamic \
     --replay_stream_json_path "" \
-    --pass_pool_jsonl_path exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
-    --save_all_ckpts 0     
+    --upstream_eval_data exp_results/data_streams/mrqa_naturalquestions_dev.hidden_passes.jsonl \
+    --save_ckpt_freq 0     
     > ${log_file} 2>&1 
     
     & 

@@ -273,7 +273,7 @@ class HyperCL(ContinualFinetuning):
         """Evaluates the performance"""
 
         if not eval_dataloader:
-            eval_dataloader = self.bug_eval_loaders[self.timecode]
+            eval_dataloader = self.submission_eval_loaders[self.timecode]
 
         # prepare adapt_dataloaders
         adapt_dataloaders = self.get_adapt_dataloaders(eval_dataloader, verbose=True) 

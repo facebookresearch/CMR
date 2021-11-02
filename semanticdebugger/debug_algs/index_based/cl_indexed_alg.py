@@ -120,12 +120,12 @@ class IndexBasedCL(ContinualFinetuning):
         self.logger.info(f"Data Batch Size: {self.data_batch_size};")
         self.timecode = 0
 
-        if self.debugger_args.save_all_ckpts:
+        if self.debugger_args.save_ckpt_freq > 0 and self.timecode % self.debugger_args.save_ckpt_freq == 0:
             # save the initial model as the 0-th model.
             self._save_base_model()
 
-        self.overall_errors = []
-        self.seen_stream_data = []
+        self.past_errors = []
+        self.past_submission = []
         last_steps = 0
         self.logger.info("Copying initial model")
         initial_model = copy.deepcopy(self.base_model) # for the use of query
@@ -134,7 +134,7 @@ class IndexBasedCL(ContinualFinetuning):
 
             result_dict = {"timecode": self.timecode}   # start with 0
 
-            self._replay_based_eval(result_dict)
+            # self._replay_based_eval(result_dict)
             formatted_bug_examples = self._get_dynamic_errors(
                 data_eval_loader, result_dict, return_raw_bug_examples=True)
 
@@ -241,16 +241,16 @@ class IndexBasedCL(ContinualFinetuning):
             ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
             self.logger.info(
-                f"Start bug-fixing (len(examples_to_train)={len(examples_to_train)}) .... Timecode: {self.timecode}")
+                f"Start error-fixing (len(examples_to_train)={len(examples_to_train)}) .... Timecode: {self.timecode}")
             bug_train_loader, _ = self.get_dataloader(
                 self.data_args, examples_to_train, mode="train")
             self.fix_bugs(bug_train_loader)   # for debugging
-            self.logger.info("Start bug-fixing .... Done!")
+            self.logger.info("Start error-fixing .... Done!")
             ############### CORE ###############
             self._log_episode_result(result_dict, data_eval_loader)
             self.timecode += 1
 
-            if self.debugger_args.save_all_ckpts:
+            if self.debugger_args.save_ckpt_freq > 0 and self.timecode % self.debugger_args.save_ckpt_freq == 0:
                 self._save_base_model()
 
             # Store to memory

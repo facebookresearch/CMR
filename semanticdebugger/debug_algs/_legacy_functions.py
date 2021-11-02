@@ -265,9 +265,9 @@ def load_data_static(self, data_args):
 
     # Create the pass pool evaluation loader for the final forgetting issue.
 
-    if data_args.pass_pool_jsonl_path:
+    if data_args.upstream_eval_data:
         # Create loaders for the sampled pass examples
-        with open(data_args.pass_pool_jsonl_path) as f:
+        with open(data_args.upstream_eval_data) as f:
             pass_examples = [json.loads(line)
                                 for line in set(f.read().splitlines())]
         self.sampled_passes = pass_examples
@@ -295,7 +295,7 @@ def online_debug_static(self):
     self.logger.info(f"Bug Batch Size: {self.bug_batch_size}")
     self.timecode = 0
 
-    if self.debugger_args.save_all_ckpts:
+    if self.debugger_args.save_ckpt_freq:
         # save the initial model as the 0-th model.
         self._save_base_model()
 
@@ -307,7 +307,7 @@ def online_debug_static(self):
         self.logger.info("Start bug-fixing .... Done!")
         ############### CORE ###############
         self.timecode += 1
-        if self.debugger_args.save_all_ckpts:
+        if self.debugger_args.save_ckpt_freq:
             self._save_base_model()
             # Note that we save the model from the id=1.
         
@@ -321,7 +321,7 @@ def online_debug_static(self):
     self.logger.info(f"Replay Frequency: {self.debugger_args.replay_frequency}")
     self.timecode = 0
 
-    if self.debugger_args.save_all_ckpts:
+    if self.debugger_args.save_ckpt_freq:
         # save the initial model as the 0-th model.
         self._save_base_model()
 
@@ -349,7 +349,7 @@ def online_debug_static(self):
         self.logger.info("Start bug-fixing .... Done!")
         ############### CORE END ###############
         self.timecode += 1
-        if self.debugger_args.save_all_ckpts:
+        if self.debugger_args.save_ckpt_freq:
             self._save_base_model()
             # Note that we save the model from the id=1.
             # So the 0-th checkpoint should be the original base model.

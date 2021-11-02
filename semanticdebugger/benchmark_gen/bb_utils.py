@@ -65,7 +65,7 @@ def build_submission_stream(submission_data, scaled_all_pmfs, config, args):
             if config[data_name]["upstream"]:
                 _data_name = f"*{data_name}"
             if _data_name in scaled_data[t]:
-                _sampled = random.choices(submission_data[data_name], k=scaled_data[t][_data_name])
+                _sampled = random.sample(submission_data[data_name], k=scaled_data[t][_data_name])
                 episode += _sampled
                 num_errors = len([1 for item in _sampled if item["init_status"]=="error"])
                 init_error_pmfs.append(dict(time_step=t, p=num_errors, prefix=_data_name))
