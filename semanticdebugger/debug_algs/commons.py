@@ -61,6 +61,24 @@ class OnlineDebuggingMethod():
         
         return
 
+
+    def save_result_file(self):
+        output_info = {}
+        output_info["method_class"] = self.name
+        output_info["base_model_args"] = str(self.base_model_args)
+        output_info["debugger_args"] = str(self.debugger_args)
+        output_info["data_args"] = str(self.data_args)
+        output_info["model_update_steps"] = self.model_update_steps
+        output_info["online_eval_results"] = self.online_eval_results 
+        
+        # if args.cl_method_name in ["offline_debug"]:
+        #     output_info["offline_bound_results"] = offline_bound_results
+        #     logger.info(f"eval_results_overall_bug: {offline_bound_results['eval_results_overall_bug']['metric_results']}")
+        #     logger.info(f"eval_results_overall_forget: {offline_bound_results['eval_results_overall_forget']['metric_results']}")
+        with open(self.data_args.result_file, "w") as f:
+            json.dump(output_info, f)
+        self.logger.info(f"Updated result feule: {self.data_args.result_file} at Timecode: {self.timecode}.")
+
     def _check_data_args(self, additional_args=[]):
         required_atts = ["submission_stream_data",
                          "upstream_eval_data",
@@ -71,7 +89,8 @@ class OnlineDebuggingMethod():
                          "max_output_length",
                          "task_name",
                          "num_beams",
-                         "max_timecode"] + additional_args
+                         "max_timecode",
+                         "result_file"] + additional_args
         assert all([hasattr(self.data_args, att) for att in required_atts])
         return
 
@@ -173,12 +192,17 @@ class OnlineDebuggingMethod():
             return bug_train_loader, bug_eval_loader
   
     def _update_result_dict(self, result_dict):
-        if self.last_OKR is None or self.last_KG is None or self.last_UKR is None:
-            pass
-        else:
-            scores = [result_dict["CSR"], result_dict["ER"], self.last_OKR, self.last_KG, self.last_UKR]
-            result_dict["Overall"] = float(np.mean(scores))
-            wandb.log({"Overall": result_dict["Overall"]}, step=self.timecode)
+        # if self.last_OKR is None or self.last_KG is None or self.last_UKR is None:
+        #     pass
+        # else:
+        scores = [result_dict["CSR"], result_dict["EFR"]]
+        if self.last_OKR:
+            scores.append(self.last_OKR)
+            scores.append(self.last_UKR)
+            scores.append(self.last_KG)
+        result_dict["Overall"] = float(np.mean(scores))
+        wandb.log({"Overall": result_dict["Overall"]}, step=self.timecode)
+        self.logger.info(f'Overall: {result_dict["Overall"]} from scores={scores}')
         self.online_eval_results.append(result_dict)
 
     def online_debug(self):
@@ -216,6 +240,7 @@ class OnlineDebuggingMethod():
 
             if self.debugger_args.save_ckpt_freq > 0 and self.timecode % self.debugger_args.save_ckpt_freq == 0:
                 self._save_base_model()
+                self.save_result_file()
             self.logger.info("-"*50)
             self.timecode += 1
 

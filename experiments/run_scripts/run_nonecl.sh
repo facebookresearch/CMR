@@ -6,10 +6,13 @@ cd ~/SemanticDebugger/
 seed=42
 gpu=0
 prefix="QA_nonecl"
-log_file="experiments/logs/run_1030_${prefix}_seed=${seed}.log"
+
+ckpt_dir="experiments/ckpt_dirs/qa/er/${prefix}"
+mkdir -p ${ckpt_dir}
+
+log_file="experiments/logs/run_1103_${prefix}_seed=${seed}.log"
 echo "Starting ${log_file}."
-touch ${log_file}
-mkdir experiments/ckpt_dirs/qa/nonecl
+touch ${log_file} 
 
 CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetune.py \
     --use_wandb True \
@@ -24,10 +27,10 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --kg_eval_freq 10 \
     --kg_eval_mode "metric" \
     --prefix ${prefix} \
-    --submission_stream_data "experiments/eval_data/qa/dynamic_submission_stream.v1.json" \
-    --upstream_eval_data "experiments/eval_data/qa/upstream_eval.v1.jsonl" \
-    --heldout_submission_data "experiments/eval_data/qa/heldout_eval.v1.jsonl" \
-    --save_ckpt_freq 30 \
+    --submission_stream_data "experiments/eval_data/qa/submission_stream.T=100,b=64,alpha=0.98,beta=0.7,gamma=0.5.json" \
+    --upstream_eval_data "experiments/eval_data/qa/upstream_eval.jsonl" \
+    --heldout_submission_data "experiments/eval_data/qa/heldout_eval.jsonl" \
+    --save_ckpt_freq 10 \
     --ckpt_dir "experiments/ckpt_dirs/qa/nonecl" \
     --result_file experiments/results/qa/${prefix}_result.json > ${log_file} 
     # 2>&1 

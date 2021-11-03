@@ -97,6 +97,7 @@ def setup_args(args):
         max_input_length=args.max_input_length,
         max_output_length=args.max_output_length,
         task_name=args.task_name,
+        result_file=args.result_file,
         train_batch_size=args.train_batch_size,
         predict_batch_size=args.predict_batch_size,
         num_beams=args.num_beams,
@@ -179,22 +180,9 @@ def run(args):
         else: 
             debugging_alg.online_debug() 
 
-        output_info = {}
-        output_info["model_update_steps"] = debugging_alg.model_update_steps
-        output_info["method_class"] = debugging_alg.name
-        output_info["base_model_args"] = str(debugging_alg.base_model_args)
-        output_info["debugger_args"] = str(debugging_alg.debugger_args)
-        output_info["data_args"] = str(debugging_alg.data_args)
-        # output_info["online_eval_results"] = debugging_alg.online_eval_results
-        # output_info["final_eval_results"] = debugging_alg.overall_eval_results
         
-        if args.cl_method_name in ["offline_debug"]:
-            output_info["offline_bound_results"] = offline_bound_results
-            logger.info(f"eval_results_overall_bug: {offline_bound_results['eval_results_overall_bug']['metric_results']}")
-            logger.info(f"eval_results_overall_forget: {offline_bound_results['eval_results_overall_forget']['metric_results']}")
-        with open(args.result_file, "w") as f:
-            json.dump(output_info, f)
         # logger.info(f'output_info["final_eval_results"]={output_info["final_eval_results"]}')
+        debugging_alg.save_result_file()
         logger.info(f"Finished. Results saved to {args.result_file}")
     else:
         # Parallel offline evaluation mode 
@@ -235,7 +223,7 @@ def get_cli_parser():
     # data_args
 
     parser.add_argument("--submission_stream_data",
-                        default="experiments/eval_data/qa/dynamic_submission_stream.v1.json")    
+                        default="/path/to/submission_stream")    
 
     # this will be used for evaluating forgetting
     parser.add_argument("--upstream_eval_data", 

@@ -1,6 +1,6 @@
 seed=42
 declare -a lrs=("1e-5" "3e-5" "5e-5")
-declare -a eps=("1" "3" "5")
+declare -a eps=("1" "3" "6")
 for lr in "${lrs[@]}"
 do
 for ep in "${eps[@]}"

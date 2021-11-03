@@ -195,6 +195,7 @@ class MemoryBasedCL(ContinualFinetuning):
             
             if self.debugger_args.save_ckpt_freq > 0 and self.timecode % self.debugger_args.save_ckpt_freq == 0:
                 self._save_base_model()
+                self.save_result_file()
             self.logger.info("-"*50)
             self.timecode += 1
 

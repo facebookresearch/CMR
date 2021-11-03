@@ -13,12 +13,13 @@ gpu=0
 memory_store_rate=1.0
 
 prefix="QA_er_lr=${lr}_ep=${ep}_rs=${replay_size}_rf=${replay_freq}"
-log_file="experiments/logs/run_1030_${prefix}_seed=${seed}.log"
- 
-log_file=experiments/logs/run_${prefix}.log
+log_file="experiments/logs/run_1103_${prefix}_seed=${seed}.log"
+ckpt_dir="experiments/ckpt_dirs/qa/er/${prefix}"
+mkdir -p ${ckpt_dir}
+
 echo "Starting ${log_file}."
 touch ${log_file}
-mkdir experiments/ckpt_dirs/qa/er 
+
 CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetune.py \
     --use_wandb True \
     --seed $seed \
@@ -30,21 +31,19 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --use_replay_mix \
     --base_model_path "out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt" \
     --num_beams 3 \
-    --predict_batch_size 32 \
+    --predict_batch_size 48 \
     --max_timecode 100 \
-    --kr_eval_freq 5 \
-    --kr_eval_mode "metric" \
-    --kg_eval_freq 10 \
-    --kg_eval_mode "metric" \
+    --kr_eval_freq 5 --kr_eval_mode "metric" \
+    --kg_eval_freq 10 --kg_eval_mode "metric" \
     --prefix ${prefix} \
     --upstream_data_path "data/mrqa_squad/mrqa_squad_train.jsonl" \
-    --submission_stream_data "experiments/eval_data/qa/dynamic_submission_stream.v1.json" \
-    --upstream_eval_data "experiments/eval_data/qa/upstream_eval.v1.jsonl" \
-    --heldout_submission_data "experiments/eval_data/qa/heldout_eval.v1.jsonl" \
-    --save_ckpt_freq 100 \
-    --ckpt_dir "experiments/ckpt_dirs/qa/er" \
+    --submission_stream_data "experiments/eval_data/qa/submission_stream.T=100,b=64,alpha=0.98,beta=0.7,gamma=0.5.json" \
+    --upstream_eval_data "experiments/eval_data/qa/upstream_eval.jsonl" \
+    --heldout_submission_data "experiments/eval_data/qa/heldout_eval.jsonl" \
+    --save_ckpt_freq 10 \
+    --ckpt_dir ${ckpt_dir} \
     --init_memory_cache_path "na" \
-    --memory_path experiments/ckpt_dirs/qa/er/${prefix}_memory_dict.pkl \
+    --memory_path ${ckpt_dir}/memory_dict.pkl \
     --result_file experiments/results/qa/${prefix}_result.json > ${log_file} 
     # 2>&1 
     # &
