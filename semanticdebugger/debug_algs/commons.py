@@ -48,6 +48,7 @@ class OnlineDebuggingMethod():
         # for dynamic stream mode
         self.data_eval_loaders = []
         self.online_eval_results = []
+        self.last_OKR = None; self.last_UKR = None; self.last_KG = None 
 
         if self.use_cuda:
             self.n_gpu = torch.cuda.device_count()
@@ -57,6 +58,7 @@ class OnlineDebuggingMethod():
         self.model_update_steps = 0  # number of updates over the base model.
         self.past_errors = []
         self.past_submissions = []
+        
         return
 
     def _check_data_args(self, additional_args=[]):
@@ -151,14 +153,18 @@ class OnlineDebuggingMethod():
                 self.past_errors.append(bug)
         formatted_bug_batch = self.data_formatter(errors)
         self.logger.info(f"Found {len(formatted_bug_batch)} errors.")
-
+        
+        SR = 1 - len(error_ids)/len(predictions)
+        CSR = 1 - len(self.past_errors) / len(self.past_submissions)
         wandb.log({"num_errors": len(formatted_bug_batch)}, step=self.timecode)
- 
-        wandb.log({"CER": len(self.past_errors) / len(self.past_submissions)}, step=self.timecode)
+        wandb.log({"CSR": CSR}, step=self.timecode)
+        wandb.log({"SR": SR}, step=self.timecode)
 
-        result_dict["before_eval"] = _pack_as_dict(predictions, results, results_all)
-        result_dict["error_ids"] = error_ids
-
+        result_dict["before_eval_results"] = _pack_as_dict(predictions, results, results_all)
+        result_dict["before_error_ids"] = error_ids        
+        result_dict["SR"] = SR
+        result_dict["CSR"] = CSR
+        
         if return_raw_bug_examples:
             return formatted_bug_batch
         else:
@@ -166,15 +172,22 @@ class OnlineDebuggingMethod():
                 self.data_args, formatted_bug_batch, mode="both")
             return bug_train_loader, bug_eval_loader
   
-
-    # The new evaluation pipeline.
+    def _update_result_dict(self, result_dict):
+        if self.last_OKR is None or self.last_KG is None or self.last_UKR is None:
+            pass
+        else:
+            scores = [result_dict["CSR"], result_dict["ER"], self.last_OKR, self.last_KG, self.last_UKR]
+            result_dict["Overall"] = float(np.mean(scores))
+            wandb.log({"Overall": result_dict["Overall"]}, step=self.timecode)
+        self.online_eval_results.append(result_dict)
 
     def online_debug(self):
         self.logger.info("Start Online Debugging with Dynamic Error Mode")
         self.logger.info(f"Number of Batches of Data: {self.num_data_batches}")
         self.logger.info(f"Data Batch Size: {self.data_batch_size};")
         self.timecode = 0
-
+        
+        
         if self.debugger_args.save_ckpt_freq:
             # save the initial model as the 0-th model.
             self._save_base_model()
@@ -198,7 +211,9 @@ class OnlineDebuggingMethod():
             ############### CORE ###############
 
             self.evaluate_error_fixing(result_dict, bug_eval_loader)
-            self.online_eval_results.append(result_dict) 
+            self._update_result_dict(result_dict)
+            
+
             if self.debugger_args.save_ckpt_freq > 0 and self.timecode % self.debugger_args.save_ckpt_freq == 0:
                 self._save_base_model()
             self.logger.info("-"*50)
@@ -213,29 +228,7 @@ class OnlineDebuggingMethod():
     def final_evaluation(self):
         self.logger.info("Start the final evaluation.")
         # TODO: 
-        # self.overall_eval_results = {}
-        # self.overall_eval_results["overall_oncoming_test"] = {key:
-        #                                                       float(np.mean([r["before_eval"]["metric_results"][key]
-        #                                                                      for r in self.online_eval_results]))
-        #                                                       for key in self.metric.split("|")}
-        # self.overall_eval_results["overall_error_number"] = len(self.past_errors)
-        # self.overall_eval_results["overall_instant_fixing_rate"] = float(
-        #     np.mean([r["instant_fixing_rate"] for r in self.online_eval_results]))
- 
-        # # Test the in-stream examples overall.
-        # self.logger.info("Test final online KR.")
-        # _, overall_instream_eval_dataloader = self.get_dataloader(
-        #     self.data_args, self.past_submissions, mode="eval")
-        # oie_predictions, oie_results, oie_results_all = self.evaluate(
-        #     eval_dataloader=overall_instream_eval_dataloader, verbose=True)
-        # self.overall_eval_results["final_OKR"] = oie_results
-
-        # # Test the upstream forgetting eval.
-        # self.logger.info("Test final upstream KR.")
-        # oue_predictions, oue_results, oue_results_all = self.evaluate(
-        #     eval_dataloader=self.upstream_eval_loader, verbose=True)
-        # self.overall_eval_results["final_UKR"] = oue_results
-        # self.logger.info("Finish the final evaluation.")
+        self.logger.info("Nothing here.")
 
     
     def eval_knowledge_retention(self, result_dict):
@@ -251,8 +244,9 @@ class OnlineDebuggingMethod():
             scores = results_all["EM"] 
             UKR = len([1 for s in scores if s == 1]) / len(scores)
         
-        
+        result_dict["UKR"] = UKR
         wandb.log({"UKR": UKR}, step=self.timecode)
+        self.last_UKR = UKR
 
         # UKR_loss = self.evaluate(self.upstream_eval_loader, mode="loss")
         # wandb.log({"UKR_loss": UKR_loss}, step=self.timecode)
@@ -267,6 +261,7 @@ class OnlineDebuggingMethod():
                 < self.debugger_args.okr_sample_size = {self.debugger_args.okr_sample_size}")
             return 
         sampled_past_submissions = random.sample(self.past_submissions, k=self.debugger_args.okr_sample_size)
+        result_dict["OKR_sampled_ids"] = [_id for _input, _truth, _id in sampled_past_submissions]
         _, past_submission_eval_loader = self.get_dataloader(self.data_args, sampled_past_submissions, mode="eval")
         self.logger.info(f"Start eval_knowledge_retention for OKR @ Timecode={self.timecode}")
         if self.debugger_args.kr_eval_mode == "loss":
@@ -276,7 +271,10 @@ class OnlineDebuggingMethod():
             scores = results_all["EM"] 
             OKR = len([1 for s in scores if s == 1]) / len(scores)
         self.logger.info(f"Online Knowledge Retation (OKR@{self.timecode}): {OKR:.4f}") 
+        result_dict["OKR"] = OKR
+        self.last_OKR = OKR
         wandb.log({"OKR": OKR}, step=self.timecode)
+        
          
 
     def eval_knowledge_generalization(self, result_dict):
@@ -287,18 +285,17 @@ class OnlineDebuggingMethod():
         if self.debugger_args.kg_eval_mode == "loss":
             KG_loss = self.evaluate(self.heldout_submission_eval_loader, mode="loss")
         elif self.debugger_args.kg_eval_mode == "metric":
+             # TODO: get a decomposed version?
             predictions, results, results_all = self.evaluate(self.heldout_submission_eval_loader)
             scores = results_all["EM"] 
             KG = len([1 for s in scores if s == 1]) / len(scores) 
-        wandb.log({"KG": KG}, step=self.timecode)
- 
-        self.logger.info(f"Future Knowledge Generalization (KG@{self.timecode}): {KG:.4f}") 
-
-        
+        result_dict["KG"] = KG         
+        wandb.log({"KG": KG}, step=self.timecode) 
+        self.last_KG = KG
+        self.logger.info(f"Future Knowledge Generalization (KG@{self.timecode}): {KG:.4f}")         
         
     def evaluate_error_fixing(self, result_dict, bug_eval_loader):
         after_predictions, after_results, after_results_all = self.evaluate(bug_eval_loader)
-        
         fixed_ids = []
         unfixed_ids = []
         for (_input, _truth, _id),  score_after in zip(bug_eval_loader.data, after_results_all["EM"]): 
@@ -307,6 +304,7 @@ class OnlineDebuggingMethod():
             else:
                 unfixed_ids.append(_id)
         EFR = len(fixed_ids) / len(fixed_ids+unfixed_ids)
+        result_dict["EFR"] = EFR
         wandb.log({"EFR": EFR}, step=self.timecode) 
         return EFR
       # So the 0-th checkpoint should be the original base model.
@@ -330,7 +328,7 @@ class OnlineDebuggingMethod():
         if not eval_dataloader:
             self.logger.info("evaluate with submission eval loaders")
             eval_dataloader = self.submission_eval_loaders[self.timecode]
-        
+
         if mode == "metric":
             predictions = self.base_model_infer(eval_dataloader, verbose)
             assert len(predictions) == len(eval_dataloader)

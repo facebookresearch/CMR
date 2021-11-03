@@ -191,7 +191,8 @@ class MemoryBasedCL(ContinualFinetuning):
             
             
             self.evaluate_error_fixing(result_dict, bug_eval_loader)
-            self.online_eval_results.append(result_dict) 
+            self._update_result_dict(result_dict)
+            
             if self.debugger_args.save_ckpt_freq > 0 and self.timecode % self.debugger_args.save_ckpt_freq == 0:
                 self._save_base_model()
             self.logger.info("-"*50)
