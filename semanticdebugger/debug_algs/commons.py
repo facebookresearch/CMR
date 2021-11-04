@@ -257,7 +257,11 @@ class OnlineDebuggingMethod():
 
     
     def eval_knowledge_retention(self, result_dict):
-        if self.timecode % self.debugger_args.kr_eval_freq != 0:
+        if self.timecode == self.data_args.max_timecode-1:
+            pass
+        elif self.timecode % self.debugger_args.kr_eval_freq == 0:
+            pass
+        else:
             return 
         
         ######################## UKR ######################## 
@@ -303,8 +307,12 @@ class OnlineDebuggingMethod():
          
 
     def eval_knowledge_generalization(self, result_dict):
-        if self.timecode % self.debugger_args.kg_eval_freq != 0:
-            return
+        if self.timecode == self.data_args.max_timecode-1:
+            pass
+        elif self.timecode % self.debugger_args.kg_eval_freq == 0:
+            pass
+        else:
+            return 
         ######################## KG ######################## 
         self.logger.info(f"Start eval_knowledge_generalization for KG @ Timecode={self.timecode}")
         if self.debugger_args.kg_eval_mode == "loss":
