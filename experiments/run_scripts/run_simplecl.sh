@@ -3,12 +3,20 @@ source ~/.bashrc
 conda activate bartqa 
 cd ~/SemanticDebugger/
 
+## Paths ##
+ns_config=$4
+upstream_data_path="data/mrqa_squad/mrqa_squad_train.jsonl"
+submission_stream_data="experiments/eval_data/qa/submission_stream.${ns_config}.json"
+upstream_eval_data="experiments/eval_data/qa/upstream_eval.jsonl"
+heldout_submission_data="experiments/eval_data/qa/heldout_eval.jsonl"
+
+## Args ##
 seed=$1
 lr=$2
 ep=$3
 gpu=0
 
-prefix="QA_simplecl_lr=${lr}_ep=${ep}"
+prefix="QA_simplecl_lr=${lr}_ep=${ep}_${ns_config}"
 ckpt_dir="experiments/ckpt_dirs/qa/er/${prefix}"
 mkdir -p ${ckpt_dir}
 
