@@ -38,9 +38,9 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --kr_eval_freq 5 --kr_eval_mode "metric" \
     --kg_eval_freq 10 --kg_eval_mode "metric" \
     --prefix ${prefix} \
-    --submission_stream_data "experiments/eval_data/qa/submission_stream.T=100,b=64,alpha=0.98,beta=0.7,gamma=0.5.json" \
-    --upstream_eval_data "experiments/eval_data/qa/upstream_eval.jsonl" \
-    --heldout_submission_data "experiments/eval_data/qa/heldout_eval.jsonl" \
+    --submission_stream_data ${submission_stream_data} \
+    --upstream_eval_data ${upstream_eval_data} \
+    --heldout_submission_data ${heldout_submission_data} \
     --save_ckpt_freq 10 \
     --ckpt_dir ${ckpt_dir} \
     --result_file experiments/results/qa/${prefix}_result.json > ${log_file} 
