@@ -58,6 +58,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     # &
 tail -f ${log_file}
 echo "Finished ${log_file}."
+exit
 
 
 

@@ -28,14 +28,16 @@ def show_result(path):
     UKRs = [item["UKR"] for item in online if "UKR" in item]
     OKRs = [item["OKR"] for item in online if "OKR" in item]
     KGs = [item["KG"] for item in online if "KG" in item]
-    assert len(EFRs) == ns_config["T"]
+    if len(EFRs) != ns_config["T"]:
+        return None
     last_step = online[-1] 
     assert last_step["timecode"] == ns_config["T"] -1 
     r["CSR(T)"] = last_step["CSR"]
     r["AEFR(T)"] = float(np.mean(EFRs))
-    r["UKR(T-4)"] = UKRs[-1]
-    r["OKR'(T-4)"] = OKRs[-1]
-    r["KG(T-4)"] = KGs[-1]
+    # print(len(UKRs))
+    r["UKR(T)"] = UKRs[-1]
+    r["OKR'(T)"] = OKRs[-1]
+    r["KG(T)"] = KGs[-1]
     return r
     
 
@@ -48,7 +50,9 @@ for file in glob.glob("*.json"):
 
 results = []
 for r_file in result_files:
-    results.append(show_result(r_file))
+    r = show_result(r_file)
+    if r:
+        results.append(r)
 
 results.sort(key=lambda x:x["cl_method"])
 
