@@ -1,0 +1,917 @@
+11/04/2021 18:04:19 - INFO - __main__ - Namespace(adam_epsilon=1e-08, adapter_dim=32, append_another_bos=1, base_model_path='out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt', base_model_type='facebook/bart-base', ckpt_dir='experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5', cl_method_name='simple_cl', current_thread_id=None, do_lowercase=False, ewc_gamma=1, ewc_lambda=0.5, example_encoder_name='roberta-base', freeze_embeds=False, gradient_accumulation_steps=1, heldout_submission_data='experiments/eval_data/qa/heldout_eval.jsonl', index_rank_method='most_similar', indexing_args_path='exp_results/supervision_data/1012_dm_simple.train_args.json', indexing_method='bart_index', inference_query_size=1, init_memory_cache_path='bug_data/memory_key_cache.pkl', kg_eval_freq=10, kg_eval_mode='metric', kr_eval_freq=5, kr_eval_mode='metric', learning_rate=3e-05, local_adapt_lr=1e-05, max_grad_norm=0.1, max_input_length=888, max_output_length=50, max_timecode=100, memory_key_encoder='facebook/bart-base', memory_path='', memory_store_rate=1.0, mir_abalation_args='none', num_adapt_epochs=1, num_beams=3, num_threads_eval=0, num_train_epochs=1.0, okr_sample_seed=1337, okr_sample_size=512, path_to_thread_result=None, predict_batch_size=48, prefix='QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5', replay_candidate_size=8, replay_frequency=1, replay_size=8, result_file='experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json', save_ckpt_freq=10, seed=42, skip_instant_eval=False, submission_stream_data='experiments/eval_data/qa/submission_stream.T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5.json', task_emb_dim=768, task_name='mrqa', train_batch_size=8, upstream_data_path='data/mrqa_squad/mrqa_squad_train.jsonl', upstream_eval_data='experiments/eval_data/qa/upstream_eval.jsonl', upstream_sample_ratio=-1, use_mir=False, use_replay_mix=False, use_wandb=True, weight_decay=0.01)
+11/04/2021 18:04:20 - INFO - transformers.tokenization_utils - loading file https://s3.amazonaws.com/models.huggingface.co/bert/roberta-large-vocab.json from cache at /private/home/yuchenlin/.cache/torch/transformers/1ae1f5b6e2b22b25ccc04c000bb79ca847aa226d0761536b011cf7e5868f0655.ef00af9e673c7160b4d41cfda1f48c5f4cba57d5142754525572a846a1ab1b9b
+11/04/2021 18:04:20 - INFO - transformers.tokenization_utils - loading file https://s3.amazonaws.com/models.huggingface.co/bert/roberta-large-merges.txt from cache at /private/home/yuchenlin/.cache/torch/transformers/f8f83199a6270d582d6245dc100e99c4155de81c9745c6248077018fe01abcfb.70bec105b4158ed9a1747fea67a43f5dee97855c64d62b6ec3742f4cfdb5feda
+11/04/2021 18:04:38 - INFO - __main__ - load_data: len(upstream_eval_examples)=512
+11/04/2021 18:04:39 - INFO - __main__ - load_data: len(heldout_eval_examples)=1280
+11/04/2021 18:04:43 - INFO - __main__ - Loading checkpoint from out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt for facebook/bart-base .....
+11/04/2021 18:04:44 - INFO - transformers.configuration_utils - loading configuration file https://s3.amazonaws.com/models.huggingface.co/bert/facebook/bart-base/config.json from cache at /private/home/yuchenlin/.cache/torch/transformers/09f4fcaeaf785dd3b97b085d6e3510c7081f586ec8e75981683c6299c0f81d9d.e8d516ad807436d395effad8c2326786872659b7dd1210827ac67c761198a0eb
+11/04/2021 18:04:44 - INFO - transformers.configuration_utils - Model config BartConfig {
+  "activation_dropout": 0.1,
+  "activation_function": "gelu",
+  "add_bias_logits": false,
+  "add_final_layer_norm": false,
+  "architectures": [
+    "BartModel",
+    "BartForConditionalGeneration",
+    "BartForSequenceClassification"
+  ],
+  "attention_dropout": 0.1,
+  "bos_token_id": 0,
+  "classif_dropout": 0.0,
+  "d_model": 768,
+  "decoder_attention_heads": 12,
+  "decoder_ffn_dim": 3072,
+  "decoder_layerdrop": 0.0,
+  "decoder_layers": 6,
+  "decoder_start_token_id": 2,
+  "dropout": 0.1,
+  "early_stopping": true,
+  "encoder_attention_heads": 12,
+  "encoder_ffn_dim": 3072,
+  "encoder_layerdrop": 0.0,
+  "encoder_layers": 6,
+  "eos_token_id": 2,
+  "id2label": {
+    "0": "LABEL_0",
+    "1": "LABEL_1",
+    "2": "LABEL_2"
+  },
+  "init_std": 0.02,
+  "is_encoder_decoder": true,
+  "label2id": {
+    "LABEL_0": 0,
+    "LABEL_1": 1,
+    "LABEL_2": 2
+  },
+  "max_position_embeddings": 1024,
+  "model_type": "bart",
+  "no_repeat_ngram_size": 3,
+  "normalize_before": false,
+  "normalize_embedding": true,
+  "num_beams": 4,
+  "num_hidden_layers": 6,
+  "pad_token_id": 1,
+  "scale_embedding": false,
+  "static_position_embeddings": false,
+  "task_specific_params": {
+    "summarization": {
+      "length_penalty": 1.0,
+      "max_length": 128,
+      "min_length": 12,
+      "num_beams": 4
+    },
+    "summarization_cnn": {
+      "length_penalty": 2.0,
+      "max_length": 142,
+      "min_length": 56,
+      "num_beams": 4
+    },
+    "summarization_xsum": {
+      "length_penalty": 1.0,
+      "max_length": 62,
+      "min_length": 11,
+      "num_beams": 6
+    }
+  },
+  "vocab_size": 50265
+}
+
+11/04/2021 18:04:44 - INFO - transformers.modeling_utils - loading weights file https://cdn.huggingface.co/facebook/bart-base/pytorch_model.bin from cache at /private/home/yuchenlin/.cache/torch/transformers/566c05fb6983817e8ad7a4fa51e3099fe9caa3b31730f964bc5198d71c677523.0a3d95c18c1e434448941bc25accea7b122882be6526fb67c8e8fb6d5ebc711c
+11/04/2021 18:04:47 - INFO - __main__ - Loading checkpoint from out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt for facebook/bart-base ..... Done!
+11/04/2021 18:04:51 - INFO - __main__ - Moving to the GPUs.
+11/04/2021 18:04:51 - INFO - __main__ - Debugger Setup ......
+11/04/2021 18:04:51 - INFO - __main__ - debugger_args: Namespace(adam_epsilon=1e-08, ckpt_dir='experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5', gradient_accumulation_steps=1, kg_eval_freq=10, kg_eval_mode='metric', kr_eval_freq=5, kr_eval_mode='metric', learning_rate=3e-05, max_grad_norm=0.1, num_epochs=1.0, okr_sample_seed=1337, okr_sample_size=512, save_ckpt_freq=10, skip_instant_eval=False, total_steps=10000, warmup_steps=0, weight_decay=0.01) ......
+11/04/2021 18:04:51 - INFO - __main__ - optimizer & scheduler Setup ...... Done!
+11/04/2021 18:04:51 - INFO - __main__ - Debugger Setup ...... Done!
+11/04/2021 18:04:51 - INFO - __main__ - Start Online Debugging with Dynamic Error Mode
+11/04/2021 18:04:51 - INFO - __main__ - Number of Batches of Data: 100
+11/04/2021 18:04:51 - INFO - __main__ - Data Batch Size: 64;
+11/04/2021 18:04:53 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_000.pt.
+11/04/2021 18:04:53 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=0
+11/04/2021 18:05:17 - INFO - __main__ - Upstream Knowledge Retation (UKR@0): 0.8027
+11/04/2021 18:05:17 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=0
+11/04/2021 18:06:51 - INFO - __main__ - Future Knowledge Generalization (KG@0): 0.3125
+11/04/2021 18:06:51 - INFO - __main__ - Evaluating to get errors .... Timecode: 0
+11/04/2021 18:06:54 - INFO - __main__ - Before Error Fixing: {'EM': 0.875, 'QA-F1': 0.8836538461538461}
+11/04/2021 18:06:54 - INFO - __main__ - Found 8 errors.
+11/04/2021 18:06:54 - INFO - __main__ - Start error-fixing .... Timecode: 0
+11/04/2021 18:06:55 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:06:55 - INFO - __main__ - Overall: 0.75 from scores=[0.875, 0.625]
+11/04/2021 18:06:58 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_000.pt.
+11/04/2021 18:06:58 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 0.
+11/04/2021 18:06:58 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:06:58 - INFO - __main__ - Evaluating to get errors .... Timecode: 1
+11/04/2021 18:07:01 - INFO - __main__ - Before Error Fixing: {'EM': 0.703125, 'QA-F1': 0.7364688263125763}
+11/04/2021 18:07:01 - INFO - __main__ - Found 19 errors.
+11/04/2021 18:07:01 - INFO - __main__ - Start error-fixing .... Timecode: 1
+11/04/2021 18:07:01 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:07:03 - INFO - __main__ - Overall: 0.6313733552631579 from scores=[0.7890625, 0.47368421052631576]
+11/04/2021 18:07:03 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:07:03 - INFO - __main__ - Evaluating to get errors .... Timecode: 2
+11/04/2021 18:07:06 - INFO - __main__ - Before Error Fixing: {'EM': 0.859375, 'QA-F1': 0.8803937815656566}
+11/04/2021 18:07:06 - INFO - __main__ - Found 9 errors.
+11/04/2021 18:07:06 - INFO - __main__ - Start error-fixing .... Timecode: 2
+11/04/2021 18:07:06 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:07:07 - INFO - __main__ - Overall: 0.5173611111111112 from scores=[0.8125, 0.2222222222222222]
+11/04/2021 18:07:07 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:07:07 - INFO - __main__ - Evaluating to get errors .... Timecode: 3
+11/04/2021 18:07:11 - INFO - __main__ - Before Error Fixing: {'EM': 0.765625, 'QA-F1': 0.8104414682539682}
+11/04/2021 18:07:11 - INFO - __main__ - Found 15 errors.
+11/04/2021 18:07:11 - INFO - __main__ - Start error-fixing .... Timecode: 3
+11/04/2021 18:07:12 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:07:13 - INFO - __main__ - Overall: 0.46705729166666665 from scores=[0.80078125, 0.13333333333333333]
+11/04/2021 18:07:13 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:07:13 - INFO - __main__ - Evaluating to get errors .... Timecode: 4
+11/04/2021 18:07:17 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7336040874833978}
+11/04/2021 18:07:17 - INFO - __main__ - Found 22 errors.
+11/04/2021 18:07:17 - INFO - __main__ - Start error-fixing .... Timecode: 4
+11/04/2021 18:07:17 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:07:19 - INFO - __main__ - Overall: 0.5450284090909091 from scores=[0.771875, 0.3181818181818182]
+11/04/2021 18:07:19 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:07:19 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=5
+11/04/2021 18:07:46 - INFO - __main__ - Upstream Knowledge Retation (UKR@5): 0.8164
+11/04/2021 18:07:46 - INFO - __main__ - len(self.past_submissions) = 320                 < self.debugger_args.okr_sample_size = 512
+11/04/2021 18:07:46 - INFO - __main__ - Evaluating to get errors .... Timecode: 5
+11/04/2021 18:07:49 - INFO - __main__ - Before Error Fixing: {'EM': 0.75, 'QA-F1': 0.808002500971251}
+11/04/2021 18:07:49 - INFO - __main__ - Found 16 errors.
+11/04/2021 18:07:49 - INFO - __main__ - Start error-fixing .... Timecode: 5
+11/04/2021 18:07:49 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:07:51 - INFO - __main__ - Overall: 0.4466145833333333 from scores=[0.7682291666666666, 0.125]
+11/04/2021 18:07:51 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:07:51 - INFO - __main__ - Evaluating to get errors .... Timecode: 6
+11/04/2021 18:07:57 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.6977296838510074}
+11/04/2021 18:07:57 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:07:57 - INFO - __main__ - Start error-fixing .... Timecode: 6
+11/04/2021 18:07:58 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:08:00 - INFO - __main__ - Overall: 0.5613839285714286 from scores=[0.7477678571428572, 0.375]
+11/04/2021 18:08:00 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:08:00 - INFO - __main__ - Evaluating to get errors .... Timecode: 7
+11/04/2021 18:08:03 - INFO - __main__ - Before Error Fixing: {'EM': 0.734375, 'QA-F1': 0.8114211309523809}
+11/04/2021 18:08:03 - INFO - __main__ - Found 17 errors.
+11/04/2021 18:08:03 - INFO - __main__ - Start error-fixing .... Timecode: 7
+11/04/2021 18:08:04 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:08:05 - INFO - __main__ - Overall: 0.5495174632352942 from scores=[0.74609375, 0.35294117647058826]
+11/04/2021 18:08:05 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:08:05 - INFO - __main__ - Evaluating to get errors .... Timecode: 8
+11/04/2021 18:08:08 - INFO - __main__ - Before Error Fixing: {'EM': 0.734375, 'QA-F1': 0.7561785130718954}
+11/04/2021 18:08:08 - INFO - __main__ - Found 17 errors.
+11/04/2021 18:08:08 - INFO - __main__ - Start error-fixing .... Timecode: 8
+11/04/2021 18:08:09 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:08:10 - INFO - __main__ - Overall: 0.4900428921568628 from scores=[0.7447916666666667, 0.23529411764705882]
+11/04/2021 18:08:10 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:08:10 - INFO - __main__ - Evaluating to get errors .... Timecode: 9
+11/04/2021 18:08:14 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.6724617236917769}
+11/04/2021 18:08:14 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:08:14 - INFO - __main__ - Start error-fixing .... Timecode: 9
+11/04/2021 18:08:14 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:08:17 - INFO - __main__ - Overall: 0.49140625 from scores=[0.7328125, 0.25]
+11/04/2021 18:08:17 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:08:17 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=10
+11/04/2021 18:08:39 - INFO - __main__ - Upstream Knowledge Retation (UKR@10): 0.8320
+11/04/2021 18:08:40 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=10
+11/04/2021 18:09:08 - INFO - __main__ - Online Knowledge Retation (OKR@10): 0.8711
+11/04/2021 18:09:08 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=10
+11/04/2021 18:10:22 - INFO - __main__ - Future Knowledge Generalization (KG@10): 0.3812
+11/04/2021 18:10:22 - INFO - __main__ - Evaluating to get errors .... Timecode: 10
+11/04/2021 18:10:26 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7286458333333333}
+11/04/2021 18:10:26 - INFO - __main__ - Found 22 errors.
+11/04/2021 18:10:26 - INFO - __main__ - Start error-fixing .... Timecode: 10
+11/04/2021 18:10:27 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:10:28 - INFO - __main__ - Overall: 0.5984090909090909 from scores=[0.7258522727272727, 0.18181818181818182, 0.87109375, 0.83203125, 0.38125]
+11/04/2021 18:10:30 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_010.pt.
+11/04/2021 18:10:30 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 10.
+11/04/2021 18:10:30 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:10:30 - INFO - __main__ - Evaluating to get errors .... Timecode: 11
+11/04/2021 18:10:34 - INFO - __main__ - Before Error Fixing: {'EM': 0.734375, 'QA-F1': 0.7650669642857143}
+11/04/2021 18:10:34 - INFO - __main__ - Found 17 errors.
+11/04/2021 18:10:34 - INFO - __main__ - Start error-fixing .... Timecode: 11
+11/04/2021 18:10:35 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:10:36 - INFO - __main__ - Overall: 0.5974816176470589 from scores=[0.7265625, 0.17647058823529413, 0.87109375, 0.83203125, 0.38125]
+11/04/2021 18:10:36 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:10:36 - INFO - __main__ - Evaluating to get errors .... Timecode: 12
+11/04/2021 18:10:40 - INFO - __main__ - Before Error Fixing: {'EM': 0.78125, 'QA-F1': 0.8241753472222222}
+11/04/2021 18:10:40 - INFO - __main__ - Found 14 errors.
+11/04/2021 18:10:40 - INFO - __main__ - Start error-fixing .... Timecode: 12
+11/04/2021 18:10:41 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:10:42 - INFO - __main__ - Overall: 0.5630288461538462 from scores=[0.7307692307692308, 0.0, 0.87109375, 0.83203125, 0.38125]
+11/04/2021 18:10:42 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:10:42 - INFO - __main__ - Evaluating to get errors .... Timecode: 13
+11/04/2021 18:10:45 - INFO - __main__ - Before Error Fixing: {'EM': 0.796875, 'QA-F1': 0.8537344599844601}
+11/04/2021 18:10:45 - INFO - __main__ - Found 13 errors.
+11/04/2021 18:10:46 - INFO - __main__ - Start error-fixing .... Timecode: 13
+11/04/2021 18:10:46 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:10:47 - INFO - __main__ - Overall: 0.5793578296703297 from scores=[0.7354910714285714, 0.07692307692307693, 0.87109375, 0.83203125, 0.38125]
+11/04/2021 18:10:47 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:10:47 - INFO - __main__ - Evaluating to get errors .... Timecode: 14
+11/04/2021 18:10:51 - INFO - __main__ - Before Error Fixing: {'EM': 0.703125, 'QA-F1': 0.7727407141469642}
+11/04/2021 18:10:51 - INFO - __main__ - Found 19 errors.
+11/04/2021 18:10:51 - INFO - __main__ - Start error-fixing .... Timecode: 14
+11/04/2021 18:10:52 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:10:53 - INFO - __main__ - Overall: 0.5951206140350878 from scores=[0.7333333333333334, 0.15789473684210525, 0.87109375, 0.83203125, 0.38125]
+11/04/2021 18:10:53 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:10:53 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=15
+11/04/2021 18:11:22 - INFO - __main__ - Upstream Knowledge Retation (UKR@15): 0.7949
+11/04/2021 18:11:22 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=15
+11/04/2021 18:12:00 - INFO - __main__ - Online Knowledge Retation (OKR@15): 0.8340
+11/04/2021 18:12:00 - INFO - __main__ - Evaluating to get errors .... Timecode: 15
+11/04/2021 18:12:04 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6745088755199049}
+11/04/2021 18:12:04 - INFO - __main__ - Found 28 errors.
+11/04/2021 18:12:04 - INFO - __main__ - Start error-fixing .... Timecode: 15
+11/04/2021 18:12:05 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:12:07 - INFO - __main__ - Overall: 0.5965625 from scores=[0.72265625, 0.25, 0.833984375, 0.794921875, 0.38125]
+11/04/2021 18:12:07 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:12:07 - INFO - __main__ - Evaluating to get errors .... Timecode: 16
+11/04/2021 18:12:12 - INFO - __main__ - Before Error Fixing: {'EM': 0.734375, 'QA-F1': 0.7890575396825397}
+11/04/2021 18:12:12 - INFO - __main__ - Found 17 errors.
+11/04/2021 18:12:12 - INFO - __main__ - Start error-fixing .... Timecode: 16
+11/04/2021 18:12:13 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:12:14 - INFO - __main__ - Overall: 0.5937591911764707 from scores=[0.7233455882352942, 0.23529411764705882, 0.833984375, 0.794921875, 0.38125]
+11/04/2021 18:12:14 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:12:14 - INFO - __main__ - Evaluating to get errors .... Timecode: 17
+11/04/2021 18:12:20 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.691952163260127}
+11/04/2021 18:12:20 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:12:20 - INFO - __main__ - Start error-fixing .... Timecode: 17
+11/04/2021 18:12:21 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:12:23 - INFO - __main__ - Overall: 0.5622743055555556 from scores=[0.7178819444444444, 0.08333333333333333, 0.833984375, 0.794921875, 0.38125]
+11/04/2021 18:12:23 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:12:23 - INFO - __main__ - Evaluating to get errors .... Timecode: 18
+11/04/2021 18:12:27 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7460076458468002}
+11/04/2021 18:12:27 - INFO - __main__ - Found 22 errors.
+11/04/2021 18:12:27 - INFO - __main__ - Start error-fixing .... Timecode: 18
+11/04/2021 18:12:28 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:12:30 - INFO - __main__ - Overall: 0.5449588815789473 from scores=[0.7146381578947368, 0.0, 0.833984375, 0.794921875, 0.38125]
+11/04/2021 18:12:30 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:12:30 - INFO - __main__ - Evaluating to get errors .... Timecode: 19
+11/04/2021 18:12:36 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7286159620098039}
+11/04/2021 18:12:36 - INFO - __main__ - Found 22 errors.
+11/04/2021 18:12:36 - INFO - __main__ - Start error-fixing .... Timecode: 19
+11/04/2021 18:12:37 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:12:39 - INFO - __main__ - Overall: 0.5625568181818182 from scores=[0.71171875, 0.09090909090909091, 0.833984375, 0.794921875, 0.38125]
+11/04/2021 18:12:39 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:12:39 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=20
+11/04/2021 18:13:08 - INFO - __main__ - Upstream Knowledge Retation (UKR@20): 0.7969
+11/04/2021 18:13:09 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=20
+11/04/2021 18:13:45 - INFO - __main__ - Online Knowledge Retation (OKR@20): 0.8164
+11/04/2021 18:13:45 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=20
+11/04/2021 18:15:18 - INFO - __main__ - Future Knowledge Generalization (KG@20): 0.4359
+11/04/2021 18:15:18 - INFO - __main__ - Evaluating to get errors .... Timecode: 20
+11/04/2021 18:15:23 - INFO - __main__ - Before Error Fixing: {'EM': 0.734375, 'QA-F1': 0.7801306460084033}
+11/04/2021 18:15:23 - INFO - __main__ - Found 17 errors.
+11/04/2021 18:15:23 - INFO - __main__ - Start error-fixing .... Timecode: 20
+11/04/2021 18:15:24 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:15:25 - INFO - __main__ - Overall: 0.5759326855742297 from scores=[0.7127976190476191, 0.11764705882352941, 0.81640625, 0.796875, 0.4359375]
+11/04/2021 18:15:27 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_020.pt.
+11/04/2021 18:15:27 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 20.
+11/04/2021 18:15:27 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:15:27 - INFO - __main__ - Evaluating to get errors .... Timecode: 21
+11/04/2021 18:15:31 - INFO - __main__ - Before Error Fixing: {'EM': 0.78125, 'QA-F1': 0.8712917998268916}
+11/04/2021 18:15:31 - INFO - __main__ - Found 14 errors.
+11/04/2021 18:15:31 - INFO - __main__ - Start error-fixing .... Timecode: 21
+11/04/2021 18:15:32 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:15:33 - INFO - __main__ - Overall: 0.5815969967532467 from scores=[0.7159090909090908, 0.14285714285714285, 0.81640625, 0.796875, 0.4359375]
+11/04/2021 18:15:33 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:15:33 - INFO - __main__ - Evaluating to get errors .... Timecode: 22
+11/04/2021 18:15:38 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.6913396499333999}
+11/04/2021 18:15:38 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:15:38 - INFO - __main__ - Start error-fixing .... Timecode: 22
+11/04/2021 18:15:39 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:15:41 - INFO - __main__ - Overall: 0.5689017210144928 from scores=[0.7119565217391304, 0.08333333333333333, 0.81640625, 0.796875, 0.4359375]
+11/04/2021 18:15:41 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:15:41 - INFO - __main__ - Evaluating to get errors .... Timecode: 23
+11/04/2021 18:15:45 - INFO - __main__ - Before Error Fixing: {'EM': 0.6875, 'QA-F1': 0.7285037878787879}
+11/04/2021 18:15:45 - INFO - __main__ - Found 20 errors.
+11/04/2021 18:15:46 - INFO - __main__ - Start error-fixing .... Timecode: 23
+11/04/2021 18:15:46 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:15:48 - INFO - __main__ - Overall: 0.58203125 from scores=[0.7109375, 0.15, 0.81640625, 0.796875, 0.4359375]
+11/04/2021 18:15:48 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:15:48 - INFO - __main__ - Evaluating to get errors .... Timecode: 24
+11/04/2021 18:15:53 - INFO - __main__ - Before Error Fixing: {'EM': 0.765625, 'QA-F1': 0.8032738095238096}
+11/04/2021 18:15:53 - INFO - __main__ - Found 15 errors.
+11/04/2021 18:15:53 - INFO - __main__ - Start error-fixing .... Timecode: 24
+11/04/2021 18:15:54 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:15:56 - INFO - __main__ - Overall: 0.5658020833333334 from scores=[0.713125, 0.06666666666666667, 0.81640625, 0.796875, 0.4359375]
+11/04/2021 18:15:56 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:15:56 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=25
+11/04/2021 18:16:22 - INFO - __main__ - Upstream Knowledge Retation (UKR@25): 0.8066
+11/04/2021 18:16:23 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=25
+11/04/2021 18:16:58 - INFO - __main__ - Online Knowledge Retation (OKR@25): 0.8066
+11/04/2021 18:16:58 - INFO - __main__ - Evaluating to get errors .... Timecode: 25
+11/04/2021 18:17:03 - INFO - __main__ - Before Error Fixing: {'EM': 0.6875, 'QA-F1': 0.7522350912975913}
+11/04/2021 18:17:03 - INFO - __main__ - Found 20 errors.
+11/04/2021 18:17:03 - INFO - __main__ - Start error-fixing .... Timecode: 25
+11/04/2021 18:17:03 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:17:05 - INFO - __main__ - Overall: 0.5722716346153847 from scores=[0.7121394230769231, 0.1, 0.806640625, 0.806640625, 0.4359375]
+11/04/2021 18:17:05 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:17:05 - INFO - __main__ - Evaluating to get errors .... Timecode: 26
+11/04/2021 18:17:10 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.7343177719200888}
+11/04/2021 18:17:10 - INFO - __main__ - Found 25 errors.
+11/04/2021 18:17:10 - INFO - __main__ - Start error-fixing .... Timecode: 26
+11/04/2021 18:17:11 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:17:13 - INFO - __main__ - Overall: 0.5995104166666667 from scores=[0.7083333333333333, 0.24, 0.806640625, 0.806640625, 0.4359375]
+11/04/2021 18:17:13 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:17:13 - INFO - __main__ - Evaluating to get errors .... Timecode: 27
+11/04/2021 18:17:18 - INFO - __main__ - Before Error Fixing: {'EM': 0.6875, 'QA-F1': 0.7198206018518518}
+11/04/2021 18:17:18 - INFO - __main__ - Found 20 errors.
+11/04/2021 18:17:19 - INFO - __main__ - Start error-fixing .... Timecode: 27
+11/04/2021 18:17:20 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:17:21 - INFO - __main__ - Overall: 0.5813616071428572 from scores=[0.7075892857142857, 0.15, 0.806640625, 0.806640625, 0.4359375]
+11/04/2021 18:17:21 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:17:21 - INFO - __main__ - Evaluating to get errors .... Timecode: 28
+11/04/2021 18:17:25 - INFO - __main__ - Before Error Fixing: {'EM': 0.6875, 'QA-F1': 0.7697172619047619}
+11/04/2021 18:17:25 - INFO - __main__ - Found 20 errors.
+11/04/2021 18:17:25 - INFO - __main__ - Start error-fixing .... Timecode: 28
+11/04/2021 18:17:26 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:17:28 - INFO - __main__ - Overall: 0.5712230603448276 from scores=[0.7068965517241379, 0.1, 0.806640625, 0.806640625, 0.4359375]
+11/04/2021 18:17:28 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:17:28 - INFO - __main__ - Evaluating to get errors .... Timecode: 29
+11/04/2021 18:17:32 - INFO - __main__ - Before Error Fixing: {'EM': 0.671875, 'QA-F1': 0.7558258044304309}
+11/04/2021 18:17:32 - INFO - __main__ - Found 21 errors.
+11/04/2021 18:17:32 - INFO - __main__ - Start error-fixing .... Timecode: 29
+11/04/2021 18:17:33 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:17:35 - INFO - __main__ - Overall: 0.598608630952381 from scores=[0.7057291666666667, 0.23809523809523808, 0.806640625, 0.806640625, 0.4359375]
+11/04/2021 18:17:35 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:17:35 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=30
+11/04/2021 18:18:06 - INFO - __main__ - Upstream Knowledge Retation (UKR@30): 0.7715
+11/04/2021 18:18:07 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=30
+11/04/2021 18:18:48 - INFO - __main__ - Online Knowledge Retation (OKR@30): 0.7695
+11/04/2021 18:18:48 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=30
+11/04/2021 18:20:20 - INFO - __main__ - Future Knowledge Generalization (KG@30): 0.4492
+11/04/2021 18:20:20 - INFO - __main__ - Evaluating to get errors .... Timecode: 30
+11/04/2021 18:20:25 - INFO - __main__ - Before Error Fixing: {'EM': 0.671875, 'QA-F1': 0.7928514194139193}
+11/04/2021 18:20:25 - INFO - __main__ - Found 21 errors.
+11/04/2021 18:20:25 - INFO - __main__ - Start error-fixing .... Timecode: 30
+11/04/2021 18:20:26 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:20:28 - INFO - __main__ - Overall: 0.5770695324500767 from scores=[0.7046370967741935, 0.19047619047619047, 0.76953125, 0.771484375, 0.44921875]
+11/04/2021 18:20:30 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_030.pt.
+11/04/2021 18:20:30 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 30.
+11/04/2021 18:20:30 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:20:30 - INFO - __main__ - Evaluating to get errors .... Timecode: 31
+11/04/2021 18:20:36 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.7439854964114833}
+11/04/2021 18:20:36 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:20:36 - INFO - __main__ - Start error-fixing .... Timecode: 31
+11/04/2021 18:20:37 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:20:39 - INFO - __main__ - Overall: 0.5551432291666667 from scores=[0.7021484375, 0.08333333333333333, 0.76953125, 0.771484375, 0.44921875]
+11/04/2021 18:20:39 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:20:39 - INFO - __main__ - Evaluating to get errors .... Timecode: 32
+11/04/2021 18:20:43 - INFO - __main__ - Before Error Fixing: {'EM': 0.71875, 'QA-F1': 0.788320707070707}
+11/04/2021 18:20:43 - INFO - __main__ - Found 18 errors.
+11/04/2021 18:20:43 - INFO - __main__ - Start error-fixing .... Timecode: 32
+11/04/2021 18:20:44 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:20:46 - INFO - __main__ - Overall: 0.5830216224747475 from scores=[0.7026515151515151, 0.2222222222222222, 0.76953125, 0.771484375, 0.44921875]
+11/04/2021 18:20:46 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:20:46 - INFO - __main__ - Evaluating to get errors .... Timecode: 33
+11/04/2021 18:20:49 - INFO - __main__ - Before Error Fixing: {'EM': 0.640625, 'QA-F1': 0.7048487103174603}
+11/04/2021 18:20:49 - INFO - __main__ - Found 23 errors.
+11/04/2021 18:20:49 - INFO - __main__ - Start error-fixing .... Timecode: 33
+11/04/2021 18:20:50 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:20:52 - INFO - __main__ - Overall: 0.5816905770460358 from scores=[0.7008272058823529, 0.21739130434782608, 0.76953125, 0.771484375, 0.44921875]
+11/04/2021 18:20:52 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:20:52 - INFO - __main__ - Evaluating to get errors .... Timecode: 34
+11/04/2021 18:20:57 - INFO - __main__ - Before Error Fixing: {'EM': 0.671875, 'QA-F1': 0.7417891483516483}
+11/04/2021 18:20:57 - INFO - __main__ - Found 21 errors.
+11/04/2021 18:20:57 - INFO - __main__ - Start error-fixing .... Timecode: 34
+11/04/2021 18:20:58 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:20:59 - INFO - __main__ - Overall: 0.557094494047619 from scores=[0.7, 0.09523809523809523, 0.76953125, 0.771484375, 0.44921875]
+11/04/2021 18:20:59 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:20:59 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=35
+11/04/2021 18:21:27 - INFO - __main__ - Upstream Knowledge Retation (UKR@35): 0.8066
+11/04/2021 18:21:28 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=35
+11/04/2021 18:22:02 - INFO - __main__ - Online Knowledge Retation (OKR@35): 0.8066
+11/04/2021 18:22:02 - INFO - __main__ - Evaluating to get errors .... Timecode: 35
+11/04/2021 18:22:08 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7367776211361738}
+11/04/2021 18:22:08 - INFO - __main__ - Found 22 errors.
+11/04/2021 18:22:08 - INFO - __main__ - Start error-fixing .... Timecode: 35
+11/04/2021 18:22:09 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:22:11 - INFO - __main__ - Overall: 0.6158933080808081 from scores=[0.6987847222222222, 0.3181818181818182, 0.806640625, 0.806640625, 0.44921875]
+11/04/2021 18:22:11 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:22:11 - INFO - __main__ - Evaluating to get errors .... Timecode: 36
+11/04/2021 18:22:16 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.6796911002304147}
+11/04/2021 18:22:16 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:22:16 - INFO - __main__ - Start error-fixing .... Timecode: 36
+11/04/2021 18:22:17 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:22:19 - INFO - __main__ - Overall: 0.5851914414414414 from scores=[0.6967905405405406, 0.16666666666666666, 0.806640625, 0.806640625, 0.44921875]
+11/04/2021 18:22:19 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:22:19 - INFO - __main__ - Evaluating to get errors .... Timecode: 37
+11/04/2021 18:22:24 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.6995909641960402}
+11/04/2021 18:22:24 - INFO - __main__ - Found 25 errors.
+11/04/2021 18:22:24 - INFO - __main__ - Start error-fixing .... Timecode: 37
+11/04/2021 18:22:26 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:22:28 - INFO - __main__ - Overall: 0.5993980263157894 from scores=[0.6944901315789473, 0.24, 0.806640625, 0.806640625, 0.44921875]
+11/04/2021 18:22:28 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:22:28 - INFO - __main__ - Evaluating to get errors .... Timecode: 38
+11/04/2021 18:22:34 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.7362240470377626}
+11/04/2021 18:22:34 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:22:34 - INFO - __main__ - Start error-fixing .... Timecode: 38
+11/04/2021 18:22:35 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:22:37 - INFO - __main__ - Overall: 0.5927083333333333 from scores=[0.6927083333333333, 0.20833333333333334, 0.806640625, 0.806640625, 0.44921875]
+11/04/2021 18:22:37 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:22:37 - INFO - __main__ - Evaluating to get errors .... Timecode: 39
+11/04/2021 18:22:43 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6564934471595656}
+11/04/2021 18:22:43 - INFO - __main__ - Found 28 errors.
+11/04/2021 18:22:43 - INFO - __main__ - Start error-fixing .... Timecode: 39
+11/04/2021 18:22:44 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:22:46 - INFO - __main__ - Overall: 0.5646763392857143 from scores=[0.689453125, 0.07142857142857142, 0.806640625, 0.806640625, 0.44921875]
+11/04/2021 18:22:46 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:22:46 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=40
+11/04/2021 18:23:14 - INFO - __main__ - Upstream Knowledge Retation (UKR@40): 0.8125
+11/04/2021 18:23:15 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=40
+11/04/2021 18:23:48 - INFO - __main__ - Online Knowledge Retation (OKR@40): 0.8027
+11/04/2021 18:23:48 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=40
+11/04/2021 18:25:05 - INFO - __main__ - Future Knowledge Generalization (KG@40): 0.4805
+11/04/2021 18:25:05 - INFO - __main__ - Evaluating to get errors .... Timecode: 40
+11/04/2021 18:25:10 - INFO - __main__ - Before Error Fixing: {'EM': 0.71875, 'QA-F1': 0.7660863095238095}
+11/04/2021 18:25:10 - INFO - __main__ - Found 18 errors.
+11/04/2021 18:25:10 - INFO - __main__ - Start error-fixing .... Timecode: 40
+11/04/2021 18:25:11 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:25:12 - INFO - __main__ - Overall: 0.6016186060298103 from scores=[0.6901676829268293, 0.2222222222222222, 0.802734375, 0.8125, 0.48046875]
+11/04/2021 18:25:14 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_040.pt.
+11/04/2021 18:25:14 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 40.
+11/04/2021 18:25:14 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:25:14 - INFO - __main__ - Evaluating to get errors .... Timecode: 41
+11/04/2021 18:25:19 - INFO - __main__ - Before Error Fixing: {'EM': 0.6875, 'QA-F1': 0.7578312987687987}
+11/04/2021 18:25:19 - INFO - __main__ - Found 20 errors.
+11/04/2021 18:25:19 - INFO - __main__ - Start error-fixing .... Timecode: 41
+11/04/2021 18:25:20 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:25:22 - INFO - __main__ - Overall: 0.5971614583333333 from scores=[0.6901041666666667, 0.2, 0.802734375, 0.8125, 0.48046875]
+11/04/2021 18:25:22 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:25:22 - INFO - __main__ - Evaluating to get errors .... Timecode: 42
+11/04/2021 18:25:27 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.7060970568783069}
+11/04/2021 18:25:27 - INFO - __main__ - Found 25 errors.
+11/04/2021 18:25:27 - INFO - __main__ - Start error-fixing .... Timecode: 42
+11/04/2021 18:25:28 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:25:30 - INFO - __main__ - Overall: 0.5807859738372093 from scores=[0.6882267441860466, 0.12, 0.802734375, 0.8125, 0.48046875]
+11/04/2021 18:25:30 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:25:30 - INFO - __main__ - Evaluating to get errors .... Timecode: 43
+11/04/2021 18:25:35 - INFO - __main__ - Before Error Fixing: {'EM': 0.421875, 'QA-F1': 0.5392644469811079}
+11/04/2021 18:25:35 - INFO - __main__ - Found 37 errors.
+11/04/2021 18:25:35 - INFO - __main__ - Start error-fixing .... Timecode: 43
+11/04/2021 18:25:37 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:25:40 - INFO - __main__ - Overall: 0.5826023111179361 from scores=[0.6821732954545454, 0.13513513513513514, 0.802734375, 0.8125, 0.48046875]
+11/04/2021 18:25:40 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:25:40 - INFO - __main__ - Evaluating to get errors .... Timecode: 44
+11/04/2021 18:25:46 - INFO - __main__ - Before Error Fixing: {'EM': 0.6875, 'QA-F1': 0.7093378274525528}
+11/04/2021 18:25:46 - INFO - __main__ - Found 20 errors.
+11/04/2021 18:25:46 - INFO - __main__ - Start error-fixing .... Timecode: 44
+11/04/2021 18:25:47 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:25:49 - INFO - __main__ - Overall: 0.6055989583333334 from scores=[0.6822916666666667, 0.25, 0.802734375, 0.8125, 0.48046875]
+11/04/2021 18:25:49 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:25:49 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=45
+11/04/2021 18:26:21 - INFO - __main__ - Upstream Knowledge Retation (UKR@45): 0.7832
+11/04/2021 18:26:21 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=45
+11/04/2021 18:27:02 - INFO - __main__ - Online Knowledge Retation (OKR@45): 0.7949
+11/04/2021 18:27:02 - INFO - __main__ - Evaluating to get errors .... Timecode: 45
+11/04/2021 18:27:08 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6442307692307692}
+11/04/2021 18:27:08 - INFO - __main__ - Found 26 errors.
+11/04/2021 18:27:08 - INFO - __main__ - Start error-fixing .... Timecode: 45
+11/04/2021 18:27:09 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:27:11 - INFO - __main__ - Overall: 0.5939459657190636 from scores=[0.6803668478260869, 0.23076923076923078, 0.794921875, 0.783203125, 0.48046875]
+11/04/2021 18:27:11 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:27:11 - INFO - __main__ - Evaluating to get errors .... Timecode: 46
+11/04/2021 18:27:16 - INFO - __main__ - Before Error Fixing: {'EM': 0.6875, 'QA-F1': 0.7212406517094017}
+11/04/2021 18:27:16 - INFO - __main__ - Found 20 errors.
+11/04/2021 18:27:16 - INFO - __main__ - Start error-fixing .... Timecode: 46
+11/04/2021 18:27:17 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:27:19 - INFO - __main__ - Overall: 0.5678224734042553 from scores=[0.6805186170212766, 0.1, 0.794921875, 0.783203125, 0.48046875]
+11/04/2021 18:27:19 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:27:19 - INFO - __main__ - Evaluating to get errors .... Timecode: 47
+11/04/2021 18:27:25 - INFO - __main__ - Before Error Fixing: {'EM': 0.671875, 'QA-F1': 0.7216170813815308}
+11/04/2021 18:27:25 - INFO - __main__ - Found 21 errors.
+11/04/2021 18:27:25 - INFO - __main__ - Start error-fixing .... Timecode: 47
+11/04/2021 18:27:26 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:27:28 - INFO - __main__ - Overall: 0.6049293154761906 from scores=[0.6803385416666667, 0.2857142857142857, 0.794921875, 0.783203125, 0.48046875]
+11/04/2021 18:27:28 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:27:28 - INFO - __main__ - Evaluating to get errors .... Timecode: 48
+11/04/2021 18:27:32 - INFO - __main__ - Before Error Fixing: {'EM': 0.703125, 'QA-F1': 0.7561395202020202}
+11/04/2021 18:27:32 - INFO - __main__ - Found 19 errors.
+11/04/2021 18:27:32 - INFO - __main__ - Start error-fixing .... Timecode: 48
+11/04/2021 18:27:33 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:27:35 - INFO - __main__ - Overall: 0.589984727443609 from scores=[0.6808035714285714, 0.21052631578947367, 0.794921875, 0.783203125, 0.48046875]
+11/04/2021 18:27:35 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:27:35 - INFO - __main__ - Evaluating to get errors .... Timecode: 49
+11/04/2021 18:27:40 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.724712266899767}
+11/04/2021 18:27:40 - INFO - __main__ - Found 22 errors.
+11/04/2021 18:27:40 - INFO - __main__ - Start error-fixing .... Timecode: 49
+11/04/2021 18:27:41 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:27:43 - INFO - __main__ - Overall: 0.5750539772727272 from scores=[0.6803125, 0.13636363636363635, 0.794921875, 0.783203125, 0.48046875]
+11/04/2021 18:27:43 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:27:43 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=50
+11/04/2021 18:28:12 - INFO - __main__ - Upstream Knowledge Retation (UKR@50): 0.8105
+11/04/2021 18:28:13 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=50
+11/04/2021 18:28:49 - INFO - __main__ - Online Knowledge Retation (OKR@50): 0.7891
+11/04/2021 18:28:49 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=50
+11/04/2021 18:30:10 - INFO - __main__ - Future Knowledge Generalization (KG@50): 0.4891
+11/04/2021 18:30:10 - INFO - __main__ - Evaluating to get errors .... Timecode: 50
+11/04/2021 18:30:14 - INFO - __main__ - Before Error Fixing: {'EM': 0.703125, 'QA-F1': 0.7375}
+11/04/2021 18:30:14 - INFO - __main__ - Found 19 errors.
+11/04/2021 18:30:14 - INFO - __main__ - Start error-fixing .... Timecode: 50
+11/04/2021 18:30:15 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:30:16 - INFO - __main__ - Overall: 0.5854652831527348 from scores=[0.6807598039215687, 0.15789473684210525, 0.7890625, 0.810546875, 0.4890625]
+11/04/2021 18:30:18 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_050.pt.
+11/04/2021 18:30:18 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 50.
+11/04/2021 18:30:18 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:30:18 - INFO - __main__ - Evaluating to get errors .... Timecode: 51
+11/04/2021 18:30:22 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.6997095352564102}
+11/04/2021 18:30:22 - INFO - __main__ - Found 25 errors.
+11/04/2021 18:30:22 - INFO - __main__ - Start error-fixing .... Timecode: 51
+11/04/2021 18:30:23 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:30:25 - INFO - __main__ - Overall: 0.5856117788461539 from scores=[0.6793870192307692, 0.16, 0.7890625, 0.810546875, 0.4890625]
+11/04/2021 18:30:25 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:30:25 - INFO - __main__ - Evaluating to get errors .... Timecode: 52
+11/04/2021 18:30:29 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.6915142423366107}
+11/04/2021 18:30:29 - INFO - __main__ - Found 25 errors.
+11/04/2021 18:30:29 - INFO - __main__ - Start error-fixing .... Timecode: 52
+11/04/2021 18:30:31 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:30:33 - INFO - __main__ - Overall: 0.5693475825471699 from scores=[0.6780660377358491, 0.08, 0.7890625, 0.810546875, 0.4890625]
+11/04/2021 18:30:33 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:30:33 - INFO - __main__ - Evaluating to get errors .... Timecode: 53
+11/04/2021 18:30:37 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7254588293650794}
+11/04/2021 18:30:37 - INFO - __main__ - Found 22 errors.
+11/04/2021 18:30:37 - INFO - __main__ - Start error-fixing .... Timecode: 53
+11/04/2021 18:30:38 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:30:40 - INFO - __main__ - Overall: 0.5896304187710438 from scores=[0.677662037037037, 0.18181818181818182, 0.7890625, 0.810546875, 0.4890625]
+11/04/2021 18:30:40 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:30:40 - INFO - __main__ - Evaluating to get errors .... Timecode: 54
+11/04/2021 18:30:46 - INFO - __main__ - Before Error Fixing: {'EM': 0.546875, 'QA-F1': 0.6232206474164195}
+11/04/2021 18:30:46 - INFO - __main__ - Found 29 errors.
+11/04/2021 18:30:46 - INFO - __main__ - Start error-fixing .... Timecode: 54
+11/04/2021 18:30:47 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:30:50 - INFO - __main__ - Overall: 0.5872739518025079 from scores=[0.6752840909090909, 0.1724137931034483, 0.7890625, 0.810546875, 0.4890625]
+11/04/2021 18:30:50 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:30:50 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=55
+11/04/2021 18:31:24 - INFO - __main__ - Upstream Knowledge Retation (UKR@55): 0.7500
+11/04/2021 18:31:25 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=55
+11/04/2021 18:32:06 - INFO - __main__ - Online Knowledge Retation (OKR@55): 0.7207
+11/04/2021 18:32:06 - INFO - __main__ - Evaluating to get errors .... Timecode: 55
+11/04/2021 18:32:11 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.6668198583555104}
+11/04/2021 18:32:11 - INFO - __main__ - Found 25 errors.
+11/04/2021 18:32:11 - INFO - __main__ - Start error-fixing .... Timecode: 55
+11/04/2021 18:32:12 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:32:14 - INFO - __main__ - Overall: 0.5347745535714286 from scores=[0.6741071428571428, 0.04, 0.720703125, 0.75, 0.4890625]
+11/04/2021 18:32:14 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:32:14 - INFO - __main__ - Evaluating to get errors .... Timecode: 56
+11/04/2021 18:32:20 - INFO - __main__ - Before Error Fixing: {'EM': 0.453125, 'QA-F1': 0.6129516421676982}
+11/04/2021 18:32:20 - INFO - __main__ - Found 35 errors.
+11/04/2021 18:32:20 - INFO - __main__ - Start error-fixing .... Timecode: 56
+11/04/2021 18:32:22 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:32:25 - INFO - __main__ - Overall: 0.565999177631579 from scores=[0.6702302631578947, 0.2, 0.720703125, 0.75, 0.4890625]
+11/04/2021 18:32:25 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:32:25 - INFO - __main__ - Evaluating to get errors .... Timecode: 57
+11/04/2021 18:32:30 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.5971250579617515}
+11/04/2021 18:32:30 - INFO - __main__ - Found 32 errors.
+11/04/2021 18:32:30 - INFO - __main__ - Start error-fixing .... Timecode: 57
+11/04/2021 18:32:31 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:32:34 - INFO - __main__ - Overall: 0.5754121767241379 from scores=[0.6672952586206897, 0.25, 0.720703125, 0.75, 0.4890625]
+11/04/2021 18:32:34 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:32:34 - INFO - __main__ - Evaluating to get errors .... Timecode: 58
+11/04/2021 18:32:38 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6708495273109244}
+11/04/2021 18:32:38 - INFO - __main__ - Found 26 errors.
+11/04/2021 18:32:38 - INFO - __main__ - Start error-fixing .... Timecode: 58
+11/04/2021 18:32:39 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:32:41 - INFO - __main__ - Overall: 0.5867013323011735 from scores=[0.6660487288135593, 0.3076923076923077, 0.720703125, 0.75, 0.4890625]
+11/04/2021 18:32:41 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:32:41 - INFO - __main__ - Evaluating to get errors .... Timecode: 59
+11/04/2021 18:32:44 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.5735798329959514}
+11/04/2021 18:32:44 - INFO - __main__ - Found 32 errors.
+11/04/2021 18:32:44 - INFO - __main__ - Start error-fixing .... Timecode: 59
+11/04/2021 18:32:46 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:32:48 - INFO - __main__ - Overall: 0.549609375 from scores=[0.66328125, 0.125, 0.720703125, 0.75, 0.4890625]
+11/04/2021 18:32:48 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:32:48 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=60
+11/04/2021 18:33:13 - INFO - __main__ - Upstream Knowledge Retation (UKR@60): 0.7988
+11/04/2021 18:33:14 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=60
+11/04/2021 18:33:47 - INFO - __main__ - Online Knowledge Retation (OKR@60): 0.8027
+11/04/2021 18:33:47 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=60
+11/04/2021 18:35:04 - INFO - __main__ - Future Knowledge Generalization (KG@60): 0.4938
+11/04/2021 18:35:04 - INFO - __main__ - Evaluating to get errors .... Timecode: 60
+11/04/2021 18:35:08 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6546228819607022}
+11/04/2021 18:35:08 - INFO - __main__ - Found 26 errors.
+11/04/2021 18:35:08 - INFO - __main__ - Start error-fixing .... Timecode: 60
+11/04/2021 18:35:10 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:35:12 - INFO - __main__ - Overall: 0.5822600094577554 from scores=[0.662141393442623, 0.15384615384615385, 0.802734375, 0.798828125, 0.49375]
+11/04/2021 18:35:14 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_060.pt.
+11/04/2021 18:35:14 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 60.
+11/04/2021 18:35:14 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:35:14 - INFO - __main__ - Evaluating to get errors .... Timecode: 61
+11/04/2021 18:35:18 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6899181547619047}
+11/04/2021 18:35:18 - INFO - __main__ - Found 27 errors.
+11/04/2021 18:35:18 - INFO - __main__ - Start error-fixing .... Timecode: 61
+11/04/2021 18:35:19 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:35:21 - INFO - __main__ - Overall: 0.5882567951015532 from scores=[0.6607862903225806, 0.18518518518518517, 0.802734375, 0.798828125, 0.49375]
+11/04/2021 18:35:21 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:35:21 - INFO - __main__ - Evaluating to get errors .... Timecode: 62
+11/04/2021 18:35:26 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.6775979662698413}
+11/04/2021 18:35:26 - INFO - __main__ - Found 32 errors.
+11/04/2021 18:35:26 - INFO - __main__ - Start error-fixing .... Timecode: 62
+11/04/2021 18:35:28 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:35:30 - INFO - __main__ - Overall: 0.5757093253968254 from scores=[0.658234126984127, 0.125, 0.802734375, 0.798828125, 0.49375]
+11/04/2021 18:35:30 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:35:30 - INFO - __main__ - Evaluating to get errors .... Timecode: 63
+11/04/2021 18:35:35 - INFO - __main__ - Before Error Fixing: {'EM': 0.640625, 'QA-F1': 0.7120322565365669}
+11/04/2021 18:35:35 - INFO - __main__ - Found 23 errors.
+11/04/2021 18:35:35 - INFO - __main__ - Start error-fixing .... Timecode: 63
+11/04/2021 18:35:36 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:35:38 - INFO - __main__ - Overall: 0.5767412533967391 from scores=[0.657958984375, 0.13043478260869565, 0.802734375, 0.798828125, 0.49375]
+11/04/2021 18:35:38 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:35:38 - INFO - __main__ - Evaluating to get errors .... Timecode: 64
+11/04/2021 18:35:42 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7221738417093145}
+11/04/2021 18:35:42 - INFO - __main__ - Found 22 errors.
+11/04/2021 18:35:43 - INFO - __main__ - Start error-fixing .... Timecode: 64
+11/04/2021 18:35:44 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:35:46 - INFO - __main__ - Overall: 0.5779217657342657 from scores=[0.6579326923076922, 0.13636363636363635, 0.802734375, 0.798828125, 0.49375]
+11/04/2021 18:35:46 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:35:46 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=65
+11/04/2021 18:36:15 - INFO - __main__ - Upstream Knowledge Retation (UKR@65): 0.7832
+11/04/2021 18:36:16 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=65
+11/04/2021 18:36:54 - INFO - __main__ - Online Knowledge Retation (OKR@65): 0.7695
+11/04/2021 18:36:54 - INFO - __main__ - Evaluating to get errors .... Timecode: 65
+11/04/2021 18:37:00 - INFO - __main__ - Before Error Fixing: {'EM': 0.6875, 'QA-F1': 0.7570274203431373}
+11/04/2021 18:37:00 - INFO - __main__ - Found 20 errors.
+11/04/2021 18:37:00 - INFO - __main__ - Start error-fixing .... Timecode: 65
+11/04/2021 18:37:01 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:37:03 - INFO - __main__ - Overall: 0.5809730113636363 from scores=[0.6583806818181819, 0.2, 0.76953125, 0.783203125, 0.49375]
+11/04/2021 18:37:03 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:37:03 - INFO - __main__ - Evaluating to get errors .... Timecode: 66
+11/04/2021 18:37:08 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.6270628425114312}
+11/04/2021 18:37:08 - INFO - __main__ - Found 30 errors.
+11/04/2021 18:37:08 - INFO - __main__ - Start error-fixing .... Timecode: 66
+11/04/2021 18:37:09 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:37:12 - INFO - __main__ - Overall: 0.5605935167910447 from scores=[0.6564832089552239, 0.1, 0.76953125, 0.783203125, 0.49375]
+11/04/2021 18:37:12 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:37:12 - INFO - __main__ - Evaluating to get errors .... Timecode: 67
+11/04/2021 18:37:16 - INFO - __main__ - Before Error Fixing: {'EM': 0.453125, 'QA-F1': 0.5578831469456469}
+11/04/2021 18:37:16 - INFO - __main__ - Found 35 errors.
+11/04/2021 18:37:17 - INFO - __main__ - Start error-fixing .... Timecode: 67
+11/04/2021 18:37:18 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:37:20 - INFO - __main__ - Overall: 0.614281118697479 from scores=[0.6534926470588236, 0.37142857142857144, 0.76953125, 0.783203125, 0.49375]
+11/04/2021 18:37:20 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:37:20 - INFO - __main__ - Evaluating to get errors .... Timecode: 68
+11/04/2021 18:37:24 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6792918019480519}
+11/04/2021 18:37:24 - INFO - __main__ - Found 27 errors.
+11/04/2021 18:37:24 - INFO - __main__ - Start error-fixing .... Timecode: 68
+11/04/2021 18:37:25 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:37:27 - INFO - __main__ - Overall: 0.59162879931562 from scores=[0.6524003623188406, 0.25925925925925924, 0.76953125, 0.783203125, 0.49375]
+11/04/2021 18:37:27 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:37:27 - INFO - __main__ - Evaluating to get errors .... Timecode: 69
+11/04/2021 18:37:32 - INFO - __main__ - Before Error Fixing: {'EM': 0.640625, 'QA-F1': 0.7277457967836257}
+11/04/2021 18:37:32 - INFO - __main__ - Found 23 errors.
+11/04/2021 18:37:32 - INFO - __main__ - Start error-fixing .... Timecode: 69
+11/04/2021 18:37:33 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:37:35 - INFO - __main__ - Overall: 0.5745259122670807 from scores=[0.6522321428571429, 0.17391304347826086, 0.76953125, 0.783203125, 0.49375]
+11/04/2021 18:37:35 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:37:35 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=70
+11/04/2021 18:38:04 - INFO - __main__ - Upstream Knowledge Retation (UKR@70): 0.7852
+11/04/2021 18:38:05 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=70
+11/04/2021 18:38:41 - INFO - __main__ - Online Knowledge Retation (OKR@70): 0.7559
+11/04/2021 18:38:41 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=70
+11/04/2021 18:40:03 - INFO - __main__ - Future Knowledge Generalization (KG@70): 0.4828
+11/04/2021 18:40:03 - INFO - __main__ - Evaluating to get errors .... Timecode: 70
+11/04/2021 18:40:08 - INFO - __main__ - Before Error Fixing: {'EM': 0.6875, 'QA-F1': 0.7551605869620576}
+11/04/2021 18:40:08 - INFO - __main__ - Found 20 errors.
+11/04/2021 18:40:08 - INFO - __main__ - Start error-fixing .... Timecode: 70
+11/04/2021 18:40:09 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:40:10 - INFO - __main__ - Overall: 0.5753113996478874 from scores=[0.6527288732394366, 0.2, 0.755859375, 0.78515625, 0.4828125]
+11/04/2021 18:40:12 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_070.pt.
+11/04/2021 18:40:12 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 70.
+11/04/2021 18:40:12 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:40:12 - INFO - __main__ - Evaluating to get errors .... Timecode: 71
+11/04/2021 18:40:17 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6867393207282914}
+11/04/2021 18:40:17 - INFO - __main__ - Found 26 errors.
+11/04/2021 18:40:18 - INFO - __main__ - Start error-fixing .... Timecode: 71
+11/04/2021 18:40:19 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:40:21 - INFO - __main__ - Overall: 0.5428398771367522 from scores=[0.6519097222222222, 0.038461538461538464, 0.755859375, 0.78515625, 0.4828125]
+11/04/2021 18:40:21 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:40:21 - INFO - __main__ - Evaluating to get errors .... Timecode: 72
+11/04/2021 18:40:25 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.5789591165413535}
+11/04/2021 18:40:25 - INFO - __main__ - Found 31 errors.
+11/04/2021 18:40:26 - INFO - __main__ - Start error-fixing .... Timecode: 72
+11/04/2021 18:40:27 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:40:29 - INFO - __main__ - Overall: 0.5605806382567389 from scores=[0.650042808219178, 0.12903225806451613, 0.755859375, 0.78515625, 0.4828125]
+11/04/2021 18:40:29 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:40:29 - INFO - __main__ - Evaluating to get errors .... Timecode: 73
+11/04/2021 18:40:34 - INFO - __main__ - Before Error Fixing: {'EM': 0.71875, 'QA-F1': 0.7434771232057416}
+11/04/2021 18:40:34 - INFO - __main__ - Found 18 errors.
+11/04/2021 18:40:34 - INFO - __main__ - Start error-fixing .... Timecode: 73
+11/04/2021 18:40:35 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:40:36 - INFO - __main__ - Overall: 0.5349598817567568 from scores=[0.6509712837837838, 0.0, 0.755859375, 0.78515625, 0.4828125]
+11/04/2021 18:40:36 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:40:36 - INFO - __main__ - Evaluating to get errors .... Timecode: 74
+11/04/2021 18:40:41 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.7015022115565593}
+11/04/2021 18:40:41 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:40:41 - INFO - __main__ - Start error-fixing .... Timecode: 74
+11/04/2021 18:40:42 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:40:45 - INFO - __main__ - Overall: 0.5682239583333334 from scores=[0.650625, 0.16666666666666666, 0.755859375, 0.78515625, 0.4828125]
+11/04/2021 18:40:45 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:40:45 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=75
+11/04/2021 18:41:11 - INFO - __main__ - Upstream Knowledge Retation (UKR@75): 0.7871
+11/04/2021 18:41:12 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=75
+11/04/2021 18:41:45 - INFO - __main__ - Online Knowledge Retation (OKR@75): 0.7637
+11/04/2021 18:41:45 - INFO - __main__ - Evaluating to get errors .... Timecode: 75
+11/04/2021 18:41:50 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.6161489661654136}
+11/04/2021 18:41:50 - INFO - __main__ - Found 31 errors.
+11/04/2021 18:41:50 - INFO - __main__ - Start error-fixing .... Timecode: 75
+11/04/2021 18:41:51 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:41:54 - INFO - __main__ - Overall: 0.5881013900679117 from scores=[0.6488486842105263, 0.25806451612903225, 0.763671875, 0.787109375, 0.4828125]
+11/04/2021 18:41:54 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:41:54 - INFO - __main__ - Evaluating to get errors .... Timecode: 76
+11/04/2021 18:41:58 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.697611970320043}
+11/04/2021 18:41:58 - INFO - __main__ - Found 26 errors.
+11/04/2021 18:41:58 - INFO - __main__ - Start error-fixing .... Timecode: 76
+11/04/2021 18:41:59 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:42:01 - INFO - __main__ - Overall: 0.5671146041458541 from scores=[0.6481331168831168, 0.15384615384615385, 0.763671875, 0.787109375, 0.4828125]
+11/04/2021 18:42:01 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:42:01 - INFO - __main__ - Evaluating to get errors .... Timecode: 77
+11/04/2021 18:42:05 - INFO - __main__ - Before Error Fixing: {'EM': 0.375, 'QA-F1': 0.5540926074377119}
+11/04/2021 18:42:05 - INFO - __main__ - Found 40 errors.
+11/04/2021 18:42:06 - INFO - __main__ - Start error-fixing .... Timecode: 77
+11/04/2021 18:42:07 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:42:10 - INFO - __main__ - Overall: 0.5506450320512821 from scores=[0.6446314102564102, 0.075, 0.763671875, 0.787109375, 0.4828125]
+11/04/2021 18:42:10 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:42:10 - INFO - __main__ - Evaluating to get errors .... Timecode: 78
+11/04/2021 18:42:14 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.7066262296731047}
+11/04/2021 18:42:14 - INFO - __main__ - Found 26 errors.
+11/04/2021 18:42:14 - INFO - __main__ - Start error-fixing .... Timecode: 78
+11/04/2021 18:42:16 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:42:18 - INFO - __main__ - Overall: 0.5662854491236612 from scores=[0.6439873417721519, 0.15384615384615385, 0.763671875, 0.787109375, 0.4828125]
+11/04/2021 18:42:18 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:42:18 - INFO - __main__ - Evaluating to get errors .... Timecode: 79
+11/04/2021 18:42:22 - INFO - __main__ - Before Error Fixing: {'EM': 0.4375, 'QA-F1': 0.615502851040218}
+11/04/2021 18:42:22 - INFO - __main__ - Found 36 errors.
+11/04/2021 18:42:22 - INFO - __main__ - Start error-fixing .... Timecode: 79
+11/04/2021 18:42:24 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:42:26 - INFO - __main__ - Overall: 0.5683333333333334 from scores=[0.64140625, 0.16666666666666666, 0.763671875, 0.787109375, 0.4828125]
+11/04/2021 18:42:26 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:42:26 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=80
+11/04/2021 18:42:58 - INFO - __main__ - Upstream Knowledge Retation (UKR@80): 0.7539
+11/04/2021 18:42:58 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=80
+11/04/2021 18:43:38 - INFO - __main__ - Online Knowledge Retation (OKR@80): 0.7461
+11/04/2021 18:43:38 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=80
+11/04/2021 18:45:08 - INFO - __main__ - Future Knowledge Generalization (KG@80): 0.4797
+11/04/2021 18:45:08 - INFO - __main__ - Evaluating to get errors .... Timecode: 80
+11/04/2021 18:45:12 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6338857765328354}
+11/04/2021 18:45:12 - INFO - __main__ - Found 28 errors.
+11/04/2021 18:45:12 - INFO - __main__ - Start error-fixing .... Timecode: 80
+11/04/2021 18:45:14 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:45:16 - INFO - __main__ - Overall: 0.5811667768959435 from scores=[0.6404320987654322, 0.2857142857142857, 0.74609375, 0.75390625, 0.4796875]
+11/04/2021 18:45:18 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_080.pt.
+11/04/2021 18:45:18 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 80.
+11/04/2021 18:45:18 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:45:18 - INFO - __main__ - Evaluating to get errors .... Timecode: 81
+11/04/2021 18:45:22 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6592194264069264}
+11/04/2021 18:45:22 - INFO - __main__ - Found 28 errors.
+11/04/2021 18:45:23 - INFO - __main__ - Start error-fixing .... Timecode: 81
+11/04/2021 18:45:24 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:45:26 - INFO - __main__ - Overall: 0.545262412891986 from scores=[0.6394817073170731, 0.10714285714285714, 0.74609375, 0.75390625, 0.4796875]
+11/04/2021 18:45:26 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:45:26 - INFO - __main__ - Evaluating to get errors .... Timecode: 82
+11/04/2021 18:45:30 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.6173430735930736}
+11/04/2021 18:45:30 - INFO - __main__ - Found 32 errors.
+11/04/2021 18:45:30 - INFO - __main__ - Start error-fixing .... Timecode: 82
+11/04/2021 18:45:31 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:45:33 - INFO - __main__ - Overall: 0.5359977409638554 from scores=[0.6378012048192772, 0.0625, 0.74609375, 0.75390625, 0.4796875]
+11/04/2021 18:45:33 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:45:33 - INFO - __main__ - Evaluating to get errors .... Timecode: 83
+11/04/2021 18:45:37 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.5912326388888889}
+11/04/2021 18:45:37 - INFO - __main__ - Found 32 errors.
+11/04/2021 18:45:38 - INFO - __main__ - Start error-fixing .... Timecode: 83
+11/04/2021 18:45:39 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:45:41 - INFO - __main__ - Overall: 0.5419196428571429 from scores=[0.6361607142857143, 0.09375, 0.74609375, 0.75390625, 0.4796875]
+11/04/2021 18:45:41 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:45:41 - INFO - __main__ - Evaluating to get errors .... Timecode: 84
+11/04/2021 18:45:46 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6657953566041801}
+11/04/2021 18:45:46 - INFO - __main__ - Found 27 errors.
+11/04/2021 18:45:46 - INFO - __main__ - Start error-fixing .... Timecode: 84
+11/04/2021 18:45:47 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:45:49 - INFO - __main__ - Overall: 0.5526627178649237 from scores=[0.6354779411764706, 0.14814814814814814, 0.74609375, 0.75390625, 0.4796875]
+11/04/2021 18:45:49 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:45:49 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=85
+11/04/2021 18:46:17 - INFO - __main__ - Upstream Knowledge Retation (UKR@85): 0.7949
+11/04/2021 18:46:18 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=85
+11/04/2021 18:46:58 - INFO - __main__ - Online Knowledge Retation (OKR@85): 0.7266
+11/04/2021 18:46:58 - INFO - __main__ - Evaluating to get errors .... Timecode: 85
+11/04/2021 18:47:03 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.5858036928349428}
+11/04/2021 18:47:03 - INFO - __main__ - Found 32 errors.
+11/04/2021 18:47:03 - INFO - __main__ - Start error-fixing .... Timecode: 85
+11/04/2021 18:47:04 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:47:07 - INFO - __main__ - Overall: 0.5395148982558139 from scores=[0.6339026162790697, 0.0625, 0.7265625, 0.794921875, 0.4796875]
+11/04/2021 18:47:07 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:47:07 - INFO - __main__ - Evaluating to get errors .... Timecode: 86
+11/04/2021 18:47:12 - INFO - __main__ - Before Error Fixing: {'EM': 0.453125, 'QA-F1': 0.5618977442725719}
+11/04/2021 18:47:12 - INFO - __main__ - Found 35 errors.
+11/04/2021 18:47:12 - INFO - __main__ - Start error-fixing .... Timecode: 86
+11/04/2021 18:47:14 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:47:17 - INFO - __main__ - Overall: 0.5894564603858784 from scores=[0.6318247126436782, 0.3142857142857143, 0.7265625, 0.794921875, 0.4796875]
+11/04/2021 18:47:17 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:47:17 - INFO - __main__ - Evaluating to get errors .... Timecode: 87
+11/04/2021 18:47:21 - INFO - __main__ - Before Error Fixing: {'EM': 0.421875, 'QA-F1': 0.5736047260216143}
+11/04/2021 18:47:21 - INFO - __main__ - Found 37 errors.
+11/04/2021 18:47:21 - INFO - __main__ - Start error-fixing .... Timecode: 87
+11/04/2021 18:47:23 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:47:26 - INFO - __main__ - Overall: 0.5531491861179361 from scores=[0.6294389204545454, 0.13513513513513514, 0.7265625, 0.794921875, 0.4796875]
+11/04/2021 18:47:26 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:47:26 - INFO - __main__ - Evaluating to get errors .... Timecode: 88
+11/04/2021 18:47:31 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.6085612327764689}
+11/04/2021 18:47:31 - INFO - __main__ - Found 32 errors.
+11/04/2021 18:47:31 - INFO - __main__ - Start error-fixing .... Timecode: 88
+11/04/2021 18:47:33 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:47:36 - INFO - __main__ - Overall: 0.5633312851123595 from scores=[0.6279845505617978, 0.1875, 0.7265625, 0.794921875, 0.4796875]
+11/04/2021 18:47:36 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:47:36 - INFO - __main__ - Evaluating to get errors .... Timecode: 89
+11/04/2021 18:47:42 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.5908692002442003}
+11/04/2021 18:47:42 - INFO - __main__ - Found 28 errors.
+11/04/2021 18:47:42 - INFO - __main__ - Start error-fixing .... Timecode: 89
+11/04/2021 18:47:43 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:47:46 - INFO - __main__ - Overall: 0.5685429067460317 from scores=[0.6272569444444445, 0.21428571428571427, 0.7265625, 0.794921875, 0.4796875]
+11/04/2021 18:47:46 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:47:46 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=90
+11/04/2021 18:48:17 - INFO - __main__ - Upstream Knowledge Retation (UKR@90): 0.7871
+11/04/2021 18:48:18 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=90
+11/04/2021 18:48:57 - INFO - __main__ - Online Knowledge Retation (OKR@90): 0.7207
+11/04/2021 18:48:57 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=90
+11/04/2021 18:50:26 - INFO - __main__ - Future Knowledge Generalization (KG@90): 0.4977
+11/04/2021 18:50:26 - INFO - __main__ - Evaluating to get errors .... Timecode: 90
+11/04/2021 18:50:31 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6261416652041651}
+11/04/2021 18:50:31 - INFO - __main__ - Found 27 errors.
+11/04/2021 18:50:31 - INFO - __main__ - Start error-fixing .... Timecode: 90
+11/04/2021 18:50:32 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:50:35 - INFO - __main__ - Overall: 0.5634741936304436 from scores=[0.626717032967033, 0.18518518518518517, 0.720703125, 0.787109375, 0.49765625]
+11/04/2021 18:50:37 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_090.pt.
+11/04/2021 18:50:37 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 90.
+11/04/2021 18:50:37 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:50:37 - INFO - __main__ - Evaluating to get errors .... Timecode: 91
+11/04/2021 18:50:42 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6586837905452035}
+11/04/2021 18:50:42 - INFO - __main__ - Found 26 errors.
+11/04/2021 18:50:43 - INFO - __main__ - Start error-fixing .... Timecode: 91
+11/04/2021 18:50:44 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:50:46 - INFO - __main__ - Overall: 0.5648270275919732 from scores=[0.6263586956521738, 0.19230769230769232, 0.720703125, 0.787109375, 0.49765625]
+11/04/2021 18:50:46 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:50:46 - INFO - __main__ - Evaluating to get errors .... Timecode: 92
+11/04/2021 18:50:51 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.6953587116495376}
+11/04/2021 18:50:51 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:50:51 - INFO - __main__ - Start error-fixing .... Timecode: 92
+11/04/2021 18:50:52 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:50:55 - INFO - __main__ - Overall: 0.5430292338709678 from scores=[0.6263440860215054, 0.08333333333333333, 0.720703125, 0.787109375, 0.49765625]
+11/04/2021 18:50:55 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:50:55 - INFO - __main__ - Evaluating to get errors .... Timecode: 93
+11/04/2021 18:50:59 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.647544642857143}
+11/04/2021 18:50:59 - INFO - __main__ - Found 27 errors.
+11/04/2021 18:50:59 - INFO - __main__ - Start error-fixing .... Timecode: 93
+11/04/2021 18:51:00 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:51:03 - INFO - __main__ - Overall: 0.5484821956264775 from scores=[0.6258311170212766, 0.1111111111111111, 0.720703125, 0.787109375, 0.49765625]
+11/04/2021 18:51:03 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:51:03 - INFO - __main__ - Evaluating to get errors .... Timecode: 94
+11/04/2021 18:51:08 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.5915572478991598}
+11/04/2021 18:51:08 - INFO - __main__ - Found 31 errors.
+11/04/2021 18:51:08 - INFO - __main__ - Start error-fixing .... Timecode: 94
+11/04/2021 18:51:10 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:51:12 - INFO - __main__ - Overall: 0.5711892508488965 from scores=[0.624671052631579, 0.22580645161290322, 0.720703125, 0.787109375, 0.49765625]
+11/04/2021 18:51:12 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:51:12 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=95
+11/04/2021 18:51:42 - INFO - __main__ - Upstream Knowledge Retation (UKR@95): 0.8027
+11/04/2021 18:51:43 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=95
+11/04/2021 18:52:23 - INFO - __main__ - Online Knowledge Retation (OKR@95): 0.7422
+11/04/2021 18:52:23 - INFO - __main__ - Evaluating to get errors .... Timecode: 95
+11/04/2021 18:52:27 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.6673608207915274}
+11/04/2021 18:52:27 - INFO - __main__ - Found 24 errors.
+11/04/2021 18:52:27 - INFO - __main__ - Start error-fixing .... Timecode: 95
+11/04/2021 18:52:29 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:52:30 - INFO - __main__ - Overall: 0.5584505208333334 from scores=[0.6246744791666667, 0.125, 0.7421875, 0.802734375, 0.49765625]
+11/04/2021 18:52:30 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:52:30 - INFO - __main__ - Evaluating to get errors .... Timecode: 96
+11/04/2021 18:52:35 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.7164986559139784}
+11/04/2021 18:52:35 - INFO - __main__ - Found 25 errors.
+11/04/2021 18:52:35 - INFO - __main__ - Start error-fixing .... Timecode: 96
+11/04/2021 18:52:36 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:52:38 - INFO - __main__ - Overall: 0.5494189755154639 from scores=[0.6245167525773196, 0.08, 0.7421875, 0.802734375, 0.49765625]
+11/04/2021 18:52:38 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:52:38 - INFO - __main__ - Evaluating to get errors .... Timecode: 97
+11/04/2021 18:52:43 - INFO - __main__ - Before Error Fixing: {'EM': 0.546875, 'QA-F1': 0.6783042478354978}
+11/04/2021 18:52:43 - INFO - __main__ - Found 29 errors.
+11/04/2021 18:52:43 - INFO - __main__ - Start error-fixing .... Timecode: 97
+11/04/2021 18:52:44 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:52:46 - INFO - __main__ - Overall: 0.5539501781315974 from scores=[0.6237244897959184, 0.10344827586206896, 0.7421875, 0.802734375, 0.49765625]
+11/04/2021 18:52:46 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:52:46 - INFO - __main__ - Evaluating to get errors .... Timecode: 98
+11/04/2021 18:52:51 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6738798632101062}
+11/04/2021 18:52:51 - INFO - __main__ - Found 26 errors.
+11/04/2021 18:52:51 - INFO - __main__ - Start error-fixing .... Timecode: 98
+11/04/2021 18:52:53 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:52:55 - INFO - __main__ - Overall: 0.5485845838189587 from scores=[0.6234217171717171, 0.07692307692307693, 0.7421875, 0.802734375, 0.49765625]
+11/04/2021 18:52:55 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:52:55 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=99
+11/04/2021 18:53:25 - INFO - __main__ - Upstream Knowledge Retation (UKR@99): 0.7871
+11/04/2021 18:53:26 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=99
+11/04/2021 18:54:06 - INFO - __main__ - Online Knowledge Retation (OKR@99): 0.7480
+11/04/2021 18:54:06 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=99
+11/04/2021 18:55:27 - INFO - __main__ - Future Knowledge Generalization (KG@99): 0.5062
+11/04/2021 18:55:27 - INFO - __main__ - Evaluating to get errors .... Timecode: 99
+11/04/2021 18:55:33 - INFO - __main__ - Before Error Fixing: {'EM': 0.671875, 'QA-F1': 0.7303571428571428}
+11/04/2021 18:55:33 - INFO - __main__ - Found 21 errors.
+11/04/2021 18:55:33 - INFO - __main__ - Start error-fixing .... Timecode: 99
+11/04/2021 18:55:34 - INFO - __main__ - Start error-fixing .... Done!
+11/04/2021 18:55:35 - INFO - __main__ - Overall: 0.5711577380952381 from scores=[0.62390625, 0.19047619047619047, 0.748046875, 0.787109375, 0.50625]
+11/04/2021 18:55:35 - INFO - __main__ - --------------------------------------------------
+11/04/2021 18:55:35 - INFO - __main__ - Start the final evaluation.
+11/04/2021 18:55:35 - INFO - __main__ - Nothing here.
+11/04/2021 18:55:37 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5/model_ckpt_100.pt.
+11/04/2021 18:55:37 - INFO - __main__ - Updated result feule: experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json at Timecode: 100.
+11/04/2021 18:55:37 - INFO - __main__ - Finished. Results saved to experiments/results/qa/QA_simplecl_lr=3e-5_ep=1_T=100,b=64,alpha=0.98,beta=0.5,gamma=0.5_result.json

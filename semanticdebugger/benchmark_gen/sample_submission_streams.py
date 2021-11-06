@@ -2,11 +2,7 @@ import argparse
 from os import path
 import random 
 import json
-from re import S
-from typing_extensions import OrderedDict
-from scipy.sparse import data
 
-from torch import numel
 from semanticdebugger.benchmark_gen.bb_utils import bb_sample, bb_rescale, build_submission_stream
 from semanticdebugger.models.utils import set_seeds
 from semanticdebugger.notebooks.draw_utils import draw_curve, draw_stacked_bars
@@ -147,7 +143,10 @@ def generate_submission_stream_v2(submission_data, args, cfg):
         current_major_ood = random.choice(OODs)  # the initial major OOD cluster 
     for t in range(1, T+1):
         S_t = []
-        b_upstream = round(b * (alpha**(t-1))) 
+        if alpha == 0:
+            b_upstream = 0 # special case when upstream data ratio = 0; (because 0^0=1 by definition)
+        else:
+            b_upstream = round(b * (alpha**(t-1))) 
         b_ood = b - b_upstream
         b_ood_major = round(b_ood * gamma)
         b_ood_diverse = b_ood - b_ood_major
@@ -242,6 +241,7 @@ def main():
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0.7, gamma=0.5))
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=0.5))
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=1))
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0, beta=0.7, gamma=0.5))
 
     
 
