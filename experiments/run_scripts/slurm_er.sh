@@ -1,8 +1,8 @@
-ns_config="T=100,b=64,alpha=0,beta=0.7,gamma=0.5"
+ns_config="T=100,b=64,alpha=0.98,beta=0.7,gamma=0.5"
 seed=42
 declare -a lrs=("1e-5")
 declare -a eps=("3")
-declare -a rss=("32")
+declare -a rss=("64" "128")
 declare -a rfs=("1")
 for lr in "${lrs[@]}"
 do

@@ -1,8 +1,8 @@
-ns_config="T=100,b=64,alpha=0,beta=0.7,gamma=0.5"
+ns_config="T=100,b=64,alpha=0.98,beta=0.7,gamma=0.5"
 seed=42
 
-declare -a lrs=("1e-5" "3e-5" "5e-5")
-declare -a eps=("1" "3" "6")
+declare -a lrs=("1e-5")
+declare -a eps=("6" "12" "18")
 for lr in "${lrs[@]}"
 do
 for ep in "${eps[@]}"

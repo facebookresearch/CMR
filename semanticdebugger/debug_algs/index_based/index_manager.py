@@ -83,6 +83,7 @@ class RandomMemoryManger(BaseMemoryManager):
 
     def retrieve_from_memory(self, query_examples=None, sample_size=-1, **kwargs):
         assert sample_size > 0 
+        sample_size = min(sample_size, self.get_memory_size())
         self.logger.info("Randomly retrieve from the memory. `query_examples` not used")
         retrieved_example_ids = random.sample(list(self.memory_examples.keys()), sample_size)
         retrieved_examples = [self.memory_examples[rid] for rid in retrieved_example_ids]
