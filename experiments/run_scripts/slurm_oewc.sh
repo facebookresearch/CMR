@@ -2,7 +2,7 @@ ns_config="T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8"
 seed=42
 
 declare -a lrs=("3e-5" "5e-5")
-declare -a eps=("5" "10" "20")
+declare -a eps=("5" "10")
 declare -a lambdas=("500" "250" "1000")
 for lr in "${lrs[@]}"
 do
