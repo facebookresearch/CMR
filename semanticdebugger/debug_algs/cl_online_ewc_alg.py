@@ -160,7 +160,7 @@ class OnlineEWC(ContinualFinetuning):
             # ewc-related hyper parameters
             "ewc_lambda",
             "ewc_gamma", 
-            "use_sampled_upstream"
+            # "use_sampled_upstream"
             ]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
         return
@@ -189,14 +189,14 @@ class OnlineEWC(ContinualFinetuning):
         global_step = 0
         pad_token_id = self.tokenizer.pad_token_id
 
-        #### For the first update ###
-        if self.data_args.use_sampled_upstream and self.timecode==0:
-            self.logger.info("Start the initial fisher info matrix computation....")
-            upstream_dl, _ = self.get_dataloader(self.data_args, self.sampled_upstream_examples, mode="train")
-            upstream_dl.args.train_batch_size = 1 
-            upstream_fi_dl = upstream_dl.load_dataloader(do_return=True)
-            self.regularizer.estimate_fisher(upstream_fi_dl, pad_token_id)
-            self.logger.info("Start the initial fisher info matrix computation....Done!")
+        # #### For the first update ###
+        # if self.data_args.use_sampled_upstream and self.timecode==0:
+        #     self.logger.info("Start the initial fisher info matrix computation....")
+        #     upstream_dl, _ = self.get_dataloader(self.data_args, self.sampled_upstream_examples, mode="train")
+        #     upstream_dl.args.train_batch_size = 1 
+        #     upstream_fi_dl = upstream_dl.load_dataloader(do_return=True)
+        #     self.regularizer.estimate_fisher(upstream_fi_dl, pad_token_id)
+        #     self.logger.info("Start the initial fisher info matrix computation....Done!")
 
 
         for epoch_id in range(int(self.debugger_args.num_epochs)):
@@ -236,7 +236,7 @@ class OnlineEWC(ContinualFinetuning):
 
         # TODO: build bsz=1 dataloader for update the fisher information matrix
         bug_loader.logger = None 
-        fisher_dataloader = copy.deepcopy(bug_loader)  # can we copy this object?
+        fisher_dataloader = copy.deepcopy(bug_loader)
         fisher_dataloader.logger = self.logger 
         fisher_dataloader.args.train_batch_size = 1 
         fi_dl = fisher_dataloader.load_dataloader(do_return=True)

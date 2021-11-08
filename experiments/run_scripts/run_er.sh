@@ -42,7 +42,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --num_beams 3 \
     --predict_batch_size 48 \
     --max_timecode 100 \
-    --kr_eval_freq 5 --kr_eval_mode "metric" \
+    --kr_eval_freq 10 --kr_eval_mode "metric" \
     --kg_eval_freq 10 --kg_eval_mode "metric" \
     --prefix ${prefix} \
     --upstream_data_path ${upstream_data_path} \

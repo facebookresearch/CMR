@@ -289,8 +289,9 @@ class OnlineDebuggingMethod():
             self.logger.info(f"len(self.past_submissions) = {len(self.past_submissions)} \
                 < self.debugger_args.okr_sample_size = {self.debugger_args.okr_sample_size}")
             return 
-        sampled_past_submissions = random.sample(self.past_submissions, k=self.debugger_args.okr_sample_size)
+        sampled_past_submissions = rng.sample(self.past_submissions, k=self.debugger_args.okr_sample_size)
         result_dict["OKR_sampled_ids"] = [_id for _input, _truth, _id in sampled_past_submissions]
+        result_dict["OKR_sampled_ids"].sort()
         _, past_submission_eval_loader = self.get_dataloader(self.data_args, sampled_past_submissions, mode="eval")
         self.logger.info(f"Start eval_knowledge_retention for OKR @ Timecode={self.timecode}")
         if self.debugger_args.kr_eval_mode == "loss":
