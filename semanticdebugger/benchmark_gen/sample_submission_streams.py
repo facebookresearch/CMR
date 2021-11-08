@@ -118,12 +118,13 @@ def visualize_stream(submission_stream, data_names, cfg):
             init_error_stat.append(dict(time_step=time_step, num_examples=len(num_init_errors), prefix=dn))
             
     submission_stat_pd = pd.DataFrame(submission_stat)
-    title_str = f"T={cfg['T']},b={cfg['b']},alpha={cfg['alpha']},beta={cfg['beta']},gamma={cfg['gamma']}"
+    filename_str = f"T={cfg['T']},b={cfg['b']},alpha={cfg['alpha']},beta={cfg['beta']},gamma={cfg['gamma']}"
+    title_str = f"alpha={cfg['alpha']}, beta={cfg['beta']}, gamma={cfg['gamma']}"
     fig1 =  draw_stacked_bars(df=submission_stat_pd, fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples")
-    fig1.save(f'figures/mrqa.submission.{title_str}.png')
+    fig1.save(f'figures/mrqa.submission.{filename_str}.png', scale_factor=2.0)
     init_error_stat_pd = pd.DataFrame(init_error_stat)
     fig2 =  draw_stacked_bars(df=init_error_stat_pd, fig_title=f"Error Stream ({title_str}) of f_0", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Initial Errors")
-    fig2.save(f'figures/mrqa.init_error.{title_str}.png')    
+    fig2.save(f'figures/mrqa.init_error.{filename_str}.png', scale_factor=2.0)    
     return 
 
 
@@ -195,19 +196,19 @@ def generate_submission_stream_v1(submission_data, args):
     all_pmfs_pd = pd.DataFrame(all_pmfs)
     # print(all_pmfs_pd.head())
     fig1 = draw_curve(df=all_pmfs_pd, fig_title="Temporal distribution of each data cluster.", y_scale=[0., 150], x_key="time_step", y_key="p", y_title="# of Examples")
-    fig1.save('figures/mrqa.submission_stream_each.png')
+    fig1.save('figures/mrqa.submission_stream_each.png', scale_factor=2.0)
 
 
     scaled_all_pmfs = bb_rescale(all_pmfs, batch_size=args.episode_size)
     scaled_all_pmfs_pd = pd.DataFrame(scaled_all_pmfs)
     fig2 =  draw_stacked_bars(df=scaled_all_pmfs_pd, fig_title="Submission Stream (bsz=64)", y_scale=[0., 65], x_key="time_step", y_key="sum(p)", y_title="# of Examples")
-    fig2.save('figures/mrqa.submission_stream_all_scaled.png')
+    fig2.save('figures/mrqa.submission_stream_all_scaled.png', scale_factor=2.0)
 
     submission_stream, init_error_pmfs = build_submission_stream(submission_data, scaled_all_pmfs, configs["QA"], args)
 
     init_error_pmfs_pd = pd.DataFrame(init_error_pmfs)
     fig3 =  draw_stacked_bars(df=init_error_pmfs_pd, fig_title="Error Stream of f_0 (bsz=64)", y_scale=[0., 65], x_key="time_step", y_key="sum(p)", y_title="# of Errors")
-    fig3.save('figures/mrqa.submission_stream.init_errors.png')
+    fig3.save('figures/mrqa.submission_stream.init_errors.png', scale_factor=2.0)
 
     return submission_stream
 
