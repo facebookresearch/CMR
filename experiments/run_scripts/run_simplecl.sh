@@ -21,7 +21,7 @@ ckpt_dir="experiments/ckpt_dirs/qa/er/${prefix}"
 mkdir -p ${ckpt_dir}
 
 
-log_file="experiments/logs/run_1103_${prefix}_seed=${seed}.log"
+log_file="experiments/logs/run_1107_${prefix}_seed=${seed}.log"
 echo "Starting ${log_file}."
 touch ${log_file}
 mkdir experiments/ckpt_dirs/qa/simplecl
@@ -46,9 +46,9 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --result_file experiments/results/qa/${prefix}_result.json > ${log_file} 
     # 2>&1 
     # &
-tail -f ${log_file}
+# tail -f ${log_file}
 echo "Finished ${log_file}."
-exit
+# exit
 # exit
 
 
