@@ -29,7 +29,7 @@ def draw_stacked_bars(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key
 
     fig = alt.layer(fig).resolve_scale()
     fig = fig.properties(width=1100, height=height).configure_axis(
-        labelFontSize=10,
+        labelFontSize=15,
         titleFontSize=16, 
         tickCount=10,
     ).configure_legend(titleFontSize=0, labelFontSize=20, orient='top-right', strokeColor='gray',
