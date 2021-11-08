@@ -17,7 +17,10 @@ def show_result(path):
     # r["prefix"] = prefix
     r["method_class"] = o["method_class"]
     r["cl_method"] = o["method_class"]
-    if r["cl_method"] == "er":
+    if r["cl_method"] == "online_ewc":
+        ewc_lambda= debugger_args.ewc_lambda
+        r["cl_method"] = f'{r["cl_method"]}-{ewc_lambda}'
+    elif r["cl_method"] == "er":
         replay_size = debugger_args.replay_size
         replay_freq = debugger_args.replay_frequency
         r["cl_method"] = f'{r["cl_method"]}-{replay_size}-{replay_freq}'
@@ -79,12 +82,12 @@ pd.set_option('display.float_format', lambda x: '%.5f' % x)
 for ns_config in results.ns_config.unique():
     # print(ns_config)
     r = results[results["ns_config"]==ns_config]
-    r = r[(r["AEFR(T)"]>0.85) | (r["cl_method"]=="none_cl")]
+    # r = r[(r["AEFR(T)"]>0.85) | (r["cl_method"]=="none_cl")]
     
     def _sort(column):
         # def tm_sorter(column):
         """Sort function"""
-        cl_methods = ['none_cl', "simple_cl", "er", "mir"]
+        cl_methods = ['none_cl', "simple_cl", "online_ewc", "er", "mir"]
         correspondence = {team: order for order, team in enumerate(cl_methods)}
         return column.map(correspondence)
     r = r.sort_values(by=["steps", "lr", "num_epochs", "cl_method"])
