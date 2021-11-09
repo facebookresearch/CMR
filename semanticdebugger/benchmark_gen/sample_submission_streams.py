@@ -123,7 +123,7 @@ def visualize_stream(submission_stream, data_names, cfg):
     fig1 =  draw_stacked_bars(df=submission_stat_pd, fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples")
     fig1.save(f'figures/mrqa.submission.{filename_str}.png', scale_factor=2.0)
     init_error_stat_pd = pd.DataFrame(init_error_stat)
-    fig2 =  draw_stacked_bars(df=init_error_stat_pd, fig_title=f"Error Stream ({title_str}) of f_0", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Initial Errors")
+    fig2 =  draw_stacked_bars(df=init_error_stat_pd, fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors")
     fig2.save(f'figures/mrqa.init_error.{filename_str}.png', scale_factor=2.0)    
     return 
 
