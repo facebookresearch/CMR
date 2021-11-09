@@ -9,6 +9,7 @@ from scipy.stats import pearsonr, spearmanr
 METRICS = {
     'mrqa_naturalquestions': 'EM|QA-F1',
     'mrqa': 'EM|QA-F1',
+    'nli': 'EM',
 }
 
 

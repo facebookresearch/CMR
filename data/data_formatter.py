@@ -162,10 +162,100 @@ class MRQA(TextToTextDataset):
         return dataset
 
 
+class NLI(TextToTextDataset):
+
+    def __init__(self, task_identifier="snli"): 
+        self.task_identifier = task_identifier
+        # for classification tasks, specify the meaning of each label
+        self.prompt = " "  # are two sentences entailment or not entailment?
+        if self.task_identifier in ["snli", "anli", "multi_nli"]:
+            self.label = {
+                0: ["entailment"],     
+                1: ["neutral"],   
+                2: ["contradiction"]
+            }
+        elif self.task_identifier == "qnli":
+            self.label = {
+                0: ["entailment"],     
+                1: ["neutral"], 
+            }
+        elif self.task_identifier == "scitail":
+            self.label = {
+                "entails": ["entailment"],     
+                "neutral": ["neutral"],    
+            }
+
+    def get_all_lines(self, dataset, splits=["train", "validation", "test"]):
+        all_lines = {}
+        for split in splits:
+            all_lines[split] = deduplicate(self.map_to_list(dataset, split)) 
+            show_statistics(all_lines[split]) 
+
+        # TODO: de-duplicate the lines!
+        return all_lines
+
+    def write_dataset(self, path):
+        """
+        return train, dev, test
+        """
+
+        # load dataset
+        dataset = self.load_dataset()
+
+        # formulate into list (for consistency in np.random)
+        if self.task_identifier in ["snli", "scitail", "qnli"]:
+            splits = ["train", "validation", "test"]
+        elif self.task_identifier == "anli":
+            splits = ['train_r1', 'dev_r1', 'test_r1', 'train_r2', 'dev_r2', 'test_r2', 'train_r3', 'dev_r3', 'test_r3']
+        elif self.task_identifier == "multi_nli":
+            splits = ['validation_matched', 'validation_mismatched'] 
+            
+        all_lines = self.get_all_lines(dataset, splits)
+
+        # shuffle the data
+        # np.random.seed(seed)
+        # np.random.shuffle(train_lines)
+        os.makedirs(os.path.join(path, self.task_identifier), exist_ok=True)
+        prefix = os.path.join(path, self.task_identifier,
+                              "{}".format(self.task_identifier))
+        for split in splits:
+            write_to_jsonl(all_lines[split], f"{prefix}_{split}.jsonl") 
+
+    def map_to_list(self, dataset, split_name):
+        lines = []
+        for datapoint in dataset[split_name]:
+            # print(datapoint["label"])
+            if datapoint["label"] not in self.label:
+                continue
+            # lines.append(("Premise: " + datapoint["premise"] + " | Hypothesis: " +
+            #              datapoint["hypothesis"], self.label[datapoint["label"]]))
+            _id = f"{self.task_identifier}-{split_name}-{len(lines)}"
+            if self.task_identifier == "qnli":
+                _input = f'Premise: {datapoint["sentence"]} </s> Hypothesis: {datapoint["question"]}'
+            else:
+                _input = f'Premise: {datapoint["premise"]} </s> Hypothesis: {datapoint["hypothesis"]}'
+            _output = self.label[datapoint["label"]]
+            instance = {"id": _id, "input": _input, "output": _output}
+            lines.append(json.dumps(instance))
+        print("Three examples: \n" + "\n".join([str(_) for _ in lines[:3]]))
+        return lines
+
+    def load_dataset(self):
+        if self.task_identifier == "scitail":
+            return datasets.load_dataset("scitail", "dgem_format")
+        elif self.task_identifier == "qnli":
+            return datasets.load_dataset("glue", "qnli")
+        else:
+            return datasets.load_dataset(self.task_identifier)
+
 def format(dataset_name, path="./"):
     print("Formatting ", dataset_name)
     if dataset_name.startswith("mrqa_"):
         data = MRQA(subset=dataset_name.split("_")[1])
+        data.write_dataset(path)
+    elif dataset_name.startswith("nli#"):
+        name = dataset_name.split("#")[1]
+        data = NLI(task_identifier=name)
         data.write_dataset(path)
 
 
@@ -173,16 +263,18 @@ path = "data/"
 if len(sys.argv) >= 2:
     path = sys.argv[1]
 
-# format("kilt_nq", path)
-# format("kilt_triviaqa", path)
-# format("glue_qnli", path)
 
-format("mrqa_SQuAD", path)
-format("mrqa_TriviaQA", path)
-format("mrqa_NaturalQuestions", path)
-format("mrqa_HotpotQA", path)
-format("mrqa_NewsQA", path)
-format("mrqa_SearchQA", path)
+# format("mrqa_SQuAD", path)
+# format("mrqa_TriviaQA", path)
+# format("mrqa_NaturalQuestions", path)
+# format("mrqa_HotpotQA", path)
+# format("mrqa_NewsQA", path)
+# format("mrqa_SearchQA", path)
 
 
-# shuf -n 1000 dev_file data/${task}/${task}_dev.mini.jsonl
+format("nli#snli", path)
+format("nli#anli", path)
+format("nli#multi_nli", path)
+format("nli#scitail", path)
+
+
