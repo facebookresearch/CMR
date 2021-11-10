@@ -141,7 +141,8 @@ def train(args, logger, model, train_data, dev_data, optimizer, scheduler):
             if global_step % args.eval_period == 0:
                 model.eval()
                 curr_performance = inference(
-                    model if args.n_gpu == 1 else model.module, dev_data, args=args, save_predictions=False, logger=logger)
+                    model if args.n_gpu == 1 else model.module, dev_data, args=args, save_predictions=True, logger=logger)
+                    # TODO: save predictions when eval during training
                 logger.info("Step %d Train loss %.2f %s %s on epoch=%d" % (
                     global_step,
                     np.mean(train_losses),

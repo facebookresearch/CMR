@@ -234,6 +234,7 @@ class NLI(TextToTextDataset):
                 _input = f'Premise: {datapoint["sentence"]} </s> Hypothesis: {datapoint["question"]}'
             else:
                 _input = f'Premise: {datapoint["premise"]} </s> Hypothesis: {datapoint["hypothesis"]}'
+            _input += " | Options: entailment, neutral, contradiction "
             _output = self.label[datapoint["label"]]
             instance = {"id": _id, "input": _input, "output": _output}
             lines.append(json.dumps(instance))
@@ -248,6 +249,105 @@ class NLI(TextToTextDataset):
         else:
             return datasets.load_dataset(self.task_identifier)
 
+
+
+
+class CSR(TextToTextDataset):
+
+    def __init__(self, task_identifier="commonsense_qa"): 
+        self.task_identifier = task_identifier
+        # for classification tasks, specify the meaning of each label
+        # self.prompt = " "  # are two sentences entailment or not entailment?
+        # if self.task_identifier in ["snli", "anli", "multi_nli"]:
+        #     self.label = {
+        #         0: ["entailment"],     
+        #         1: ["neutral"],   
+        #         2: ["contradiction"]
+        #     }
+        # elif self.task_identifier == "qnli":
+        #     self.label = {
+        #         0: ["entailment"],     
+        #         1: ["neutral"], 
+        #     }
+        # elif self.task_identifier == "scitail":
+        #     self.label = {
+        #         "entails": ["entailment"],     
+        #         "neutral": ["neutral"],    
+        #     }
+
+    def get_all_lines(self, dataset, splits=["train", "validation", "test"]):
+        all_lines = {}
+        for split in splits:
+            all_lines[split] = deduplicate(self.map_to_list(dataset, split)) 
+            show_statistics(all_lines[split]) 
+
+        # TODO: de-duplicate the lines!
+        return all_lines
+
+    def write_dataset(self, path):
+        """
+        return train, dev, test
+        """
+
+        # load dataset
+        dataset = self.load_dataset()
+
+        # formulate into list (for consistency in np.random)
+        # if self.task_identifier in ["snli", "scitail", "qnli"]:
+        #     splits = ["train", "validation", "test"]
+        # elif self.task_identifier == "anli":
+        #     splits = ['train_r1', 'dev_r1', 'test_r1', 'train_r2', 'dev_r2', 'test_r2', 'train_r3', 'dev_r3', 'test_r3']
+        # elif self.task_identifier == "multi_nli":
+        #     splits = ['validation_matched', 'validation_mismatched'] 
+        splits = ["train", "validation"]
+        all_lines = self.get_all_lines(dataset, splits)
+
+        # shuffle the data
+        # np.random.seed(seed)
+        # np.random.shuffle(train_lines)
+        os.makedirs(os.path.join(path, self.task_identifier), exist_ok=True)
+        prefix = os.path.join(path, self.task_identifier,
+                              "{}".format(self.task_identifier))
+        for split in splits:
+            write_to_jsonl(all_lines[split], f"{prefix}_{split}.jsonl") 
+
+    def map_to_list(self, dataset, split_name):
+        lines = []
+        for datapoint in dataset[split_name]: 
+            choices = datapoint["choices"]
+            choices_map = {}
+            choice_strs = []
+            for ind, (key, choice) in enumerate(list(zip(choices["label"], choices["text"]))):
+                if self.task_identifier == "openbookqa":
+                    key = list("ABCDEF")[ind]  
+                choices_map[key]  = choice
+                choice_strs.append(f"{key}: {choice}")
+             
+            _id = f"{self.task_identifier}-{split_name}-{len(lines)}"
+            
+            if self.task_identifier == "openbookqa":
+                _input = f'Question: {datapoint["question_stem"]} </s> {" | ".join(choice_strs)}'
+            else:
+                _input = f'Question: {datapoint["question"]} </s> {" | ".join(choice_strs)}'
+
+            _output = [choices_map[datapoint["answerKey"]]]
+            instance = {"id": _id, "input": _input, "output": _output}
+            lines.append(json.dumps(instance))
+        print("Three examples: \n" + "\n".join([str(_) for _ in lines[:3]]))
+        return lines
+
+    def load_dataset(self): 
+        if self.task_identifier == "ai2_arc-easy":
+            return datasets.load_dataset("ai2_arc", "ARC-Easy")    
+        elif self.task_identifier == "ai2_arc-hard":
+            return datasets.load_dataset("ai2_arc", "ARC-Challenge")    
+        elif self.task_identifier == "openbookqa":
+            return datasets.load_dataset("openbookqa", "main")    
+        return datasets.load_dataset(self.task_identifier)
+
+
+
+
 def format(dataset_name, path="./"):
     print("Formatting ", dataset_name)
     if dataset_name.startswith("mrqa_"):
@@ -256,6 +356,10 @@ def format(dataset_name, path="./"):
     elif dataset_name.startswith("nli#"):
         name = dataset_name.split("#")[1]
         data = NLI(task_identifier=name)
+        data.write_dataset(path)
+    elif dataset_name.startswith("csr#"):
+        name = dataset_name.split("#")[1]
+        data = CSR(task_identifier=name)
         data.write_dataset(path)
 
 
@@ -278,3 +382,9 @@ format("nli#multi_nli", path)
 format("nli#scitail", path)
 
 
+# format("csr#commonsense_qa", path)
+# format("csr#riddle_sense", path)
+# format("csr#ai2_arc-easy", path)
+# format("csr#ai2_arc-hard", path)
+# format("csr#openbookqa", path)
+ 

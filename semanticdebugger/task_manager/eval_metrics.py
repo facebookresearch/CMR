@@ -10,6 +10,7 @@ METRICS = {
     'mrqa_naturalquestions': 'EM|QA-F1',
     'mrqa': 'EM|QA-F1',
     'nli': 'EM',
+    'csr': 'EM|QA-F1',
 }
 
 

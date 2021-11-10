@@ -36,26 +36,45 @@ def formatting_initial_status(data_name, predictions, truth_data, results_all, t
         formatted_data.append(item)
     return formatted_data
 
-def load_QA_datasets(args):
-    all_data = {}
-    truth_paths = {
-        # "squad-train": "data/mrqa_squad/mrqa_squad_train.jsonl",
-        "squad": "data/mrqa_squad/mrqa_squad_dev.jsonl",   
-        "nq": "data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl", #
-        "trivia": "data/mrqa_triviaqa/mrqa_triviaqa_dev.jsonl",  
-        "hotpot": "data/mrqa_hotpotqa/mrqa_hotpotqa_dev.jsonl",   
-        "news": "data/mrqa_newsqa/mrqa_newsqa_dev.jsonl",   
-        "search": "data/mrqa_searchqa/mrqa_searchqa_dev.jsonl",   
-    }
-    prediction_paths = {
-        # "squad-train": "upstream_resources/qa_upstream_preds/mrqa_squad_train.predictions.json",   
-        "squad": "upstream_resources/qa_upstream_preds/mrqa_squad_dev.predictions.json",   
-        "nq": "upstream_resources/qa_upstream_preds/mrqa_naturalquestions_dev.predictions.json", 
-        "trivia": "upstream_resources/qa_upstream_preds/mrqa_triviaqa_dev.predictions.json",  
-        "hotpot": "upstream_resources/qa_upstream_preds/mrqa_hotpotqa_dev.predictions.json",   
-        "news": "upstream_resources/qa_upstream_preds/mrqa_newsqa_dev.predictions.json", 
-        "search": "upstream_resources/qa_upstream_preds/mrqa_searchqa_dev.predictions.json", 
-    }
+def load_datasets(args): 
+    if args.task_name == "QA":
+        truth_paths = {
+            # "squad-train": "data/mrqa_squad/mrqa_squad_train.jsonl",
+            "squad": "data/mrqa_squad/mrqa_squad_dev.jsonl",   
+            "nq": "data/mrqa_naturalquestions/mrqa_naturalquestions_dev.jsonl", #
+            "trivia": "data/mrqa_triviaqa/mrqa_triviaqa_dev.jsonl",  
+            "hotpot": "data/mrqa_hotpotqa/mrqa_hotpotqa_dev.jsonl",   
+            "news": "data/mrqa_newsqa/mrqa_newsqa_dev.jsonl",   
+            "search": "data/mrqa_searchqa/mrqa_searchqa_dev.jsonl",   
+        }
+        prediction_paths = {
+            # "squad-train": "upstream_resources/qa_upstream_preds/mrqa_squad_train.predictions.json",   
+            "squad": "upstream_resources/qa_upstream_preds/mrqa_squad_dev.predictions.json",   
+            "nq": "upstream_resources/qa_upstream_preds/mrqa_naturalquestions_dev.predictions.json", 
+            "trivia": "upstream_resources/qa_upstream_preds/mrqa_triviaqa_dev.predictions.json",  
+            "hotpot": "upstream_resources/qa_upstream_preds/mrqa_hotpotqa_dev.predictions.json",   
+            "news": "upstream_resources/qa_upstream_preds/mrqa_newsqa_dev.predictions.json", 
+            "search": "upstream_resources/qa_upstream_preds/mrqa_searchqa_dev.predictions.json", 
+        }
+        upstream_data_name = "squad"
+    elif args.task_name == "NLI":
+        truth_paths = {
+            # "squad-train": "data/mrqa_squad/mrqa_squad_train.jsonl",
+            "snli": "data/snli/snli_validation.jsonl",   
+            "multi_nli_matched": "data/multi_nli/multi_nli_validation_matched.jsonl", #
+            "multi_nli_mismatched": "data/multi_nli/multi_nli_validation_mismatched.jsonl", #
+            "scitail": "data/scitail/scitail_dev.jsonl",   
+            "anli": "data/anli/anli_dev.jsonl",   
+        }
+        prediction_paths = {
+            "snli": "upstream_resources/nli_upstream_preds/snli-snli_validation.predictions.json",   
+            "multi_nli_matched": "upstream_resources/nli_upstream_preds/multi_nli-multi_nli_validation_matched.predictions.json", #
+            "multi_nli_mismatched": "upstream_resources/nli_upstream_preds/multi_nli-multi_nli_validation_mismatched.predictions.json", #
+            "scitail": "upstream_resources/nli_upstream_preds/scitail-scitail_dev.predictions.json",   
+            "anli": "upstream_resources/nli_upstream_preds/anli-anli_dev.predictions.json",   
+        }
+        upstream_data_name = "snli"
+    
 
     all_truth_data = {}
     submission_data = {}
@@ -71,7 +90,7 @@ def load_QA_datasets(args):
             truth_data.append((d["input"], d["output"], d["id"]))
         all_truth_data[data_name] = truth_data
 
-    upstream_data_name = "squad"
+    
 
     for data_name, prediction_file in prediction_paths.items():
         with open(prediction_file, "r") as f:
@@ -105,7 +124,7 @@ def load_QA_datasets(args):
     return submission_data, heldout_submission_data, upstream_sampled_data
 
 
-def visualize_stream(submission_stream, data_names, cfg):
+def visualize_stream(submission_stream, data_names, cfg, args):
     submission_stat = []
     init_error_stat = []
     for time_step, episode_data in enumerate(list(submission_stream)):
@@ -121,10 +140,10 @@ def visualize_stream(submission_stream, data_names, cfg):
     filename_str = f"T={cfg['T']},b={cfg['b']},alpha={cfg['alpha']},beta={cfg['beta']},gamma={cfg['gamma']}"
     title_str = f"alpha={cfg['alpha']}, beta={cfg['beta']}, gamma={cfg['gamma']}"
     fig1 =  draw_stacked_bars(df=submission_stat_pd, fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples")
-    fig1.save(f'figures/mrqa.submission.{filename_str}.png', scale_factor=2.0)
+    fig1.save(f'figures/{args.task_name}.submission.{filename_str}.png', scale_factor=2.0)
     init_error_stat_pd = pd.DataFrame(init_error_stat)
     fig2 =  draw_stacked_bars(df=init_error_stat_pd, fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors")
-    fig2.save(f'figures/mrqa.init_error.{filename_str}.png', scale_factor=2.0)    
+    fig2.save(f'figures/{args.task_name}.init_error.{filename_str}.png', scale_factor=2.0)    
     return 
 
 
@@ -169,7 +188,7 @@ def generate_submission_stream_v2(submission_data, args, cfg):
             current_major_ood = random.choice(other_oods)
         submission_stream.append(S_t)
     data_names = [upstream] + OODs
-    visualize_stream(submission_stream, data_names, cfg)
+    visualize_stream(submission_stream, data_names, cfg, args)
     return submission_stream    
 
 def generate_submission_stream_v1(submission_data, args):
@@ -232,6 +251,11 @@ def main():
     print(args)
     set_seeds(args.seed)
 
+    if args.task_name == "NLI":
+        args.submission_stream_file = args.submission_stream_file.replace("qa", "nli")
+        args.sampled_upstream_dataset = args.sampled_upstream_dataset.replace("qa", "nli")
+        args.heldout_submission_eval_file = args.heldout_submission_eval_file.replace("qa", "nli")
+        # args.metric = "EM"
 
      # QA:
     configs = {}
@@ -248,12 +272,17 @@ def main():
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.9, gamma=0.8))
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.5, gamma=0.8))
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.1, gamma=0.8))
+
+    configs["NLI"] = []
+    configs["NLI"].append(dict(upstream="snli", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.9, gamma=0.8))
+    configs["NLI"].append(dict(upstream="snli", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.5, gamma=0.8))
+    configs["NLI"].append(dict(upstream="snli", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.1, gamma=0.8))
     
 
     
 
-    if args.task_name == "QA":
-        submission_data, heldout_submission_data, upstream_sampled_data = load_QA_datasets(args)
+    # if args.task_name == "QA":
+    submission_data, heldout_submission_data, upstream_sampled_data = load_datasets(args)
     
 
     with open(args.heldout_submission_eval_file, "w") as f:

@@ -1,4 +1,4 @@
-task="snli"
+task="commonsense_qa"
 
 # modelsize="large"
 # lr=1e-5
@@ -12,37 +12,36 @@ task="snli"
 
 modelsize="base"
 lr=5e-5
-train_bsz=512
+train_bsz=64
 pred_bsz=64
-num_epochs=30
+num_epochs=100
 output_dir="out/${task}_bart-${modelsize}_1109_upstream_model"
 
-warmup=100
+warmup=16
 max_input_length=512
 
-# 0617v4
 
 logname="train_bart-${modelsize}_1109"
 
-# if [[ -f "data/${task}/${task}_validation.mini.2048.jsonl" ]]
-# then
-#     echo "data/${task}/${task}_validation.mini.2048.jsonl exists on your filesystem."
-# else
-
-# rm data/${task}/*-preproBartTokenized.json
-shuf -n 2048 "data/${task}/${task}_validation.jsonl" > "data/${task}/${task}_validation.mini.2048.jsonl"
-echo "data/${task}/${task}_validation.mini.2048.jsonl generated."
-# fi 
+if [[ -f "data/${task}/${task}_validation.mini.768.jsonl" ]]
+then
+    echo "data/${task}/${task}_validation.mini.768.jsonl exists on your filesystem."
+else
+    shuf -n 768 "data/${task}/${task}_validation.jsonl" > "data/${task}/${task}_validation.mini.768.jsonl"
+    echo "data/${task}/${task}_validation.mini.768.jsonl generated."
+fi 
 
 logfile=logs/${task}.${logname}.log
-rm ${logfile}
-CUDA_VISIBLE_DEVICES=0,1,2,3 python semanticdebugger/cli_bart.py \
+rm $logfile
+rm data/${task}/*-preproBartTokenized.json
+
+CUDA_VISIBLE_DEVICES=4,5,6,7 python semanticdebugger/cli_bart.py \
         --do_train \
         --output_dir ${output_dir} \
         --model facebook/bart-${modelsize} \
-        --dataset nli \
+        --dataset csr \
         --train_file data/${task}/${task}_train.jsonl \
-        --dev_file data/${task}/${task}_validation.mini.2048.jsonl \
+        --dev_file data/${task}/${task}_validation.mini.768.jsonl \
         --test_file data/${task}/${task}_validation.jsonl \
         --learning_rate ${lr} \
         --warmup_steps ${warmup} \
@@ -51,7 +50,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python semanticdebugger/cli_bart.py \
         --eval_period 300 \
         --num_train_epochs ${num_epochs} \
         --max_input_length ${max_input_length} \
-        --max_output_length 10 \
+        --max_output_length 16 \
         --num_beams 3 \
         --append_another_bos  > ${logfile}  2>&1 &
 
