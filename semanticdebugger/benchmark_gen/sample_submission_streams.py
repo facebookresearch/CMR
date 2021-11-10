@@ -255,6 +255,7 @@ def main():
         args.submission_stream_file = args.submission_stream_file.replace("qa", "nli")
         args.sampled_upstream_dataset = args.sampled_upstream_dataset.replace("qa", "nli")
         args.heldout_submission_eval_file = args.heldout_submission_eval_file.replace("qa", "nli")
+        args.episode_size = 128
         # args.metric = "EM"
 
      # QA:

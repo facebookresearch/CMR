@@ -12,6 +12,7 @@ from transformers import (AdamW, BartConfig, BartTokenizer,
 
 from semanticdebugger.debug_algs.commons import OnlineDebuggingMethod
 from tqdm import tqdm
+import copy
 
 
 class ContinualFinetuning(OnlineDebuggingMethod):
@@ -28,7 +29,8 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                          "total_steps",
                          "num_epochs",
                          "gradient_accumulation_steps",
-                         "max_grad_norm",]
+                         "max_grad_norm",
+                         "diff_loss_weight"]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
         return
 
@@ -133,6 +135,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         self.base_model.train()
         train_losses = []
         global_step = 0
+        last_weights = copy.deepcopy(list(self.base_model.parameters()))
         for epoch_id in range(int(self.debugger_args.num_epochs)):
             for batch in tqdm(bug_loader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}", disable=quiet):
                 global_step += 1
@@ -150,6 +153,20 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                                        is_training=True)
                 if self.n_gpu > 1:
                     loss = loss.mean()  # mean() to average on multi-gpu.
+                
+                # For L2 norm 
+
+                if self.debugger_args.diff_loss_weight > 0:
+                    diff_loss = torch.Tensor([0]).to("cuda" if torch.cuda.is_available() else "cpu")
+                    # Iterate over base_weights and curr_weights and accumulate the euclidean norm
+                    # of their differences
+                    
+                    curr_weights = list(self.base_model.parameters())
+                    for base_param, curr_param in zip(last_weights, curr_weights):
+                        diff_loss += (curr_param - base_param).pow(2).sum()
+                    loss = loss + self.debugger_args.diff_loss_weight * diff_loss
+
+
                 train_losses.append(loss.detach().cpu())
                 loss.backward()
                 self.model_update_steps += 1
@@ -160,4 +177,5 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                     self.optimizer.step()    # We have accumulated enough gradients
                     self.scheduler.step()
                     self.base_model.zero_grad()
+                    last_weights = copy.deepcopy(list(self.base_model.parameters())) # update the last weights
         return

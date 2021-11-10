@@ -120,6 +120,7 @@ def setup_args(args):
             num_epochs=args.num_train_epochs,
             gradient_accumulation_steps=args.gradient_accumulation_steps,
             max_grad_norm=args.max_grad_norm,
+            diff_loss_weight=args.diff_loss_weight,
             save_ckpt_freq=args.save_ckpt_freq,
             ckpt_dir=args.ckpt_dir,
             skip_instant_eval=args.skip_instant_eval,
@@ -281,6 +282,11 @@ def get_cli_parser():
                         help="Epsilon for Adam optimizer.")
     parser.add_argument("--max_grad_norm", default=0.1, type=float,
                         help="Max gradient norm.")
+
+    parser.add_argument("--diff_loss_weight", default=0, type=float,
+                        help="For L2 reg")
+    
+
     parser.add_argument("--gradient_accumulation_steps", default=1, type=int,
                         help="Max gradient norm.")
     parser.add_argument("--num_train_epochs", default=3.0, type=float,

@@ -3,7 +3,7 @@
 # n_threads=8
 # n_gpus=8
 # start_gpuid=0
-# declare -a data_names=("mrqa_squad")
+# declare -a data_names=("nli_squad")
 
 # for data_name in "${data_names[@]}"
 # do
@@ -18,7 +18,7 @@
 #             --data_dist --num_shards $n_threads --local_id ${thread} \
 #             --data_file "data/${data_name}/${dataset_name}.jsonl" \
 #             --prediction_file "upstream_resources/nli_upstream_preds/tmp/${dataset_name}.predictions.${thread}_of_${n_threads}.json" \
-#             --conig_file "scripts/infer_mrqa_bart_base.config" \
+#             --conig_file "scripts/infer_nli_bart_base.config" \
 #             --prefix ${prefix}  > logs/tmp/${prefix}_${thread}_of_${n_threads}.log 2>&1 &
 #         echo logs/tmp/${prefix}_${thread}_of_${n_threads}.log
 #     done
@@ -26,7 +26,7 @@
 # done
 
 
-# declare -a data_names=("mrqa_squad")
+# declare -a data_names=("nli_squad")
 # n_threads=8
 # for data_name in "${data_names[@]}"
 # do
@@ -64,7 +64,7 @@ do
             --data_dist --num_shards $n_threads --local_id ${thread} \
             --data_file "data/${data_name}.jsonl" \
             --prediction_file ${pred_path} \
-            --conig_file "scripts/infer_mrqa_bart_base.config" \
+            --conig_file "scripts/infer_nli_bart_base.config" \
             --prefix ${prefix}  > $log_path 2>&1 &
         echo logs/tmp/${prefix}_${thread}_of_${n_threads}.log
     done
