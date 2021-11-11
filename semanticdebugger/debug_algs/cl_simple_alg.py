@@ -135,7 +135,8 @@ class ContinualFinetuning(OnlineDebuggingMethod):
         self.base_model.train()
         train_losses = []
         global_step = 0
-        last_weights = copy.deepcopy(list(self.base_model.parameters()))
+        if self.debugger_args.diff_loss_weight > 0:
+            last_weights = copy.deepcopy(list(self.base_model.parameters()))
         for epoch_id in range(int(self.debugger_args.num_epochs)):
             for batch in tqdm(bug_loader.dataloader, desc=f"Bug-fixing Epoch {epoch_id}", disable=quiet):
                 global_step += 1
@@ -164,6 +165,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                     curr_weights = list(self.base_model.parameters())
                     for base_param, curr_param in zip(last_weights, curr_weights):
                         diff_loss += (curr_param - base_param).pow(2).sum()
+                    # self.logger.info(f"loss={loss}; diff_loss={diff_loss}; l2w={self.debugger_args.diff_loss_weight}")
                     loss = loss + self.debugger_args.diff_loss_weight * diff_loss
 
 
@@ -177,5 +179,7 @@ class ContinualFinetuning(OnlineDebuggingMethod):
                     self.optimizer.step()    # We have accumulated enough gradients
                     self.scheduler.step()
                     self.base_model.zero_grad()
-                    last_weights = copy.deepcopy(list(self.base_model.parameters())) # update the last weights
+                    # last_weights = copy.deepcopy(list(self.base_model.parameters())) # update the last weights
+        if self.debugger_args.diff_loss_weight > 0:
+            del last_weights
         return

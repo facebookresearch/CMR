@@ -68,21 +68,27 @@ class BartIOIndexManager(BartIndexManager):
     def retrieve_from_memory(self, query_examples, sample_size, **kwargs):
         input_vectors = self.get_query_representation(query_examples)
         agg_method = kwargs.get("agg_method", "each_topk_then_random")
-        rank_method = kwargs.get("rank_method", "most_similar")
+        rank_method = kwargs.get("rank_method", "most_sim_input")
         if agg_method == "each_topk_then_random":
             each_sample_size = kwargs.get("each_sample_size", 5)
             each_sim_sample_size = kwargs.get("each_sim_sample_size", 30)
             retrieved_example_ids = []
+            retrieved_example_scores = []
             for query_vector in input_vectors: 
                 sim_input_index_ids = self.search_index(query_vector, each_sim_sample_size, partition="input", return_index_ids=True)
-                sim_output_vectors = [self.memory_index["output"].reconstruct(int(eid)) for eid in sim_input_index_ids]
-                query_output_vector = query_vector[self.dim_vector:]
-                distances = [distance.cosine(query_output_vector, s) for s in sim_output_vectors]
-                retrieved_ids = [int(x) for _, x in sorted(zip(distances, sim_input_index_ids), reverse=True)]
+                if rank_method == "most_sim_input":
+                    retrieved_ids = sim_input_index_ids
+                elif rank_method == "most_sim_input_most_diff_output":
+                    sim_output_vectors = [self.memory_index["output"].reconstruct(int(eid)) for eid in sim_input_index_ids]
+                    query_output_vector = query_vector[self.dim_vector:]
+                    distances = [distance.cosine(query_output_vector, s) for s in sim_output_vectors]
+                    retrieved_ids = [int(x) for _, x in sorted(zip(distances, sim_input_index_ids), reverse=True)]
                 retrieved_example_ids += [self.memory_index_sorted_ids[int(eid)] for eid in retrieved_ids][:each_sample_size]
+                # retrieved_example_scores += # TODO: 
         self.logger.info(f"IO index -- retrieved_example_ids={len(retrieved_example_ids)}")
         retrieved_examples = self.get_examples_by_ids(retrieved_example_ids)
         retrieved_examples = random.sample(retrieved_examples, sample_size) # TODO: consider ranking 
+        # retrieved_examples = retrieved_examples[:sample_size]
         return retrieved_examples
 
 if __name__ == '__main__':
@@ -92,7 +98,9 @@ if __name__ == '__main__':
 
     debugging_alg, data_args, base_model_args, debugger_args, logger = run_lifelong_finetune.setup_args(
         args)
+    base_model_args.base_model_path = "out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt"
     args.predict_batch_size = 8
+
     index_manager = BartIOIndexManager(logger=logger)
     index_manager.set_up_data_args(args)
     index_manager.load_encoder_model(base_model_args)
@@ -100,22 +108,15 @@ if __name__ == '__main__':
     # index_manager.set_up_initial_memory(index_manager.initial_memory_path, cut_off=None)
     # index_manager.save_memory_to_path("exp_results/data_streams/bart_io_index.sample_init_memory.pkl")
     
-    index_manager.initial_memory_path = "data/mrqa_naturalquestions/mrqa_naturalquestions_train.jsonl"
+    index_manager.initial_memory_path = "data/mrqa_squad/mrqa_squad_train.jsonl"
     index_manager.set_up_initial_memory(index_manager.initial_memory_path, cut_off=None)
-    index_manager.save_memory_to_path("exp_results/data_streams/bart_io_index.init_memory.pkl")
+    index_manager.save_memory_to_path("experiments/eval_data/qa/bart_io_index.init_memory.pkl")
+ 
 
-    # item = [0,0,0]
-    # item[2] = "mrqa_naturalquestions-train-10-copy"
-    # item[0] = "Context: The movie was shot in LA and the Hawaiian islands of Bologno and Kologno between March 3 , 2020 and May 25 , 2020 . The movie is deliberately vague about which Hawaiian island its latter portion depicts ; thus , the characters hike across a rope bridge on Bologno and arrive in the next scene at a spectacular waterfall on Kologno , rather than the ordinary irrigation dam and pond on Bologno where the actual trail terminates . | Question: which did they hike in just go with it ?"
-    # item[1] = ['xxa xzcvxzcv q234er2314', 'adsfasdf sad fgcxbv dsafv adsf .']
-    
-    # index_manager.store_examples([item])
-
-
-    # query_ids = ["mrqa_naturalquestions-train-10"]
+    # query_ids = ["mrqa_squad-train-10"]
     # print(index_manager.memory_examples[query_ids[0]])
     # retrieved_exmaples = index_manager.retrieve_from_memory(query_examples=[
-    #                                                    index_manager.memory_examples[qid] for qid in query_ids], each_sample_size=10, sample_size=10, rank_method="")
+    #                                                    index_manager.memory_examples[qid] for qid in query_ids], each_sample_size=10, sample_size=10, rank_method="most_sim_input")
     
     # for item in retrieved_exmaples: 
     #     print("-"*50)

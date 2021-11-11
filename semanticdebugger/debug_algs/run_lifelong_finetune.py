@@ -2,7 +2,7 @@ from argparse import Namespace
 import argparse
 from torch import detach
 from semanticdebugger.models.utils import set_seeds
-from semanticdebugger.debug_algs.cl_none import NoneCL
+from semanticdebugger.debug_algs.cl_none import NoneCL, OfflineCL
 from semanticdebugger.debug_algs.cl_simple_alg import ContinualFinetuning
 from semanticdebugger.debug_algs.cl_online_ewc_alg import OnlineEWC
 from semanticdebugger.debug_algs.offline_debug_bounds import OfflineDebugger
@@ -44,6 +44,8 @@ def setup_args(args):
 
     if args.cl_method_name == "none_cl":
         debugging_alg = NoneCL(logger=logger)
+    elif args.cl_method_name == "offline_cl":
+        debugging_alg = OfflineCL(logger=logger)
     elif args.cl_method_name == "simple_cl":
         debugging_alg = ContinualFinetuning(logger=logger)
     elif args.cl_method_name == "online_ewc":
@@ -110,7 +112,7 @@ def setup_args(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["none_cl", "simple_cl", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "index_cl", "hyper_cl", "simple_ds_mine"]:
+    if args.cl_method_name in ["none_cl", "offline_cl", "simple_cl", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "index_cl", "hyper_cl", "simple_ds_mine"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -177,7 +179,6 @@ def run(args):
 
         if args.cl_method_name in ["offline_debug"]:
             debugging_alg.offline_debug()
-            offline_bound_results = debugging_alg.single_timecode_eval(timecode=-1)
         else: 
             debugging_alg.online_debug() 
 
@@ -331,6 +332,10 @@ def get_cli_parser():
     parser.add_argument('--example_encoder_name', type=str, default="roberta-base")
     parser.add_argument('--task_emb_dim', type=int, default=768)
 
+
+    ### The HPs for offline
+
+    parser.add_argument('--offline_retrain_upstream', default=False, type=lambda x: (str(x).lower() in ['true','1', 'yes']))
 
     # To save all ckpts.
 

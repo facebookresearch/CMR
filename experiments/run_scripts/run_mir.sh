@@ -6,19 +6,21 @@ cd ~/SemanticDebugger/
 ## Args ##
 lr=$1
 ep=$2
-replay_size=$3
-replay_freq=$4
-upstream_ratio=$5
-mir_cand_size=$6
-mir_abalation_args=$7   # none, largest_beforeloss, largest_afterloss
+l2w=$3
+replay_size=$4
+replay_freq=$5
+upstream_ratio=$6
+mir_cand_size=$7
+mir_abalation_args=$8   # none, largest_beforeloss, largest_afterloss
 
 memory_store_rate=1.0
 seed=42
 
 ## Paths ##
-ns_config=$8
-task_name=$9
+ns_config=$9
+task_name=${10}
 
+echo "task_name=${task_name}"
 
 if [ "$task_name" = "qa" ]; then
     upstream_data_path="data/mrqa_squad/mrqa_squad_train.jsonl"
@@ -41,7 +43,7 @@ fi
 gpu=0
 
 
-prefix="${task_name}_mir_lr=${lr}_ep=${ep}_rs=${replay_size}_rf=${replay_freq}_mcs=${mir_cand_size}_${mir_abalation_args}_${ns_config}"
+prefix="${task_name}_mir_lr=${lr}_ep=${ep}_l2w=${l2w}_rs=${replay_size}_rf=${replay_freq}_mcs=${mir_cand_size}_${mir_abalation_args}_${ns_config}"
 ckpt_dir="experiments/ckpt_dirs/${task_name}/mir/${prefix}"
 mkdir -p ${ckpt_dir}
 
@@ -56,6 +58,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --cl_method "mir" \
     --mir_abalation_args ${mir_abalation_args} \
     --learning_rate ${lr} --num_train_epochs ${ep} \
+    --diff_loss_weight ${l2w} \
     --replay_size ${replay_size} --replay_frequency ${replay_freq} \
     --replay_candidate_size ${mir_cand_size} \
     --upstream_sample_ratio ${upstream_ratio} \
@@ -81,6 +84,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     # &
 # tail -f ${log_file}
 echo "Finished ${log_file}."
+exit
 # exit
 # exit
 

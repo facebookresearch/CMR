@@ -6,16 +6,17 @@ cd ~/SemanticDebugger/
 ## Arguments ##
 lr=$1
 ep=$2
-replay_size=$3
-replay_freq=$4
-upstream_ratio=$5
+l2w=$3
+replay_size=$4
+replay_freq=$5
+upstream_ratio=$6
 seed=42
 gpu=0
 memory_store_rate=1.0
 
 ## Paths ##
-ns_config=$6
-task_name=$7
+ns_config=$7
+task_name=$8
 
 
 if [ "$task_name" = "qa" ]; then
@@ -36,7 +37,7 @@ fi
 
 
 
-prefix="${task_name}_er_lr=${lr}_ep=${ep}_rs=${replay_size}_rf=${replay_freq}_${ns_config}"
+prefix="${task_name}_er_lr=${lr}_ep=${ep}_l2w=${l2w}_rs=${replay_size}_rf=${replay_freq}_${ns_config}"
 log_file="experiments/logs/run_1107_${prefix}_seed=${seed}.log"
 ckpt_dir="experiments/ckpt_dirs/${task_name}/er/${prefix}"
 mkdir -p ${ckpt_dir}
@@ -50,13 +51,14 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --cl_method "er" \
     --task_name ${task_name_arg} \
     --learning_rate ${lr} --num_train_epochs ${ep} \
+    --diff_loss_weight ${l2w} \
     --replay_size ${replay_size} --replay_frequency ${replay_freq} \
     --upstream_sample_ratio ${upstream_ratio} \
     --num_adapt_epochs  0 \
     --use_replay_mix \
     --base_model_path ${base_model_path} \
     --num_beams 3 \
-    --predict_batch_size 48 \
+    --predict_batch_size 16 \
     --max_timecode 100 \
     --kr_eval_freq 10 --kr_eval_mode "metric" \
     --kg_eval_freq 10 --kg_eval_mode "metric" \

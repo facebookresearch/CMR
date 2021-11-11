@@ -13,13 +13,17 @@ def show_result(path):
     debugger_args = eval(o["debugger_args"])
     data_args = eval(o["data_args"])
 
-    r["path"] = path
+    r["path"] = path.replace(",", "|")
     # r["prefix"] = prefix
     r["method_class"] = o["method_class"]
     r["cl_method"] = o["method_class"]
-    if r["cl_method"] == "online_ewc":
+    if r["cl_method"] == "simple_cl":
+        if hasattr(debugger_args, "diff_loss_weight"):
+            r["cl_method"] = f'{r["cl_method"]}-l2w={debugger_args.diff_loss_weight}'
+    elif r["cl_method"] == "online_ewc":
         ewc_lambda= debugger_args.ewc_lambda
-        r["cl_method"] = f'{r["cl_method"]}-{ewc_lambda}'
+        ewc_gamma= debugger_args.ewc_gamma
+        r["cl_method"] = f'{r["cl_method"]}-{ewc_lambda}-{ewc_gamma}'
     elif r["cl_method"] == "er":
         replay_size = debugger_args.replay_size
         replay_freq = debugger_args.replay_frequency
@@ -28,7 +32,8 @@ def show_result(path):
         replay_size = debugger_args.replay_size
         replay_freq = debugger_args.replay_frequency
         replay_candidate_size = debugger_args.replay_candidate_size
-        r["cl_method"] = f'{r["cl_method"]}-{replay_size}/{replay_candidate_size}-{replay_freq}'
+        mir_abalation_args = debugger_args.mir_abalation_args
+        r["cl_method"] = f'{r["cl_method"]}-{replay_size}/{replay_candidate_size}-{replay_freq}-{mir_abalation_args}'
         # replay_size = debugger_args.replay_size
     r["steps"] = o["model_update_steps"]
     
@@ -51,12 +56,14 @@ def show_result(path):
         return None
     last_step = online[-1] 
     assert last_step["timecode"] == ns_config["T"] -1 
-    r["CSR(T)"] = last_step["CSR"]
-    r["AEFR(T)"] = float(np.mean(EFRs))
+    
     # print(len(UKRs))
     r["UKR(T)"] = UKRs[-1]
     r["OKR(T)"] = OKRs[-1]
+    r["AEFR(T)"] = float(np.mean(EFRs))
+    r["CSR(T)"] = last_step["CSR"]
     r["KG(T)"] = KGs[-1]
+    r["AVG"] = float(np.mean([r["UKR(T)"], r["OKR(T)"], r["AEFR(T)"], r["CSR(T)"], r["KG(T)"]]))
     return r
     
 
@@ -67,33 +74,38 @@ result_files = []
 for file in glob.glob("*.json"):
     result_files.append(file)
 
+print(result_files)
+
 results = []
 for r_file in result_files:
     r = show_result(r_file)
     if r:
         results.append(r)
-
+ 
 results.sort(key=lambda x:x["cl_method"])
 
 results = pd.DataFrame(results)
 
-pd.set_option('display.float_format', lambda x: '%.5f' % x)
+pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
 for ns_config in results.ns_config.unique():
     # print(ns_config)
     r = results[results["ns_config"]==ns_config]
+    r = r[((r["lr"]==3e-5) & (r["num_epochs"]==10)) | (r["cl_method"]=="none_cl")]
     # r = r[(r["AEFR(T)"]>0.85) | (r["cl_method"]=="none_cl")]
     
     def _sort(column):
         # def tm_sorter(column):
         """Sort function"""
-        cl_methods = ['none_cl', "simple_cl", "online_ewc", "er", "mir"]
+        cl_methods = ['none_cl', "simple_cl", "online_ewc", "er", "mir", "index_cl_bart_io_index"]
         correspondence = {team: order for order, team in enumerate(cl_methods)}
         return column.map(correspondence)
     r = r.sort_values(by=["steps", "lr", "num_epochs", "cl_method"])
     r = r.sort_values(by="method_class", key=_sort, kind="mergesort")
-    r = r.drop(columns=["path", "ns_config", "method_class"])
-    r.to_csv(f"csvs/{ns_config}.csv", index=False)
+    r = r.drop(columns=["ns_config", "method_class"])
+    # r = r.drop(columns=["path"])
+    r = r.drop(columns=["lr", "num_epochs"])
+    r.to_csv(f"csvs/{ns_config}.csv", index=False, sep=",")
     print("-"*50)
     print(f'ns_config="{ns_config.replace(",", " & ")}",')
     print(open(f"csvs/{ns_config}.csv").read())

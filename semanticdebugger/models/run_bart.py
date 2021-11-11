@@ -36,6 +36,7 @@ def run(args, logger):
 
     if args.do_train:
         if args.checkpoint is not None and args.checkpoint != "None":
+            logger.info(f"Loading checkpoint: {args.checkpoint}")
             model = MyBart.from_pretrained(args.model,
                                            state_dict=convert_model_to_single_gpu(torch.load(args.checkpoint)))
         else:

@@ -9,13 +9,21 @@ seed=42
 ## Paths ##
 ns_config=$1
 task_name=$2
+offline=$3
+
+cl_method="none_cl"
 
 if [ "$task_name" = "qa" ]; then
     upstream_data_path="data/mrqa_squad/mrqa_squad_train.jsonl"
     submission_stream_data="experiments/eval_data/qa/submission_stream.${ns_config}.json"
     upstream_eval_data="experiments/eval_data/qa/upstream_eval.jsonl"
     heldout_submission_data="experiments/eval_data/qa/heldout_eval.jsonl"
-    base_model_path="out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt"
+    if [ "$offline" = "yes" ]; then
+        base_model_path="out/qa_${ns_config}_retrained_model/best-model.pt"
+        cl_method="offline_cl"
+    else
+        base_model_path="out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt"
+    fi
     task_name_arg="mrqa"
 elif [ "$task_name" = "nli" ]; then
     upstream_data_path="data/snli/snli_train.jsonl"
@@ -26,13 +34,15 @@ elif [ "$task_name" = "nli" ]; then
     task_name_arg="nli"
 fi
 
-gpu=0
-prefix="${task_name}_nonecl_${ns_config}"
+echo "base_model_path=${base_model_path}"
 
-ckpt_dir="experiments/ckpt_dirs/${task_name}/er/${prefix}"
+gpu=0
+prefix="${task_name}_nonecl_${ns_config}_offline=${offline}"
+
+ckpt_dir="experiments/ckpt_dirs/${task_name}/nonecl/${prefix}"
 mkdir -p ${ckpt_dir}
 
-log_file="experiments/logs/run_1107_${prefix}_seed=${seed}.log"
+log_file="experiments/logs/run_1110_${prefix}_seed=${seed}.log"
 echo "Starting ${log_file}."
 touch ${log_file} 
 
@@ -40,7 +50,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --use_wandb True \
     --seed $seed \
     --task_name ${task_name_arg} \
-    --cl_method "none_cl" \
+    --cl_method ${cl_method} \
     --base_model_path ${base_model_path} \
     --num_beams 3 \
     --learning_rate 0 --num_train_epochs 0 \
@@ -52,12 +62,12 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --submission_stream_data ${submission_stream_data} \
     --upstream_eval_data ${upstream_eval_data} \
     --heldout_submission_data ${heldout_submission_data} \
-    --save_ckpt_freq 10 \
+    --save_ckpt_freq 100 \
     --ckpt_dir ${ckpt_dir} \
     --result_file "experiments/results/${task_name}/${prefix}_result.json" > ${log_file} 
     # 2>&1 
     # &
 # tail -f ${log_file}
 echo "Finished ${log_file}."
-# exit
+exit
 # exit

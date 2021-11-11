@@ -195,7 +195,8 @@ class OnlineDebuggingMethod():
         # if self.last_OKR is None or self.last_KG is None or self.last_UKR is None:
         #     pass
         # else:
-        scores = [result_dict["CSR"], result_dict["EFR"]]
+
+        scores = [result_dict.get("CSR", 0.0), result_dict.get("EFR", 0.0)]
         if self.last_OKR:
             scores.append(self.last_OKR)
             scores.append(self.last_UKR)
@@ -340,6 +341,7 @@ class OnlineDebuggingMethod():
         EFR = len(fixed_ids) / len(fixed_ids+unfixed_ids)
         result_dict["EFR"] = EFR
         wandb.log({"EFR": EFR}, step=self.timecode) 
+        self.logger.info(f"EFR={EFR}")
         return EFR
       # So the 0-th checkpoint should be the original base model.
 

@@ -8,10 +8,11 @@ seed=$1
 lr=$2
 ep=$3
 ewc_lambda=$4
+ewc_gamma=$5
 
 ## Paths ##
-ns_config=$5
-task_name=$6
+ns_config=$6
+task_name=$7
 
 
 if [ "$task_name" = "qa" ]; then
@@ -33,12 +34,12 @@ fi
 
 gpu=0
 
-prefix="${task_name}_oewc_lr=${lr}_ep=${ep}_lbd=${ewc_lambda}_${ns_config}"
+prefix="${task_name}_oewc_lr=${lr}_ep=${ep}_lbd=${ewc_lambda}_gm=${ewc_gamma}_${ns_config}"
 ckpt_dir="experiments/ckpt_dirs/${task_name}/owc/${prefix}"
 mkdir -p ${ckpt_dir}
 
 
-log_file="experiments/logs/run_1107_${prefix}_seed=${seed}.log"
+log_file="experiments/logs/run_1110_${prefix}_seed=${seed}.log"
 echo "Starting ${log_file}."
 touch ${log_file} 
 
@@ -46,7 +47,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --use_wandb True \
     --seed $seed \
     --cl_method "online_ewc" \
-    --ewc_lambda ${ewc_lambda} --ewc_gamma 1 \
+    --ewc_lambda ${ewc_lambda} --ewc_gamma ${ewc_gamma} \
     --learning_rate ${lr} --num_train_epochs ${ep} \
     --base_model_path ${base_model_path} \
     --num_beams 3 \
@@ -65,6 +66,7 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     # &
 # tail -f ${log_file}
 echo "Finished ${log_file}."
+exit
 # exit
 # exit
 

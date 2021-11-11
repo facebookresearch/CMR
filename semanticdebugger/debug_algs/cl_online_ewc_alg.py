@@ -135,12 +135,20 @@ class EWCRegularizer(nn.Module, metaclass=abc.ABCMeta):
                         n = n.replace('.', '__')
                         mean = getattr(self, '{}_EWC_prev_task{}'.format(
                             n, "" if self.online else task))
-                        fisher = getattr(self, '{}_EWC_estimated_fisher{}'.format(
-                            n, "" if self.online else task))
-                        # If "online EWC", apply decay-term to the running sum of the Fisher Information matrices
-                        fisher = self.gamma*fisher if self.online else fisher
-                        # Calculate EWC-loss
-                        losses.append((fisher * (p-mean)**2).sum())
+                        
+                        if self.gamma > 0 :
+                            fisher = getattr(self, '{}_EWC_estimated_fisher{}'.format(
+                                n, "" if self.online else task))
+                            # If "online EWC", apply decay-term to the running sum of the Fisher Information matrices
+                            
+                            fisher = self.gamma*fisher if self.online else fisher
+                            
+                            # Calculate EWC-loss
+                            losses.append((fisher * (p-mean)**2).sum())
+                        else:
+                            # This is just the L2 norm w/o computing the fisher info for weighting 
+                            losses.append(((p-mean)**2).sum())
+                            
             # Sum EWC-loss from all parameters (and from all tasks, if "offline EWC")
             return (1./2)*sum(losses)
         else:

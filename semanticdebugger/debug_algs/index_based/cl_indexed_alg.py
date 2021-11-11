@@ -41,7 +41,7 @@ class IndexBasedCL(ContinualFinetuning):
             "index_rank_method"
         ]
         assert all([hasattr(self.debugger_args, att) for att in required_atts])
-        assert self.debugger_args.index_rank_method in ["most_similar", "most_different"]
+        # assert self.debugger_args.index_rank_method in ["most_similar", "most_different"]
 
     def debugger_setup(self, debugger_args):
 
@@ -130,14 +130,20 @@ class IndexBasedCL(ContinualFinetuning):
         self.logger.info("Copying initial model")
         initial_model = copy.deepcopy(self.base_model) # for the use of query
 
-        for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (Dynamic)"):
+        for data_eval_loader in tqdm(self.data_eval_loaders, desc="Online Debugging (with Index-based replay)"):
 
             result_dict = {"timecode": self.timecode}   # start with 0
+            self.eval_knowledge_retention(result_dict)
+            self.eval_knowledge_generalization(result_dict)
+
+
+            ############### CORE ###############
 
             # self._replay_based_eval(result_dict)
             formatted_bug_examples = self._get_dynamic_errors(
                 data_eval_loader, result_dict, return_raw_bug_examples=True)
-
+            _, bug_eval_loader = self.get_dataloader(self.data_args, formatted_bug_batch=formatted_bug_examples, mode="eval")
+            
             examples_to_train = formatted_bug_examples[:]
 
             # if (self.model_update_steps - last_steps) >= self.debugger_args.replay_frequency \
@@ -236,9 +242,8 @@ class IndexBasedCL(ContinualFinetuning):
                     self.fix_bugs(replay_data_loader, quiet=False)  # sparse replay
                     self.logger.info("Replay-Training done.")
 
-            last_steps = self.model_update_steps
+            last_steps = self.model_update_steps 
 
-            ############### CORE ###############
             # Fix the bugs by mini-batch based "training"
             self.logger.info(
                 f"Start error-fixing (len(examples_to_train)={len(examples_to_train)}) .... Timecode: {self.timecode}")
@@ -246,17 +251,8 @@ class IndexBasedCL(ContinualFinetuning):
                 self.data_args, examples_to_train, mode="train")
             self.fix_bugs(bug_train_loader)   # for debugging
             self.logger.info("Start error-fixing .... Done!")
-            ############### CORE ###############
-            self._log_episode_result(result_dict, data_eval_loader)
-            self.timecode += 1
-
-            if self.debugger_args.save_ckpt_freq > 0 and self.timecode % self.debugger_args.save_ckpt_freq == 0:
-                self._save_base_model()
-
-            # Store to memory
-            _max = 1000000
-            flag_store_examples = bool(random.randrange(0, _max)/_max >=
-                                       1 - self.debugger_args.memory_store_rate)
+            
+            flag_store_examples = True
             if flag_store_examples:
                 self.logger.info(
                     f"Saving the current error examples (len={len(formatted_bug_examples)}) to the memory.")
@@ -265,7 +261,20 @@ class IndexBasedCL(ContinualFinetuning):
                     self.logger.info(f"Current upstream_memroy_module size: {self.upstream_memroy_module.get_memory_size()}.")
                 self.memroy_module.store_examples(formatted_bug_examples)
                 self.logger.info("Finished.")
+
+            ############### CORE ###############
+
+            
+            self.evaluate_error_fixing(result_dict, bug_eval_loader)
+            self._update_result_dict(result_dict)
+            
+            if self.debugger_args.save_ckpt_freq > 0 and self.timecode % self.debugger_args.save_ckpt_freq == 0:
+                self._save_base_model()
+                self.save_result_file()
             self.logger.info("-"*50)
+            self.timecode += 1
+
+
         #### Final evaluation ####
         self.final_evaluation()
         

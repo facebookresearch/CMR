@@ -1,0 +1,1547 @@
+11/10/2021 14:27:21 - INFO - __main__ - Namespace(adam_epsilon=1e-08, adapter_dim=32, append_another_bos=1, base_model_path='out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt', base_model_type='facebook/bart-base', ckpt_dir='experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8', cl_method_name='er', current_thread_id=None, diff_loss_weight=0.0, do_lowercase=False, ewc_gamma=1, ewc_lambda=0.5, example_encoder_name='roberta-base', freeze_embeds=False, gradient_accumulation_steps=1, heldout_submission_data='experiments/eval_data/qa/heldout_eval.jsonl', index_rank_method='most_similar', indexing_args_path='exp_results/supervision_data/1012_dm_simple.train_args.json', indexing_method='bart_index', inference_query_size=1, init_memory_cache_path='na', kg_eval_freq=10, kg_eval_mode='metric', kr_eval_freq=10, kr_eval_mode='metric', learning_rate=3e-05, local_adapt_lr=1e-05, max_grad_norm=0.1, max_input_length=888, max_output_length=50, max_timecode=100, memory_key_encoder='facebook/bart-base', memory_path='experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/memory_dict.pkl', memory_store_rate=1.0, mir_abalation_args='none', num_adapt_epochs=0, num_beams=3, num_threads_eval=0, num_train_epochs=10.0, okr_sample_seed=1337, okr_sample_size=512, path_to_thread_result=None, predict_batch_size=48, prefix='qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8', replay_candidate_size=8, replay_frequency=3, replay_size=32, result_file='experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json', save_ckpt_freq=10, seed=42, skip_instant_eval=False, submission_stream_data='experiments/eval_data/qa/submission_stream.T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8.json', task_emb_dim=768, task_name='mrqa', train_batch_size=8, upstream_data_path='data/mrqa_squad/mrqa_squad_train.jsonl', upstream_eval_data='experiments/eval_data/qa/upstream_eval.jsonl', upstream_sample_ratio=0.5, use_mir=False, use_replay_mix=True, use_wandb=True, weight_decay=0.01)
+11/10/2021 14:27:22 - INFO - transformers.tokenization_utils - loading file https://s3.amazonaws.com/models.huggingface.co/bert/roberta-large-vocab.json from cache at /private/home/yuchenlin/.cache/torch/transformers/1ae1f5b6e2b22b25ccc04c000bb79ca847aa226d0761536b011cf7e5868f0655.ef00af9e673c7160b4d41cfda1f48c5f4cba57d5142754525572a846a1ab1b9b
+11/10/2021 14:27:22 - INFO - transformers.tokenization_utils - loading file https://s3.amazonaws.com/models.huggingface.co/bert/roberta-large-merges.txt from cache at /private/home/yuchenlin/.cache/torch/transformers/f8f83199a6270d582d6245dc100e99c4155de81c9745c6248077018fe01abcfb.70bec105b4158ed9a1747fea67a43f5dee97855c64d62b6ec3742f4cfdb5feda
+11/10/2021 14:27:44 - INFO - __main__ - load_data: len(upstream_eval_examples)=512
+11/10/2021 14:27:45 - INFO - __main__ - load_data: len(heldout_eval_examples)=1280
+11/10/2021 14:27:50 - INFO - __main__ - Loading checkpoint from out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt for facebook/bart-base .....
+11/10/2021 14:27:51 - INFO - transformers.configuration_utils - loading configuration file https://s3.amazonaws.com/models.huggingface.co/bert/facebook/bart-base/config.json from cache at /private/home/yuchenlin/.cache/torch/transformers/09f4fcaeaf785dd3b97b085d6e3510c7081f586ec8e75981683c6299c0f81d9d.e8d516ad807436d395effad8c2326786872659b7dd1210827ac67c761198a0eb
+11/10/2021 14:27:51 - INFO - transformers.configuration_utils - Model config BartConfig {
+  "activation_dropout": 0.1,
+  "activation_function": "gelu",
+  "add_bias_logits": false,
+  "add_final_layer_norm": false,
+  "architectures": [
+    "BartModel",
+    "BartForConditionalGeneration",
+    "BartForSequenceClassification"
+  ],
+  "attention_dropout": 0.1,
+  "bos_token_id": 0,
+  "classif_dropout": 0.0,
+  "d_model": 768,
+  "decoder_attention_heads": 12,
+  "decoder_ffn_dim": 3072,
+  "decoder_layerdrop": 0.0,
+  "decoder_layers": 6,
+  "decoder_start_token_id": 2,
+  "dropout": 0.1,
+  "early_stopping": true,
+  "encoder_attention_heads": 12,
+  "encoder_ffn_dim": 3072,
+  "encoder_layerdrop": 0.0,
+  "encoder_layers": 6,
+  "eos_token_id": 2,
+  "id2label": {
+    "0": "LABEL_0",
+    "1": "LABEL_1",
+    "2": "LABEL_2"
+  },
+  "init_std": 0.02,
+  "is_encoder_decoder": true,
+  "label2id": {
+    "LABEL_0": 0,
+    "LABEL_1": 1,
+    "LABEL_2": 2
+  },
+  "max_position_embeddings": 1024,
+  "model_type": "bart",
+  "no_repeat_ngram_size": 3,
+  "normalize_before": false,
+  "normalize_embedding": true,
+  "num_beams": 4,
+  "num_hidden_layers": 6,
+  "pad_token_id": 1,
+  "scale_embedding": false,
+  "static_position_embeddings": false,
+  "task_specific_params": {
+    "summarization": {
+      "length_penalty": 1.0,
+      "max_length": 128,
+      "min_length": 12,
+      "num_beams": 4
+    },
+    "summarization_cnn": {
+      "length_penalty": 2.0,
+      "max_length": 142,
+      "min_length": 56,
+      "num_beams": 4
+    },
+    "summarization_xsum": {
+      "length_penalty": 1.0,
+      "max_length": 62,
+      "min_length": 11,
+      "num_beams": 6
+    }
+  },
+  "vocab_size": 50265
+}
+
+11/10/2021 14:27:51 - INFO - transformers.modeling_utils - loading weights file https://cdn.huggingface.co/facebook/bart-base/pytorch_model.bin from cache at /private/home/yuchenlin/.cache/torch/transformers/566c05fb6983817e8ad7a4fa51e3099fe9caa3b31730f964bc5198d71c677523.0a3d95c18c1e434448941bc25accea7b122882be6526fb67c8e8fb6d5ebc711c
+11/10/2021 14:27:55 - INFO - __main__ - Loading checkpoint from out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt for facebook/bart-base ..... Done!
+11/10/2021 14:27:58 - INFO - __main__ - Moving to the GPUs.
+11/10/2021 14:27:58 - INFO - __main__ - Debugger Setup ......
+11/10/2021 14:27:58 - INFO - __main__ - debugger_args: Namespace(adam_epsilon=1e-08, ckpt_dir='experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8', diff_loss_weight=0.0, gradient_accumulation_steps=1, inference_query_size=1, init_memory_cache_path='na', kg_eval_freq=10, kg_eval_mode='metric', kr_eval_freq=10, kr_eval_mode='metric', learning_rate=3e-05, local_adapt_lr=1e-05, max_grad_norm=0.1, memory_key_encoder='facebook/bart-base', memory_path='experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/memory_dict.pkl', memory_store_rate=1.0, num_adapt_epochs=0, num_epochs=10.0, okr_sample_seed=1337, okr_sample_size=512, replay_candidate_size=8, replay_frequency=3, replay_size=32, save_ckpt_freq=10, skip_instant_eval=False, total_steps=10000, upstream_sample_ratio=0.5, use_replay_mix=True, warmup_steps=0, weight_decay=0.01) ......
+11/10/2021 14:27:58 - INFO - __main__ - optimizer & scheduler Setup ...... Done!
+11/10/2021 14:27:58 - INFO - __main__ - Debugger Setup ...... Done!
+11/10/2021 14:27:58 - INFO - __main__ - Prepare the sampled upstream data as the initial memory for the ER and MIR;
+11/10/2021 14:27:59 - INFO - __main__ - Set up the initial memory with 86420 examples.
+11/10/2021 14:27:59 - INFO - __main__ - Initial memroy_module size: 0
+11/10/2021 14:27:59 - INFO - __main__ - Initial upstream_memroy_module size: 86420
+11/10/2021 14:27:59 - INFO - __main__ - Start Online Debugging with Dynamic Error Mode
+11/10/2021 14:27:59 - INFO - __main__ - Number of Batches of Data: 100
+11/10/2021 14:27:59 - INFO - __main__ - Data Batch Size: 64;
+11/10/2021 14:28:01 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_000.pt.
+11/10/2021 14:28:01 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=0
+11/10/2021 14:28:25 - INFO - __main__ - Upstream Knowledge Retation (UKR@0): 0.8027
+11/10/2021 14:28:25 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=0
+11/10/2021 14:30:00 - INFO - __main__ - Future Knowledge Generalization (KG@0): 0.3125
+11/10/2021 14:30:00 - INFO - __main__ - Evaluating to get errors .... Timecode: 0
+11/10/2021 14:30:04 - INFO - __main__ - Before Error Fixing: {'EM': 0.828125, 'QA-F1': 0.8576388888888888}
+11/10/2021 14:30:04 - INFO - __main__ - Found 11 errors.
+11/10/2021 14:30:04 - INFO - __main__ - Start error-fixing (len(examples_to_train)=11) .... Timecode: 0
+11/10/2021 14:30:06 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:30:06 - INFO - __main__ - Saving the current error examples (len=11) to the memory.
+11/10/2021 14:30:06 - INFO - __main__ - Current memory size: 0.
+11/10/2021 14:30:06 - INFO - __main__ - Save 11 examples to the memory.
+11/10/2021 14:30:06 - INFO - __main__ - .................. Done.
+11/10/2021 14:30:07 - INFO - __main__ - Overall: 0.9140625 from scores=[0.828125, 1.0]
+11/10/2021 14:30:09 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_000.pt.
+11/10/2021 14:30:09 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 0.
+11/10/2021 14:30:09 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:30:09 - INFO - __main__ - Evaluating to get errors .... Timecode: 1
+11/10/2021 14:30:12 - INFO - __main__ - Before Error Fixing: {'EM': 0.78125, 'QA-F1': 0.8189732142857142}
+11/10/2021 14:30:12 - INFO - __main__ - Found 14 errors.
+11/10/2021 14:30:12 - INFO - __main__ - Start error-fixing (len(examples_to_train)=14) .... Timecode: 1
+11/10/2021 14:30:16 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:30:16 - INFO - __main__ - Saving the current error examples (len=14) to the memory.
+11/10/2021 14:30:16 - INFO - __main__ - Current memory size: 11.
+11/10/2021 14:30:16 - INFO - __main__ - Save 14 examples to the memory.
+11/10/2021 14:30:16 - INFO - __main__ - .................. Done.
+11/10/2021 14:30:17 - INFO - __main__ - Overall: 0.90234375 from scores=[0.8046875, 1.0]
+11/10/2021 14:30:17 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:30:17 - INFO - __main__ - Evaluating to get errors .... Timecode: 2
+11/10/2021 14:30:21 - INFO - __main__ - Before Error Fixing: {'EM': 0.78125, 'QA-F1': 0.8385664682539683}
+11/10/2021 14:30:21 - INFO - __main__ - Found 14 errors.
+11/10/2021 14:30:21 - INFO - __main__ - Start error-fixing (len(examples_to_train)=14) .... Timecode: 2
+11/10/2021 14:30:23 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:30:23 - INFO - __main__ - Saving the current error examples (len=14) to the memory.
+11/10/2021 14:30:23 - INFO - __main__ - Current memory size: 25.
+11/10/2021 14:30:23 - INFO - __main__ - Save 14 examples to the memory.
+11/10/2021 14:30:23 - INFO - __main__ - .................. Done.
+11/10/2021 14:30:25 - INFO - __main__ - Overall: 0.8984375 from scores=[0.796875, 1.0]
+11/10/2021 14:30:25 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:30:25 - INFO - __main__ - Evaluating to get errors .... Timecode: 3
+11/10/2021 14:30:29 - INFO - __main__ - Before Error Fixing: {'EM': 0.640625, 'QA-F1': 0.6892485119047619}
+11/10/2021 14:30:29 - INFO - __main__ - Found 23 errors.
+11/10/2021 14:30:29 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:30:29 - INFO - __main__ - Current memroy_module size: 39.
+11/10/2021 14:30:29 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:30:29 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:30:29 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:30:29 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:30:29 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:30:29 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:30:29 - INFO - __main__ - Start error-fixing (len(examples_to_train)=55) .... Timecode: 3
+11/10/2021 14:30:51 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:30:51 - INFO - __main__ - Saving the current error examples (len=23) to the memory.
+11/10/2021 14:30:51 - INFO - __main__ - Current memory size: 39.
+11/10/2021 14:30:51 - INFO - __main__ - Save 23 examples to the memory.
+11/10/2021 14:30:51 - INFO - __main__ - .................. Done.
+11/10/2021 14:30:52 - INFO - __main__ - Overall: 0.87890625 from scores=[0.7578125, 1.0]
+11/10/2021 14:30:52 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:30:52 - INFO - __main__ - Evaluating to get errors .... Timecode: 4
+11/10/2021 14:30:55 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7335069444444444}
+11/10/2021 14:30:55 - INFO - __main__ - Found 22 errors.
+11/10/2021 14:30:55 - INFO - __main__ - Start error-fixing (len(examples_to_train)=22) .... Timecode: 4
+11/10/2021 14:31:03 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:31:03 - INFO - __main__ - Saving the current error examples (len=22) to the memory.
+11/10/2021 14:31:03 - INFO - __main__ - Current memory size: 62.
+11/10/2021 14:31:03 - INFO - __main__ - Save 22 examples to the memory.
+11/10/2021 14:31:03 - INFO - __main__ - .................. Done.
+11/10/2021 14:31:04 - INFO - __main__ - Overall: 0.86875 from scores=[0.7375, 1.0]
+11/10/2021 14:31:04 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:31:04 - INFO - __main__ - Evaluating to get errors .... Timecode: 5
+11/10/2021 14:31:06 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6715955466634815}
+11/10/2021 14:31:06 - INFO - __main__ - Found 27 errors.
+11/10/2021 14:31:06 - INFO - __main__ - Start error-fixing (len(examples_to_train)=27) .... Timecode: 5
+11/10/2021 14:31:16 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:31:16 - INFO - __main__ - Saving the current error examples (len=27) to the memory.
+11/10/2021 14:31:16 - INFO - __main__ - Current memory size: 84.
+11/10/2021 14:31:16 - INFO - __main__ - Save 27 examples to the memory.
+11/10/2021 14:31:16 - INFO - __main__ - .................. Done.
+11/10/2021 14:31:18 - INFO - __main__ - Overall: 0.8369502314814814 from scores=[0.7109375, 0.9629629629629629]
+11/10/2021 14:31:18 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:31:18 - INFO - __main__ - Evaluating to get errors .... Timecode: 6
+11/10/2021 14:31:21 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.7220582746058289}
+11/10/2021 14:31:21 - INFO - __main__ - Found 26 errors.
+11/10/2021 14:31:21 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:31:21 - INFO - __main__ - Current memroy_module size: 111.
+11/10/2021 14:31:21 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:31:21 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:31:21 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:31:21 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:31:21 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:31:21 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:31:21 - INFO - __main__ - Start error-fixing (len(examples_to_train)=58) .... Timecode: 6
+11/10/2021 14:31:40 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:31:40 - INFO - __main__ - Saving the current error examples (len=26) to the memory.
+11/10/2021 14:31:40 - INFO - __main__ - Current memory size: 111.
+11/10/2021 14:31:40 - INFO - __main__ - Save 26 examples to the memory.
+11/10/2021 14:31:40 - INFO - __main__ - .................. Done.
+11/10/2021 14:31:41 - INFO - __main__ - Overall: 0.827867445054945 from scores=[0.6941964285714286, 0.9615384615384616]
+11/10/2021 14:31:41 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:31:41 - INFO - __main__ - Evaluating to get errors .... Timecode: 7
+11/10/2021 14:31:45 - INFO - __main__ - Before Error Fixing: {'EM': 0.640625, 'QA-F1': 0.6914124503968254}
+11/10/2021 14:31:45 - INFO - __main__ - Found 23 errors.
+11/10/2021 14:31:45 - INFO - __main__ - Start error-fixing (len(examples_to_train)=23) .... Timecode: 7
+11/10/2021 14:31:52 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:31:52 - INFO - __main__ - Saving the current error examples (len=23) to the memory.
+11/10/2021 14:31:52 - INFO - __main__ - Current memory size: 137.
+11/10/2021 14:31:52 - INFO - __main__ - Save 23 examples to the memory.
+11/10/2021 14:31:52 - INFO - __main__ - .................. Done.
+11/10/2021 14:31:54 - INFO - __main__ - Overall: 0.8220108695652174 from scores=[0.6875, 0.9565217391304348]
+11/10/2021 14:31:54 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:31:54 - INFO - __main__ - Evaluating to get errors .... Timecode: 8
+11/10/2021 14:31:58 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6364583333333333}
+11/10/2021 14:31:58 - INFO - __main__ - Found 26 errors.
+11/10/2021 14:31:58 - INFO - __main__ - Start error-fixing (len(examples_to_train)=26) .... Timecode: 8
+11/10/2021 14:32:07 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:32:07 - INFO - __main__ - Saving the current error examples (len=26) to the memory.
+11/10/2021 14:32:07 - INFO - __main__ - Current memory size: 160.
+11/10/2021 14:32:07 - INFO - __main__ - Save 26 examples to the memory.
+11/10/2021 14:32:07 - INFO - __main__ - .................. Done.
+11/10/2021 14:32:08 - INFO - __main__ - Overall: 0.8385416666666666 from scores=[0.6770833333333333, 1.0]
+11/10/2021 14:32:08 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:32:08 - INFO - __main__ - Evaluating to get errors .... Timecode: 9
+11/10/2021 14:32:12 - INFO - __main__ - Before Error Fixing: {'EM': 0.453125, 'QA-F1': 0.5694768772893773}
+11/10/2021 14:32:12 - INFO - __main__ - Found 35 errors.
+11/10/2021 14:32:13 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:32:13 - INFO - __main__ - Current memroy_module size: 186.
+11/10/2021 14:32:13 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:32:13 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:32:13 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:32:13 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:32:13 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:32:13 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:32:13 - INFO - __main__ - Start error-fixing (len(examples_to_train)=67) .... Timecode: 9
+11/10/2021 14:32:43 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:32:43 - INFO - __main__ - Saving the current error examples (len=35) to the memory.
+11/10/2021 14:32:43 - INFO - __main__ - Current memory size: 186.
+11/10/2021 14:32:43 - INFO - __main__ - Save 35 examples to the memory.
+11/10/2021 14:32:43 - INFO - __main__ - .................. Done.
+11/10/2021 14:32:44 - INFO - __main__ - Overall: 0.7987723214285714 from scores=[0.6546875, 0.9428571428571428]
+11/10/2021 14:32:44 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:32:44 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=10
+11/10/2021 14:33:08 - INFO - __main__ - Upstream Knowledge Retation (UKR@10): 0.7812
+11/10/2021 14:33:09 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=10
+11/10/2021 14:33:39 - INFO - __main__ - Online Knowledge Retation (OKR@10): 0.9219
+11/10/2021 14:33:39 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=10
+11/10/2021 14:34:45 - INFO - __main__ - Future Knowledge Generalization (KG@10): 0.4594
+11/10/2021 14:34:45 - INFO - __main__ - Evaluating to get errors .... Timecode: 10
+11/10/2021 14:34:49 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6622395833333333}
+11/10/2021 14:34:49 - INFO - __main__ - Found 26 errors.
+11/10/2021 14:34:49 - INFO - __main__ - Start error-fixing (len(examples_to_train)=26) .... Timecode: 10
+11/10/2021 14:35:01 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:35:01 - INFO - __main__ - Saving the current error examples (len=26) to the memory.
+11/10/2021 14:35:01 - INFO - __main__ - Current memory size: 221.
+11/10/2021 14:35:01 - INFO - __main__ - Save 26 examples to the memory.
+11/10/2021 14:35:01 - INFO - __main__ - .................. Done.
+11/10/2021 14:35:03 - INFO - __main__ - Overall: 0.7469449300699301 from scores=[0.6491477272727273, 0.9230769230769231, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:35:05 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_010.pt.
+11/10/2021 14:35:05 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 10.
+11/10/2021 14:35:05 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:35:05 - INFO - __main__ - Evaluating to get errors .... Timecode: 11
+11/10/2021 14:35:09 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6351324202617307}
+11/10/2021 14:35:09 - INFO - __main__ - Found 27 errors.
+11/10/2021 14:35:09 - INFO - __main__ - Start error-fixing (len(examples_to_train)=27) .... Timecode: 11
+11/10/2021 14:35:19 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:35:19 - INFO - __main__ - Saving the current error examples (len=27) to the memory.
+11/10/2021 14:35:19 - INFO - __main__ - Current memory size: 247.
+11/10/2021 14:35:19 - INFO - __main__ - Save 27 examples to the memory.
+11/10/2021 14:35:19 - INFO - __main__ - .................. Done.
+11/10/2021 14:35:20 - INFO - __main__ - Overall: 0.753738425925926 from scores=[0.6432291666666667, 0.9629629629629629, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:35:20 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:35:20 - INFO - __main__ - Evaluating to get errors .... Timecode: 12
+11/10/2021 14:35:24 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.6241090506715506}
+11/10/2021 14:35:24 - INFO - __main__ - Found 31 errors.
+11/10/2021 14:35:24 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:35:24 - INFO - __main__ - Current memroy_module size: 274.
+11/10/2021 14:35:24 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:35:24 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:35:24 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:35:24 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:35:24 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:35:24 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:35:24 - INFO - __main__ - Start error-fixing (len(examples_to_train)=63) .... Timecode: 12
+11/10/2021 14:35:46 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:35:46 - INFO - __main__ - Saving the current error examples (len=31) to the memory.
+11/10/2021 14:35:46 - INFO - __main__ - Current memory size: 274.
+11/10/2021 14:35:46 - INFO - __main__ - Save 31 examples to the memory.
+11/10/2021 14:35:46 - INFO - __main__ - .................. Done.
+11/10/2021 14:35:48 - INFO - __main__ - Overall: 0.7527310794044666 from scores=[0.6334134615384616, 0.967741935483871, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:35:48 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:35:48 - INFO - __main__ - Evaluating to get errors .... Timecode: 13
+11/10/2021 14:35:53 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.6197081244778613}
+11/10/2021 14:35:53 - INFO - __main__ - Found 30 errors.
+11/10/2021 14:35:53 - INFO - __main__ - Start error-fixing (len(examples_to_train)=30) .... Timecode: 13
+11/10/2021 14:36:04 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:36:04 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 14:36:04 - INFO - __main__ - Current memory size: 305.
+11/10/2021 14:36:04 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 14:36:04 - INFO - __main__ - .................. Done.
+11/10/2021 14:36:06 - INFO - __main__ - Overall: 0.7577232142857142 from scores=[0.6261160714285714, 1.0, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:36:06 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:36:06 - INFO - __main__ - Evaluating to get errors .... Timecode: 14
+11/10/2021 14:36:10 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6379480602548037}
+11/10/2021 14:36:10 - INFO - __main__ - Found 28 errors.
+11/10/2021 14:36:10 - INFO - __main__ - Start error-fixing (len(examples_to_train)=28) .... Timecode: 14
+11/10/2021 14:36:19 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:36:19 - INFO - __main__ - Saving the current error examples (len=28) to the memory.
+11/10/2021 14:36:19 - INFO - __main__ - Current memory size: 335.
+11/10/2021 14:36:19 - INFO - __main__ - Save 28 examples to the memory.
+11/10/2021 14:36:19 - INFO - __main__ - .................. Done.
+11/10/2021 14:36:21 - INFO - __main__ - Overall: 0.7568750000000001 from scores=[0.621875, 1.0, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:36:21 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:36:21 - INFO - __main__ - Evaluating to get errors .... Timecode: 15
+11/10/2021 14:36:25 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.6221726190476191}
+11/10/2021 14:36:25 - INFO - __main__ - Found 31 errors.
+11/10/2021 14:36:25 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:36:25 - INFO - __main__ - Current memroy_module size: 363.
+11/10/2021 14:36:25 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:36:25 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:36:25 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:36:25 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:36:25 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:36:25 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:36:25 - INFO - __main__ - Start error-fixing (len(examples_to_train)=63) .... Timecode: 15
+11/10/2021 14:36:50 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:36:50 - INFO - __main__ - Saving the current error examples (len=31) to the memory.
+11/10/2021 14:36:50 - INFO - __main__ - Current memory size: 363.
+11/10/2021 14:36:50 - INFO - __main__ - Save 31 examples to the memory.
+11/10/2021 14:36:50 - INFO - __main__ - .................. Done.
+11/10/2021 14:36:52 - INFO - __main__ - Overall: 0.7555468750000001 from scores=[0.615234375, 1.0, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:36:52 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:36:52 - INFO - __main__ - Evaluating to get errors .... Timecode: 16
+11/10/2021 14:36:56 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.619439373674571}
+11/10/2021 14:36:56 - INFO - __main__ - Found 30 errors.
+11/10/2021 14:36:56 - INFO - __main__ - Start error-fixing (len(examples_to_train)=30) .... Timecode: 16
+11/10/2021 14:37:09 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:37:09 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 14:37:09 - INFO - __main__ - Current memory size: 394.
+11/10/2021 14:37:09 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 14:37:09 - INFO - __main__ - .................. Done.
+11/10/2021 14:37:11 - INFO - __main__ - Overall: 0.7545588235294118 from scores=[0.6102941176470589, 1.0, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:37:11 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:37:11 - INFO - __main__ - Evaluating to get errors .... Timecode: 17
+11/10/2021 14:37:15 - INFO - __main__ - Before Error Fixing: {'EM': 0.4375, 'QA-F1': 0.5263175847952357}
+11/10/2021 14:37:15 - INFO - __main__ - Found 36 errors.
+11/10/2021 14:37:15 - INFO - __main__ - Start error-fixing (len(examples_to_train)=36) .... Timecode: 17
+11/10/2021 14:37:31 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:37:31 - INFO - __main__ - Saving the current error examples (len=36) to the memory.
+11/10/2021 14:37:31 - INFO - __main__ - Current memory size: 424.
+11/10/2021 14:37:31 - INFO - __main__ - Save 36 examples to the memory.
+11/10/2021 14:37:31 - INFO - __main__ - .................. Done.
+11/10/2021 14:37:34 - INFO - __main__ - Overall: 0.752638888888889 from scores=[0.6006944444444444, 1.0, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:37:34 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:37:34 - INFO - __main__ - Evaluating to get errors .... Timecode: 18
+11/10/2021 14:37:38 - INFO - __main__ - Before Error Fixing: {'EM': 0.390625, 'QA-F1': 0.5196500114468865}
+11/10/2021 14:37:38 - INFO - __main__ - Found 39 errors.
+11/10/2021 14:37:38 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:37:38 - INFO - __main__ - Current memroy_module size: 460.
+11/10/2021 14:37:38 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:37:38 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:37:38 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:37:38 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:37:38 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:37:38 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:37:38 - INFO - __main__ - Start error-fixing (len(examples_to_train)=71) .... Timecode: 18
+11/10/2021 14:38:09 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:38:09 - INFO - __main__ - Saving the current error examples (len=39) to the memory.
+11/10/2021 14:38:09 - INFO - __main__ - Current memory size: 460.
+11/10/2021 14:38:09 - INFO - __main__ - Save 39 examples to the memory.
+11/10/2021 14:38:09 - INFO - __main__ - .................. Done.
+11/10/2021 14:38:11 - INFO - __main__ - Overall: 0.7504276315789473 from scores=[0.5896381578947368, 1.0, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:38:11 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:38:11 - INFO - __main__ - Evaluating to get errors .... Timecode: 19
+11/10/2021 14:38:15 - INFO - __main__ - Before Error Fixing: {'EM': 0.484375, 'QA-F1': 0.6391098484848485}
+11/10/2021 14:38:15 - INFO - __main__ - Found 33 errors.
+11/10/2021 14:38:15 - INFO - __main__ - Start error-fixing (len(examples_to_train)=33) .... Timecode: 19
+11/10/2021 14:38:31 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:38:31 - INFO - __main__ - Saving the current error examples (len=33) to the memory.
+11/10/2021 14:38:31 - INFO - __main__ - Current memory size: 499.
+11/10/2021 14:38:31 - INFO - __main__ - Save 33 examples to the memory.
+11/10/2021 14:38:31 - INFO - __main__ - .................. Done.
+11/10/2021 14:38:33 - INFO - __main__ - Overall: 0.743314393939394 from scores=[0.584375, 0.9696969696969697, 0.921875, 0.78125, 0.459375]
+11/10/2021 14:38:33 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:38:33 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=20
+11/10/2021 14:38:59 - INFO - __main__ - Upstream Knowledge Retation (UKR@20): 0.7578
+11/10/2021 14:39:00 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=20
+11/10/2021 14:39:33 - INFO - __main__ - Online Knowledge Retation (OKR@20): 0.8887
+11/10/2021 14:39:33 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=20
+11/10/2021 14:40:45 - INFO - __main__ - Future Knowledge Generalization (KG@20): 0.4836
+11/10/2021 14:40:45 - INFO - __main__ - Evaluating to get errors .... Timecode: 20
+11/10/2021 14:40:49 - INFO - __main__ - Before Error Fixing: {'EM': 0.546875, 'QA-F1': 0.6618489583333333}
+11/10/2021 14:40:49 - INFO - __main__ - Found 29 errors.
+11/10/2021 14:40:49 - INFO - __main__ - Start error-fixing (len(examples_to_train)=29) .... Timecode: 20
+11/10/2021 14:41:02 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:41:02 - INFO - __main__ - Saving the current error examples (len=29) to the memory.
+11/10/2021 14:41:02 - INFO - __main__ - Current memory size: 532.
+11/10/2021 14:41:02 - INFO - __main__ - Save 29 examples to the memory.
+11/10/2021 14:41:02 - INFO - __main__ - .................. Done.
+11/10/2021 14:41:03 - INFO - __main__ - Overall: 0.7425334821428571 from scores=[0.5825892857142857, 1.0, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:41:05 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_020.pt.
+11/10/2021 14:41:05 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 20.
+11/10/2021 14:41:05 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:41:05 - INFO - __main__ - Evaluating to get errors .... Timecode: 21
+11/10/2021 14:41:09 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.6396905678869205}
+11/10/2021 14:41:09 - INFO - __main__ - Found 30 errors.
+11/10/2021 14:41:10 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:41:10 - INFO - __main__ - Current memroy_module size: 561.
+11/10/2021 14:41:10 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:41:10 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:41:10 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:41:10 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:41:10 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:41:10 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:41:10 - INFO - __main__ - Start error-fixing (len(examples_to_train)=62) .... Timecode: 21
+11/10/2021 14:41:29 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:41:29 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 14:41:29 - INFO - __main__ - Current memory size: 561.
+11/10/2021 14:41:29 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 14:41:29 - INFO - __main__ - .................. Done.
+11/10/2021 14:41:32 - INFO - __main__ - Overall: 0.7220667613636363 from scores=[0.5802556818181819, 0.9, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:41:32 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:41:32 - INFO - __main__ - Evaluating to get errors .... Timecode: 22
+11/10/2021 14:41:36 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.6681130212380213}
+11/10/2021 14:41:36 - INFO - __main__ - Found 31 errors.
+11/10/2021 14:41:36 - INFO - __main__ - Start error-fixing (len(examples_to_train)=31) .... Timecode: 22
+11/10/2021 14:41:46 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:41:46 - INFO - __main__ - Saving the current error examples (len=31) to the memory.
+11/10/2021 14:41:46 - INFO - __main__ - Current memory size: 591.
+11/10/2021 14:41:46 - INFO - __main__ - Save 31 examples to the memory.
+11/10/2021 14:41:46 - INFO - __main__ - .................. Done.
+11/10/2021 14:41:49 - INFO - __main__ - Overall: 0.728601529628331 from scores=[0.5774456521739131, 0.9354838709677419, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:41:49 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:41:49 - INFO - __main__ - Evaluating to get errors .... Timecode: 23
+11/10/2021 14:41:52 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6306283602150538}
+11/10/2021 14:41:52 - INFO - __main__ - Found 27 errors.
+11/10/2021 14:41:52 - INFO - __main__ - Start error-fixing (len(examples_to_train)=27) .... Timecode: 23
+11/10/2021 14:42:04 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:42:04 - INFO - __main__ - Saving the current error examples (len=27) to the memory.
+11/10/2021 14:42:04 - INFO - __main__ - Current memory size: 622.
+11/10/2021 14:42:04 - INFO - __main__ - Save 27 examples to the memory.
+11/10/2021 14:42:04 - INFO - __main__ - .................. Done.
+11/10/2021 14:42:06 - INFO - __main__ - Overall: 0.7341030092592592 from scores=[0.5774739583333333, 0.9629629629629629, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:42:06 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:42:06 - INFO - __main__ - Evaluating to get errors .... Timecode: 24
+11/10/2021 14:42:10 - INFO - __main__ - Before Error Fixing: {'EM': 0.390625, 'QA-F1': 0.48723958333333334}
+11/10/2021 14:42:10 - INFO - __main__ - Found 39 errors.
+11/10/2021 14:42:10 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:42:10 - INFO - __main__ - Current memroy_module size: 649.
+11/10/2021 14:42:10 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:42:10 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:42:10 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:42:10 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:42:10 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:42:10 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:42:10 - INFO - __main__ - Start error-fixing (len(examples_to_train)=71) .... Timecode: 24
+11/10/2021 14:42:41 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:42:41 - INFO - __main__ - Saving the current error examples (len=39) to the memory.
+11/10/2021 14:42:41 - INFO - __main__ - Current memory size: 649.
+11/10/2021 14:42:41 - INFO - __main__ - Save 39 examples to the memory.
+11/10/2021 14:42:41 - INFO - __main__ - .................. Done.
+11/10/2021 14:42:43 - INFO - __main__ - Overall: 0.7400156250000001 from scores=[0.5700000000000001, 1.0, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:42:43 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:42:43 - INFO - __main__ - Evaluating to get errors .... Timecode: 25
+11/10/2021 14:42:47 - INFO - __main__ - Before Error Fixing: {'EM': 0.546875, 'QA-F1': 0.6488982371794871}
+11/10/2021 14:42:47 - INFO - __main__ - Found 29 errors.
+11/10/2021 14:42:47 - INFO - __main__ - Start error-fixing (len(examples_to_train)=29) .... Timecode: 25
+11/10/2021 14:43:00 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:43:00 - INFO - __main__ - Saving the current error examples (len=29) to the memory.
+11/10/2021 14:43:00 - INFO - __main__ - Current memory size: 688.
+11/10/2021 14:43:00 - INFO - __main__ - Save 29 examples to the memory.
+11/10/2021 14:43:00 - INFO - __main__ - .................. Done.
+11/10/2021 14:43:01 - INFO - __main__ - Overall: 0.7398377403846153 from scores=[0.5691105769230769, 1.0, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:43:01 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:43:01 - INFO - __main__ - Evaluating to get errors .... Timecode: 26
+11/10/2021 14:43:06 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.5493861607142857}
+11/10/2021 14:43:06 - INFO - __main__ - Found 32 errors.
+11/10/2021 14:43:06 - INFO - __main__ - Start error-fixing (len(examples_to_train)=32) .... Timecode: 26
+11/10/2021 14:43:20 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:43:20 - INFO - __main__ - Saving the current error examples (len=32) to the memory.
+11/10/2021 14:43:20 - INFO - __main__ - Current memory size: 717.
+11/10/2021 14:43:20 - INFO - __main__ - Save 32 examples to the memory.
+11/10/2021 14:43:20 - INFO - __main__ - .................. Done.
+11/10/2021 14:43:21 - INFO - __main__ - Overall: 0.7330758101851852 from scores=[0.5665509259259259, 0.96875, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:43:21 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:43:21 - INFO - __main__ - Evaluating to get errors .... Timecode: 27
+11/10/2021 14:43:25 - INFO - __main__ - Before Error Fixing: {'EM': 0.40625, 'QA-F1': 0.5397262158131724}
+11/10/2021 14:43:25 - INFO - __main__ - Found 38 errors.
+11/10/2021 14:43:26 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:43:26 - INFO - __main__ - Current memroy_module size: 749.
+11/10/2021 14:43:26 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:43:26 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:43:26 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:43:26 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:43:26 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:43:26 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:43:26 - INFO - __main__ - Start error-fixing (len(examples_to_train)=70) .... Timecode: 27
+11/10/2021 14:43:55 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:43:55 - INFO - __main__ - Saving the current error examples (len=38) to the memory.
+11/10/2021 14:43:55 - INFO - __main__ - Current memory size: 749.
+11/10/2021 14:43:55 - INFO - __main__ - Save 38 examples to the memory.
+11/10/2021 14:43:55 - INFO - __main__ - .................. Done.
+11/10/2021 14:43:58 - INFO - __main__ - Overall: 0.7329176456766917 from scores=[0.5608258928571428, 0.9736842105263158, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:43:58 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:43:58 - INFO - __main__ - Evaluating to get errors .... Timecode: 28
+11/10/2021 14:44:01 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.588255321067821}
+11/10/2021 14:44:01 - INFO - __main__ - Found 32 errors.
+11/10/2021 14:44:01 - INFO - __main__ - Start error-fixing (len(examples_to_train)=32) .... Timecode: 28
+11/10/2021 14:44:13 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:44:13 - INFO - __main__ - Saving the current error examples (len=32) to the memory.
+11/10/2021 14:44:13 - INFO - __main__ - Current memory size: 787.
+11/10/2021 14:44:13 - INFO - __main__ - Save 32 examples to the memory.
+11/10/2021 14:44:13 - INFO - __main__ - .................. Done.
+11/10/2021 14:44:15 - INFO - __main__ - Overall: 0.7127613146551723 from scores=[0.5587284482758621, 0.875, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:44:15 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:44:15 - INFO - __main__ - Evaluating to get errors .... Timecode: 29
+11/10/2021 14:44:19 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.7032573128280089}
+11/10/2021 14:44:19 - INFO - __main__ - Found 31 errors.
+11/10/2021 14:44:20 - INFO - __main__ - Start error-fixing (len(examples_to_train)=31) .... Timecode: 29
+11/10/2021 14:44:31 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:44:31 - INFO - __main__ - Saving the current error examples (len=31) to the memory.
+11/10/2021 14:44:31 - INFO - __main__ - Current memory size: 819.
+11/10/2021 14:44:31 - INFO - __main__ - Save 31 examples to the memory.
+11/10/2021 14:44:31 - INFO - __main__ - .................. Done.
+11/10/2021 14:44:34 - INFO - __main__ - Overall: 0.7310223454301076 from scores=[0.5572916666666667, 0.967741935483871, 0.888671875, 0.7578125, 0.48359375]
+11/10/2021 14:44:34 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:44:34 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=30
+11/10/2021 14:45:01 - INFO - __main__ - Upstream Knowledge Retation (UKR@30): 0.7188
+11/10/2021 14:45:02 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=30
+11/10/2021 14:45:39 - INFO - __main__ - Online Knowledge Retation (OKR@30): 0.8555
+11/10/2021 14:45:39 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=30
+11/10/2021 14:47:04 - INFO - __main__ - Future Knowledge Generalization (KG@30): 0.4641
+11/10/2021 14:47:04 - INFO - __main__ - Evaluating to get errors .... Timecode: 30
+11/10/2021 14:47:07 - INFO - __main__ - Before Error Fixing: {'EM': 0.484375, 'QA-F1': 0.5577628968253968}
+11/10/2021 14:47:07 - INFO - __main__ - Found 33 errors.
+11/10/2021 14:47:08 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:47:08 - INFO - __main__ - Current memroy_module size: 850.
+11/10/2021 14:47:08 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:47:08 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:47:08 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:47:08 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:47:08 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:47:08 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:47:08 - INFO - __main__ - Start error-fixing (len(examples_to_train)=65) .... Timecode: 30
+11/10/2021 14:47:37 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:47:37 - INFO - __main__ - Saving the current error examples (len=33) to the memory.
+11/10/2021 14:47:37 - INFO - __main__ - Current memory size: 850.
+11/10/2021 14:47:37 - INFO - __main__ - Save 33 examples to the memory.
+11/10/2021 14:47:37 - INFO - __main__ - .................. Done.
+11/10/2021 14:47:39 - INFO - __main__ - Overall: 0.7186441532258063 from scores=[0.5549395161290323, 1.0, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:47:41 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_030.pt.
+11/10/2021 14:47:41 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 30.
+11/10/2021 14:47:41 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:47:41 - INFO - __main__ - Evaluating to get errors .... Timecode: 31
+11/10/2021 14:47:45 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.6583941802897395}
+11/10/2021 14:47:45 - INFO - __main__ - Found 31 errors.
+11/10/2021 14:47:45 - INFO - __main__ - Start error-fixing (len(examples_to_train)=31) .... Timecode: 31
+11/10/2021 14:47:55 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:47:55 - INFO - __main__ - Saving the current error examples (len=31) to the memory.
+11/10/2021 14:47:55 - INFO - __main__ - Current memory size: 882.
+11/10/2021 14:47:55 - INFO - __main__ - Save 31 examples to the memory.
+11/10/2021 14:47:55 - INFO - __main__ - .................. Done.
+11/10/2021 14:47:58 - INFO - __main__ - Overall: 0.686140372983871 from scores=[0.5537109375, 0.8387096774193549, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:47:58 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:47:58 - INFO - __main__ - Evaluating to get errors .... Timecode: 32
+11/10/2021 14:48:02 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6550643191268192}
+11/10/2021 14:48:02 - INFO - __main__ - Found 26 errors.
+11/10/2021 14:48:02 - INFO - __main__ - Start error-fixing (len(examples_to_train)=26) .... Timecode: 32
+11/10/2021 14:48:14 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:48:14 - INFO - __main__ - Saving the current error examples (len=26) to the memory.
+11/10/2021 14:48:14 - INFO - __main__ - Current memory size: 911.
+11/10/2021 14:48:14 - INFO - __main__ - Save 26 examples to the memory.
+11/10/2021 14:48:14 - INFO - __main__ - .................. Done.
+11/10/2021 14:48:15 - INFO - __main__ - Overall: 0.7186410984848484 from scores=[0.5549242424242424, 1.0, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:48:15 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:48:15 - INFO - __main__ - Evaluating to get errors .... Timecode: 33
+11/10/2021 14:48:19 - INFO - __main__ - Before Error Fixing: {'EM': 0.625, 'QA-F1': 0.7344539141414141}
+11/10/2021 14:48:19 - INFO - __main__ - Found 24 errors.
+11/10/2021 14:48:19 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:48:19 - INFO - __main__ - Current memroy_module size: 937.
+11/10/2021 14:48:19 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:48:19 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:48:19 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:48:19 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:48:19 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:48:19 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:48:19 - INFO - __main__ - Start error-fixing (len(examples_to_train)=56) .... Timecode: 33
+11/10/2021 14:48:43 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:48:43 - INFO - __main__ - Saving the current error examples (len=24) to the memory.
+11/10/2021 14:48:43 - INFO - __main__ - Current memory size: 937.
+11/10/2021 14:48:43 - INFO - __main__ - Save 24 examples to the memory.
+11/10/2021 14:48:43 - INFO - __main__ - .................. Done.
+11/10/2021 14:48:45 - INFO - __main__ - Overall: 0.7190533088235294 from scores=[0.5569852941176471, 1.0, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:48:45 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:48:45 - INFO - __main__ - Evaluating to get errors .... Timecode: 34
+11/10/2021 14:48:48 - INFO - __main__ - Before Error Fixing: {'EM': 0.640625, 'QA-F1': 0.7256448412698413}
+11/10/2021 14:48:48 - INFO - __main__ - Found 23 errors.
+11/10/2021 14:48:48 - INFO - __main__ - Start error-fixing (len(examples_to_train)=23) .... Timecode: 34
+11/10/2021 14:48:57 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:48:57 - INFO - __main__ - Saving the current error examples (len=23) to the memory.
+11/10/2021 14:48:57 - INFO - __main__ - Current memory size: 961.
+11/10/2021 14:48:57 - INFO - __main__ - Save 23 examples to the memory.
+11/10/2021 14:48:57 - INFO - __main__ - .................. Done.
+11/10/2021 14:48:58 - INFO - __main__ - Overall: 0.71953125 from scores=[0.559375, 1.0, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:48:58 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:48:58 - INFO - __main__ - Evaluating to get errors .... Timecode: 35
+11/10/2021 14:49:02 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6692061988936989}
+11/10/2021 14:49:02 - INFO - __main__ - Found 28 errors.
+11/10/2021 14:49:02 - INFO - __main__ - Start error-fixing (len(examples_to_train)=28) .... Timecode: 35
+11/10/2021 14:49:12 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:49:12 - INFO - __main__ - Saving the current error examples (len=28) to the memory.
+11/10/2021 14:49:12 - INFO - __main__ - Current memory size: 984.
+11/10/2021 14:49:12 - INFO - __main__ - Save 28 examples to the memory.
+11/10/2021 14:49:12 - INFO - __main__ - .................. Done.
+11/10/2021 14:49:15 - INFO - __main__ - Overall: 0.7124057539682539 from scores=[0.5594618055555556, 0.9642857142857143, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:49:15 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:49:15 - INFO - __main__ - Evaluating to get errors .... Timecode: 36
+11/10/2021 14:49:21 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.6271021588616696}
+11/10/2021 14:49:21 - INFO - __main__ - Found 31 errors.
+11/10/2021 14:49:21 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:49:21 - INFO - __main__ - Current memroy_module size: 1012.
+11/10/2021 14:49:21 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:49:21 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:49:21 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:49:21 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:49:21 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:49:21 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:49:21 - INFO - __main__ - Start error-fixing (len(examples_to_train)=63) .... Timecode: 36
+11/10/2021 14:49:47 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:49:47 - INFO - __main__ - Saving the current error examples (len=31) to the memory.
+11/10/2021 14:49:47 - INFO - __main__ - Current memory size: 1012.
+11/10/2021 14:49:47 - INFO - __main__ - Save 31 examples to the memory.
+11/10/2021 14:49:47 - INFO - __main__ - .................. Done.
+11/10/2021 14:49:49 - INFO - __main__ - Overall: 0.7193116554054054 from scores=[0.558277027027027, 1.0, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:49:49 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:49:49 - INFO - __main__ - Evaluating to get errors .... Timecode: 37
+11/10/2021 14:49:53 - INFO - __main__ - Before Error Fixing: {'EM': 0.421875, 'QA-F1': 0.5352434483408748}
+11/10/2021 14:49:53 - INFO - __main__ - Found 37 errors.
+11/10/2021 14:49:53 - INFO - __main__ - Start error-fixing (len(examples_to_train)=37) .... Timecode: 37
+11/10/2021 14:50:09 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:50:09 - INFO - __main__ - Saving the current error examples (len=37) to the memory.
+11/10/2021 14:50:09 - INFO - __main__ - Current memory size: 1043.
+11/10/2021 14:50:09 - INFO - __main__ - Save 37 examples to the memory.
+11/10/2021 14:50:09 - INFO - __main__ - .................. Done.
+11/10/2021 14:50:11 - INFO - __main__ - Overall: 0.7185937499999999 from scores=[0.5546875, 1.0, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:50:11 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:50:11 - INFO - __main__ - Evaluating to get errors .... Timecode: 38
+11/10/2021 14:50:15 - INFO - __main__ - Before Error Fixing: {'EM': 0.484375, 'QA-F1': 0.5913569937007437}
+11/10/2021 14:50:15 - INFO - __main__ - Found 33 errors.
+11/10/2021 14:50:15 - INFO - __main__ - Start error-fixing (len(examples_to_train)=33) .... Timecode: 38
+11/10/2021 14:50:30 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:50:30 - INFO - __main__ - Saving the current error examples (len=33) to the memory.
+11/10/2021 14:50:30 - INFO - __main__ - Current memory size: 1080.
+11/10/2021 14:50:30 - INFO - __main__ - Save 33 examples to the memory.
+11/10/2021 14:50:30 - INFO - __main__ - .................. Done.
+11/10/2021 14:50:33 - INFO - __main__ - Overall: 0.718233173076923 from scores=[0.5528846153846154, 1.0, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:50:33 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:50:33 - INFO - __main__ - Evaluating to get errors .... Timecode: 39
+11/10/2021 14:50:37 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.5271427707930367}
+11/10/2021 14:50:37 - INFO - __main__ - Found 32 errors.
+11/10/2021 14:50:37 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:50:37 - INFO - __main__ - Current memroy_module size: 1113.
+11/10/2021 14:50:37 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:50:37 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:50:37 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:50:37 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:50:37 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:50:37 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:50:37 - INFO - __main__ - Start error-fixing (len(examples_to_train)=64) .... Timecode: 39
+11/10/2021 14:51:05 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:51:05 - INFO - __main__ - Saving the current error examples (len=32) to the memory.
+11/10/2021 14:51:05 - INFO - __main__ - Current memory size: 1113.
+11/10/2021 14:51:05 - INFO - __main__ - Save 32 examples to the memory.
+11/10/2021 14:51:05 - INFO - __main__ - .................. Done.
+11/10/2021 14:51:07 - INFO - __main__ - Overall: 0.71796875 from scores=[0.5515625, 1.0, 0.85546875, 0.71875, 0.4640625]
+11/10/2021 14:51:07 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:51:07 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=40
+11/10/2021 14:51:32 - INFO - __main__ - Upstream Knowledge Retation (UKR@40): 0.7559
+11/10/2021 14:51:33 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=40
+11/10/2021 14:52:07 - INFO - __main__ - Online Knowledge Retation (OKR@40): 0.8574
+11/10/2021 14:52:07 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=40
+11/10/2021 14:53:16 - INFO - __main__ - Future Knowledge Generalization (KG@40): 0.4570
+11/10/2021 14:53:16 - INFO - __main__ - Evaluating to get errors .... Timecode: 40
+11/10/2021 14:53:19 - INFO - __main__ - Before Error Fixing: {'EM': 0.484375, 'QA-F1': 0.5695312499999999}
+11/10/2021 14:53:19 - INFO - __main__ - Found 33 errors.
+11/10/2021 14:53:20 - INFO - __main__ - Start error-fixing (len(examples_to_train)=33) .... Timecode: 40
+11/10/2021 14:53:35 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:53:35 - INFO - __main__ - Saving the current error examples (len=33) to the memory.
+11/10/2021 14:53:35 - INFO - __main__ - Current memory size: 1145.
+11/10/2021 14:53:35 - INFO - __main__ - Save 33 examples to the memory.
+11/10/2021 14:53:35 - INFO - __main__ - .................. Done.
+11/10/2021 14:53:37 - INFO - __main__ - Overall: 0.7240472560975609 from scores=[0.5499237804878049, 1.0, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:53:39 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_040.pt.
+11/10/2021 14:53:39 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 40.
+11/10/2021 14:53:39 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:53:39 - INFO - __main__ - Evaluating to get errors .... Timecode: 41
+11/10/2021 14:53:44 - INFO - __main__ - Before Error Fixing: {'EM': 0.40625, 'QA-F1': 0.5157786007395382}
+11/10/2021 14:53:44 - INFO - __main__ - Found 38 errors.
+11/10/2021 14:53:44 - INFO - __main__ - Start error-fixing (len(examples_to_train)=38) .... Timecode: 41
+11/10/2021 14:54:01 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:54:01 - INFO - __main__ - Saving the current error examples (len=38) to the memory.
+11/10/2021 14:54:01 - INFO - __main__ - Current memory size: 1177.
+11/10/2021 14:54:01 - INFO - __main__ - Save 38 examples to the memory.
+11/10/2021 14:54:01 - INFO - __main__ - .................. Done.
+11/10/2021 14:54:03 - INFO - __main__ - Overall: 0.7233630952380953 from scores=[0.5465029761904762, 1.0, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:54:03 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:54:03 - INFO - __main__ - Evaluating to get errors .... Timecode: 42
+11/10/2021 14:54:08 - INFO - __main__ - Before Error Fixing: {'EM': 0.4375, 'QA-F1': 0.5226844724958949}
+11/10/2021 14:54:08 - INFO - __main__ - Found 36 errors.
+11/10/2021 14:54:08 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:54:08 - INFO - __main__ - Current memroy_module size: 1215.
+11/10/2021 14:54:08 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:54:08 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:54:08 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:54:08 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:54:08 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:54:08 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:54:08 - INFO - __main__ - Start error-fixing (len(examples_to_train)=68) .... Timecode: 42
+11/10/2021 14:54:38 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:54:38 - INFO - __main__ - Saving the current error examples (len=36) to the memory.
+11/10/2021 14:54:38 - INFO - __main__ - Current memory size: 1215.
+11/10/2021 14:54:38 - INFO - __main__ - Save 36 examples to the memory.
+11/10/2021 14:54:38 - INFO - __main__ - .................. Done.
+11/10/2021 14:54:40 - INFO - __main__ - Overall: 0.7228561046511628 from scores=[0.543968023255814, 1.0, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:54:40 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:54:40 - INFO - __main__ - Evaluating to get errors .... Timecode: 43
+11/10/2021 14:54:46 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6553907731200688}
+11/10/2021 14:54:46 - INFO - __main__ - Found 28 errors.
+11/10/2021 14:54:46 - INFO - __main__ - Start error-fixing (len(examples_to_train)=28) .... Timecode: 43
+11/10/2021 14:54:59 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:54:59 - INFO - __main__ - Saving the current error examples (len=28) to the memory.
+11/10/2021 14:54:59 - INFO - __main__ - Current memory size: 1251.
+11/10/2021 14:54:59 - INFO - __main__ - Save 28 examples to the memory.
+11/10/2021 14:54:59 - INFO - __main__ - .................. Done.
+11/10/2021 14:55:01 - INFO - __main__ - Overall: 0.7229403409090909 from scores=[0.5443892045454546, 1.0, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:55:01 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:55:01 - INFO - __main__ - Evaluating to get errors .... Timecode: 44
+11/10/2021 14:55:05 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.6171548069985571}
+11/10/2021 14:55:05 - INFO - __main__ - Found 31 errors.
+11/10/2021 14:55:05 - INFO - __main__ - Start error-fixing (len(examples_to_train)=31) .... Timecode: 44
+11/10/2021 14:55:16 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:55:16 - INFO - __main__ - Saving the current error examples (len=31) to the memory.
+11/10/2021 14:55:16 - INFO - __main__ - Current memory size: 1278.
+11/10/2021 14:55:16 - INFO - __main__ - Save 31 examples to the memory.
+11/10/2021 14:55:16 - INFO - __main__ - .................. Done.
+11/10/2021 14:55:19 - INFO - __main__ - Overall: 0.7163608870967743 from scores=[0.54375, 0.967741935483871, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:55:19 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:55:19 - INFO - __main__ - Evaluating to get errors .... Timecode: 45
+11/10/2021 14:55:22 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.673989887921997}
+11/10/2021 14:55:22 - INFO - __main__ - Found 28 errors.
+11/10/2021 14:55:22 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:55:22 - INFO - __main__ - Current memroy_module size: 1309.
+11/10/2021 14:55:22 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:55:22 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:55:22 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:55:22 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:55:22 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:55:22 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:55:22 - INFO - __main__ - Start error-fixing (len(examples_to_train)=60) .... Timecode: 45
+11/10/2021 14:55:45 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:55:45 - INFO - __main__ - Saving the current error examples (len=28) to the memory.
+11/10/2021 14:55:45 - INFO - __main__ - Current memory size: 1309.
+11/10/2021 14:55:45 - INFO - __main__ - Save 28 examples to the memory.
+11/10/2021 14:55:45 - INFO - __main__ - .................. Done.
+11/10/2021 14:55:47 - INFO - __main__ - Overall: 0.7157511645962733 from scores=[0.5441576086956521, 0.9642857142857143, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:55:47 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:55:47 - INFO - __main__ - Evaluating to get errors .... Timecode: 46
+11/10/2021 14:55:50 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.6137199096531653}
+11/10/2021 14:55:50 - INFO - __main__ - Found 30 errors.
+11/10/2021 14:55:50 - INFO - __main__ - Start error-fixing (len(examples_to_train)=30) .... Timecode: 46
+11/10/2021 14:56:03 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:56:03 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 14:56:03 - INFO - __main__ - Current memory size: 1336.
+11/10/2021 14:56:03 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 14:56:03 - INFO - __main__ - .................. Done.
+11/10/2021 14:56:05 - INFO - __main__ - Overall: 0.7028390957446808 from scores=[0.5438829787234043, 0.9, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:56:05 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:56:05 - INFO - __main__ - Evaluating to get errors .... Timecode: 47
+11/10/2021 14:56:09 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.6407241328267144}
+11/10/2021 14:56:09 - INFO - __main__ - Found 30 errors.
+11/10/2021 14:56:09 - INFO - __main__ - Start error-fixing (len(examples_to_train)=30) .... Timecode: 47
+11/10/2021 14:56:20 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:56:20 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 14:56:20 - INFO - __main__ - Current memory size: 1365.
+11/10/2021 14:56:20 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 14:56:20 - INFO - __main__ - .................. Done.
+11/10/2021 14:56:22 - INFO - __main__ - Overall: 0.7161197916666666 from scores=[0.5436197916666667, 0.9666666666666667, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:56:22 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:56:22 - INFO - __main__ - Evaluating to get errors .... Timecode: 48
+11/10/2021 14:56:27 - INFO - __main__ - Before Error Fixing: {'EM': 0.4375, 'QA-F1': 0.540777417027417}
+11/10/2021 14:56:27 - INFO - __main__ - Found 36 errors.
+11/10/2021 14:56:27 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:56:27 - INFO - __main__ - Current memroy_module size: 1393.
+11/10/2021 14:56:27 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:56:27 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:56:27 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:56:27 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:56:27 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:56:27 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:56:27 - INFO - __main__ - Start error-fixing (len(examples_to_train)=68) .... Timecode: 48
+11/10/2021 14:56:57 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:56:57 - INFO - __main__ - Saving the current error examples (len=36) to the memory.
+11/10/2021 14:56:57 - INFO - __main__ - Current memory size: 1393.
+11/10/2021 14:56:57 - INFO - __main__ - Save 36 examples to the memory.
+11/10/2021 14:56:57 - INFO - __main__ - .................. Done.
+11/10/2021 14:57:00 - INFO - __main__ - Overall: 0.716797760770975 from scores=[0.5414540816326531, 0.9722222222222222, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:57:00 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:57:00 - INFO - __main__ - Evaluating to get errors .... Timecode: 49
+11/10/2021 14:57:03 - INFO - __main__ - Before Error Fixing: {'EM': 0.46875, 'QA-F1': 0.548153409090909}
+11/10/2021 14:57:03 - INFO - __main__ - Found 34 errors.
+11/10/2021 14:57:03 - INFO - __main__ - Start error-fixing (len(examples_to_train)=34) .... Timecode: 49
+11/10/2021 14:57:19 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:57:19 - INFO - __main__ - Saving the current error examples (len=34) to the memory.
+11/10/2021 14:57:19 - INFO - __main__ - Current memory size: 1429.
+11/10/2021 14:57:19 - INFO - __main__ - Save 34 examples to the memory.
+11/10/2021 14:57:19 - INFO - __main__ - .................. Done.
+11/10/2021 14:57:21 - INFO - __main__ - Overall: 0.6985330882352941 from scores=[0.54, 0.8823529411764706, 0.857421875, 0.755859375, 0.45703125]
+11/10/2021 14:57:21 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:57:21 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=50
+11/10/2021 14:57:44 - INFO - __main__ - Upstream Knowledge Retation (UKR@50): 0.7480
+11/10/2021 14:57:46 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=50
+11/10/2021 14:58:21 - INFO - __main__ - Online Knowledge Retation (OKR@50): 0.8672
+11/10/2021 14:58:21 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=50
+11/10/2021 14:59:29 - INFO - __main__ - Future Knowledge Generalization (KG@50): 0.4789
+11/10/2021 14:59:29 - INFO - __main__ - Evaluating to get errors .... Timecode: 50
+11/10/2021 14:59:32 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.6576636904761906}
+11/10/2021 14:59:32 - INFO - __main__ - Found 25 errors.
+11/10/2021 14:59:32 - INFO - __main__ - Start error-fixing (len(examples_to_train)=25) .... Timecode: 50
+11/10/2021 14:59:43 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 14:59:43 - INFO - __main__ - Saving the current error examples (len=25) to the memory.
+11/10/2021 14:59:43 - INFO - __main__ - Current memory size: 1462.
+11/10/2021 14:59:43 - INFO - __main__ - Save 25 examples to the memory.
+11/10/2021 14:59:43 - INFO - __main__ - .................. Done.
+11/10/2021 14:59:45 - INFO - __main__ - Overall: 0.7191001838235295 from scores=[0.5413602941176471, 0.96, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 14:59:47 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_050.pt.
+11/10/2021 14:59:47 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 50.
+11/10/2021 14:59:47 - INFO - __main__ - --------------------------------------------------
+11/10/2021 14:59:47 - INFO - __main__ - Evaluating to get errors .... Timecode: 51
+11/10/2021 14:59:51 - INFO - __main__ - Before Error Fixing: {'EM': 0.546875, 'QA-F1': 0.6159970238095238}
+11/10/2021 14:59:51 - INFO - __main__ - Found 29 errors.
+11/10/2021 14:59:51 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 14:59:51 - INFO - __main__ - Current memroy_module size: 1486.
+11/10/2021 14:59:51 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 14:59:51 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 14:59:51 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 14:59:51 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:59:51 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 14:59:51 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 14:59:51 - INFO - __main__ - Start error-fixing (len(examples_to_train)=61) .... Timecode: 51
+11/10/2021 15:00:18 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:00:18 - INFO - __main__ - Saving the current error examples (len=29) to the memory.
+11/10/2021 15:00:18 - INFO - __main__ - Current memory size: 1486.
+11/10/2021 15:00:18 - INFO - __main__ - Save 29 examples to the memory.
+11/10/2021 15:00:18 - INFO - __main__ - .................. Done.
+11/10/2021 15:00:19 - INFO - __main__ - Overall: 0.7271213942307693 from scores=[0.5414663461538461, 1.0, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 15:00:19 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:00:19 - INFO - __main__ - Evaluating to get errors .... Timecode: 52
+11/10/2021 15:00:23 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6723214285714286}
+11/10/2021 15:00:23 - INFO - __main__ - Found 26 errors.
+11/10/2021 15:00:23 - INFO - __main__ - Start error-fixing (len(examples_to_train)=26) .... Timecode: 52
+11/10/2021 15:00:33 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:00:33 - INFO - __main__ - Saving the current error examples (len=26) to the memory.
+11/10/2021 15:00:33 - INFO - __main__ - Current memory size: 1515.
+11/10/2021 15:00:33 - INFO - __main__ - Save 26 examples to the memory.
+11/10/2021 15:00:33 - INFO - __main__ - .................. Done.
+11/10/2021 15:00:35 - INFO - __main__ - Overall: 0.7273186910377359 from scores=[0.5424528301886793, 1.0, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 15:00:35 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:00:35 - INFO - __main__ - Evaluating to get errors .... Timecode: 53
+11/10/2021 15:00:38 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.6354767628205128}
+11/10/2021 15:00:38 - INFO - __main__ - Found 30 errors.
+11/10/2021 15:00:38 - INFO - __main__ - Start error-fixing (len(examples_to_train)=30) .... Timecode: 53
+11/10/2021 15:00:51 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:00:51 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 15:00:51 - INFO - __main__ - Current memory size: 1541.
+11/10/2021 15:00:51 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 15:00:51 - INFO - __main__ - .................. Done.
+11/10/2021 15:00:53 - INFO - __main__ - Overall: 0.7272771990740741 from scores=[0.5422453703703703, 1.0, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 15:00:53 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:00:53 - INFO - __main__ - Evaluating to get errors .... Timecode: 54
+11/10/2021 15:00:57 - INFO - __main__ - Before Error Fixing: {'EM': 0.546875, 'QA-F1': 0.6718241202731092}
+11/10/2021 15:00:57 - INFO - __main__ - Found 29 errors.
+11/10/2021 15:00:57 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:00:57 - INFO - __main__ - Current memroy_module size: 1570.
+11/10/2021 15:00:57 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:00:57 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:00:57 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:00:57 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:00:57 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:00:57 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:00:57 - INFO - __main__ - Start error-fixing (len(examples_to_train)=61) .... Timecode: 54
+11/10/2021 15:01:21 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:01:21 - INFO - __main__ - Saving the current error examples (len=29) to the memory.
+11/10/2021 15:01:21 - INFO - __main__ - Current memory size: 1570.
+11/10/2021 15:01:21 - INFO - __main__ - Save 29 examples to the memory.
+11/10/2021 15:01:21 - INFO - __main__ - .................. Done.
+11/10/2021 15:01:24 - INFO - __main__ - Overall: 0.6997078271943573 from scores=[0.5423295454545455, 0.8620689655172413, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 15:01:24 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:01:24 - INFO - __main__ - Evaluating to get errors .... Timecode: 55
+11/10/2021 15:01:28 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.7141177398989899}
+11/10/2021 15:01:28 - INFO - __main__ - Found 26 errors.
+11/10/2021 15:01:28 - INFO - __main__ - Start error-fixing (len(examples_to_train)=26) .... Timecode: 55
+11/10/2021 15:01:39 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:01:39 - INFO - __main__ - Saving the current error examples (len=26) to the memory.
+11/10/2021 15:01:39 - INFO - __main__ - Current memory size: 1597.
+11/10/2021 15:01:39 - INFO - __main__ - Save 26 examples to the memory.
+11/10/2021 15:01:39 - INFO - __main__ - .................. Done.
+11/10/2021 15:01:40 - INFO - __main__ - Overall: 0.7274776785714285 from scores=[0.5432477678571428, 1.0, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 15:01:40 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:01:40 - INFO - __main__ - Evaluating to get errors .... Timecode: 56
+11/10/2021 15:01:44 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6659226190476191}
+11/10/2021 15:01:44 - INFO - __main__ - Found 27 errors.
+11/10/2021 15:01:44 - INFO - __main__ - Start error-fixing (len(examples_to_train)=27) .... Timecode: 56
+11/10/2021 15:01:56 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:01:56 - INFO - __main__ - Saving the current error examples (len=27) to the memory.
+11/10/2021 15:01:56 - INFO - __main__ - Current memory size: 1623.
+11/10/2021 15:01:56 - INFO - __main__ - Save 27 examples to the memory.
+11/10/2021 15:01:56 - INFO - __main__ - .................. Done.
+11/10/2021 15:01:57 - INFO - __main__ - Overall: 0.7276000548245614 from scores=[0.543859649122807, 1.0, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 15:01:57 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:01:57 - INFO - __main__ - Evaluating to get errors .... Timecode: 57
+11/10/2021 15:02:00 - INFO - __main__ - Before Error Fixing: {'EM': 0.484375, 'QA-F1': 0.5350694444444444}
+11/10/2021 15:02:00 - INFO - __main__ - Found 33 errors.
+11/10/2021 15:02:01 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:02:01 - INFO - __main__ - Current memroy_module size: 1650.
+11/10/2021 15:02:01 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:02:01 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:02:01 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:02:01 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:02:01 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:02:01 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:02:01 - INFO - __main__ - Start error-fixing (len(examples_to_train)=65) .... Timecode: 57
+11/10/2021 15:02:30 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:02:30 - INFO - __main__ - Saving the current error examples (len=33) to the memory.
+11/10/2021 15:02:30 - INFO - __main__ - Current memory size: 1650.
+11/10/2021 15:02:30 - INFO - __main__ - Save 33 examples to the memory.
+11/10/2021 15:02:30 - INFO - __main__ - .................. Done.
+11/10/2021 15:02:32 - INFO - __main__ - Overall: 0.7092131171630094 from scores=[0.5428340517241379, 0.9090909090909091, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 15:02:32 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:02:32 - INFO - __main__ - Evaluating to get errors .... Timecode: 58
+11/10/2021 15:02:35 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.5985576923076923}
+11/10/2021 15:02:35 - INFO - __main__ - Found 31 errors.
+11/10/2021 15:02:36 - INFO - __main__ - Start error-fixing (len(examples_to_train)=31) .... Timecode: 58
+11/10/2021 15:02:49 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:02:49 - INFO - __main__ - Saving the current error examples (len=31) to the memory.
+11/10/2021 15:02:49 - INFO - __main__ - Current memory size: 1682.
+11/10/2021 15:02:49 - INFO - __main__ - Save 31 examples to the memory.
+11/10/2021 15:02:49 - INFO - __main__ - .................. Done.
+11/10/2021 15:02:51 - INFO - __main__ - Overall: 0.7208510883679606 from scores=[0.5423728813559322, 0.967741935483871, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 15:02:51 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:02:51 - INFO - __main__ - Evaluating to get errors .... Timecode: 59
+11/10/2021 15:02:55 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.7468128225940726}
+11/10/2021 15:02:55 - INFO - __main__ - Found 25 errors.
+11/10/2021 15:02:55 - INFO - __main__ - Start error-fixing (len(examples_to_train)=25) .... Timecode: 59
+11/10/2021 15:03:06 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:03:06 - INFO - __main__ - Saving the current error examples (len=25) to the memory.
+11/10/2021 15:03:06 - INFO - __main__ - Current memory size: 1712.
+11/10/2021 15:03:06 - INFO - __main__ - Save 25 examples to the memory.
+11/10/2021 15:03:06 - INFO - __main__ - .................. Done.
+11/10/2021 15:03:08 - INFO - __main__ - Overall: 0.7275260416666667 from scores=[0.5434895833333333, 1.0, 0.8671875, 0.748046875, 0.47890625]
+11/10/2021 15:03:08 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:03:08 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=60
+11/10/2021 15:03:32 - INFO - __main__ - Upstream Knowledge Retation (UKR@60): 0.7148
+11/10/2021 15:03:33 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=60
+11/10/2021 15:04:07 - INFO - __main__ - Online Knowledge Retation (OKR@60): 0.8359
+11/10/2021 15:04:07 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=60
+11/10/2021 15:05:16 - INFO - __main__ - Future Knowledge Generalization (KG@60): 0.4773
+11/10/2021 15:05:16 - INFO - __main__ - Evaluating to get errors .... Timecode: 60
+11/10/2021 15:05:20 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.6355091977828867}
+11/10/2021 15:05:20 - INFO - __main__ - Found 32 errors.
+11/10/2021 15:05:20 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:05:20 - INFO - __main__ - Current memroy_module size: 1736.
+11/10/2021 15:05:20 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:05:20 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:05:20 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:05:20 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:05:20 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:05:20 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:05:20 - INFO - __main__ - Start error-fixing (len(examples_to_train)=64) .... Timecode: 60
+11/10/2021 15:05:44 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:05:44 - INFO - __main__ - Saving the current error examples (len=32) to the memory.
+11/10/2021 15:05:44 - INFO - __main__ - Current memory size: 1736.
+11/10/2021 15:05:44 - INFO - __main__ - Save 32 examples to the memory.
+11/10/2021 15:05:44 - INFO - __main__ - .................. Done.
+11/10/2021 15:05:47 - INFO - __main__ - Overall: 0.7141803278688525 from scores=[0.5427766393442623, 1.0, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:05:49 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_060.pt.
+11/10/2021 15:05:49 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 60.
+11/10/2021 15:05:49 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:05:49 - INFO - __main__ - Evaluating to get errors .... Timecode: 61
+11/10/2021 15:05:53 - INFO - __main__ - Before Error Fixing: {'EM': 0.546875, 'QA-F1': 0.662106259968102}
+11/10/2021 15:05:53 - INFO - __main__ - Found 29 errors.
+11/10/2021 15:05:53 - INFO - __main__ - Start error-fixing (len(examples_to_train)=29) .... Timecode: 61
+11/10/2021 15:06:04 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:06:04 - INFO - __main__ - Saving the current error examples (len=29) to the memory.
+11/10/2021 15:06:04 - INFO - __main__ - Current memory size: 1768.
+11/10/2021 15:06:04 - INFO - __main__ - Save 29 examples to the memory.
+11/10/2021 15:06:04 - INFO - __main__ - .................. Done.
+11/10/2021 15:06:06 - INFO - __main__ - Overall: 0.707296996662959 from scores=[0.5428427419354839, 0.9655172413793104, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:06:06 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:06:06 - INFO - __main__ - Evaluating to get errors .... Timecode: 62
+11/10/2021 15:06:09 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.6857638888888888}
+11/10/2021 15:06:09 - INFO - __main__ - Found 22 errors.
+11/10/2021 15:06:10 - INFO - __main__ - Start error-fixing (len(examples_to_train)=22) .... Timecode: 62
+11/10/2021 15:06:19 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:06:19 - INFO - __main__ - Saving the current error examples (len=22) to the memory.
+11/10/2021 15:06:19 - INFO - __main__ - Current memory size: 1795.
+11/10/2021 15:06:19 - INFO - __main__ - Save 22 examples to the memory.
+11/10/2021 15:06:19 - INFO - __main__ - .................. Done.
+11/10/2021 15:06:20 - INFO - __main__ - Overall: 0.7054626623376624 from scores=[0.5446428571428572, 0.9545454545454546, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:06:20 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:06:20 - INFO - __main__ - Evaluating to get errors .... Timecode: 63
+11/10/2021 15:06:25 - INFO - __main__ - Before Error Fixing: {'EM': 0.546875, 'QA-F1': 0.6742028975520824}
+11/10/2021 15:06:25 - INFO - __main__ - Found 29 errors.
+11/10/2021 15:06:25 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:06:25 - INFO - __main__ - Current memroy_module size: 1817.
+11/10/2021 15:06:25 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:06:25 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:06:25 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:06:25 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:06:25 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:06:25 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:06:25 - INFO - __main__ - Start error-fixing (len(examples_to_train)=61) .... Timecode: 63
+11/10/2021 15:06:52 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:06:52 - INFO - __main__ - Saving the current error examples (len=29) to the memory.
+11/10/2021 15:06:52 - INFO - __main__ - Current memory size: 1817.
+11/10/2021 15:06:52 - INFO - __main__ - Save 29 examples to the memory.
+11/10/2021 15:06:52 - INFO - __main__ - .................. Done.
+11/10/2021 15:06:54 - INFO - __main__ - Overall: 0.714560546875 from scores=[0.544677734375, 1.0, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:06:54 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:06:54 - INFO - __main__ - Evaluating to get errors .... Timecode: 64
+11/10/2021 15:06:58 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6467256701631701}
+11/10/2021 15:06:58 - INFO - __main__ - Found 27 errors.
+11/10/2021 15:06:58 - INFO - __main__ - Start error-fixing (len(examples_to_train)=27) .... Timecode: 64
+11/10/2021 15:07:10 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:07:10 - INFO - __main__ - Saving the current error examples (len=27) to the memory.
+11/10/2021 15:07:10 - INFO - __main__ - Current memory size: 1846.
+11/10/2021 15:07:10 - INFO - __main__ - Save 27 examples to the memory.
+11/10/2021 15:07:10 - INFO - __main__ - .................. Done.
+11/10/2021 15:07:12 - INFO - __main__ - Overall: 0.6998486467236468 from scores=[0.5451923076923078, 0.9259259259259259, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:07:12 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:07:12 - INFO - __main__ - Evaluating to get errors .... Timecode: 65
+11/10/2021 15:07:16 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.6078689449917898}
+11/10/2021 15:07:16 - INFO - __main__ - Found 32 errors.
+11/10/2021 15:07:16 - INFO - __main__ - Start error-fixing (len(examples_to_train)=32) .... Timecode: 65
+11/10/2021 15:07:31 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:07:31 - INFO - __main__ - Saving the current error examples (len=32) to the memory.
+11/10/2021 15:07:31 - INFO - __main__ - Current memory size: 1871.
+11/10/2021 15:07:31 - INFO - __main__ - Save 32 examples to the memory.
+11/10/2021 15:07:31 - INFO - __main__ - .................. Done.
+11/10/2021 15:07:32 - INFO - __main__ - Overall: 0.7020265151515152 from scores=[0.5445075757575757, 0.9375, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:07:32 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:07:32 - INFO - __main__ - Evaluating to get errors .... Timecode: 66
+11/10/2021 15:07:36 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.7067730014801517}
+11/10/2021 15:07:36 - INFO - __main__ - Found 26 errors.
+11/10/2021 15:07:36 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:07:36 - INFO - __main__ - Current memroy_module size: 1903.
+11/10/2021 15:07:36 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:07:36 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:07:36 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:07:36 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:07:36 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:07:36 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:07:36 - INFO - __main__ - Start error-fixing (len(examples_to_train)=58) .... Timecode: 66
+11/10/2021 15:07:59 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:07:59 - INFO - __main__ - Saving the current error examples (len=26) to the memory.
+11/10/2021 15:07:59 - INFO - __main__ - Current memory size: 1903.
+11/10/2021 15:07:59 - INFO - __main__ - Save 26 examples to the memory.
+11/10/2021 15:07:59 - INFO - __main__ - .................. Done.
+11/10/2021 15:08:01 - INFO - __main__ - Overall: 0.706981199770379 from scores=[0.5452425373134329, 0.9615384615384616, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:08:01 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:08:01 - INFO - __main__ - Evaluating to get errors .... Timecode: 67
+11/10/2021 15:08:05 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6653363997113997}
+11/10/2021 15:08:05 - INFO - __main__ - Found 28 errors.
+11/10/2021 15:08:05 - INFO - __main__ - Start error-fixing (len(examples_to_train)=28) .... Timecode: 67
+11/10/2021 15:08:13 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:08:13 - INFO - __main__ - Saving the current error examples (len=28) to the memory.
+11/10/2021 15:08:13 - INFO - __main__ - Current memory size: 1927.
+11/10/2021 15:08:13 - INFO - __main__ - Save 28 examples to the memory.
+11/10/2021 15:08:13 - INFO - __main__ - .................. Done.
+11/10/2021 15:08:15 - INFO - __main__ - Overall: 0.7075814075630252 from scores=[0.5454963235294117, 0.9642857142857143, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:08:15 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:08:15 - INFO - __main__ - Evaluating to get errors .... Timecode: 68
+11/10/2021 15:08:18 - INFO - __main__ - Before Error Fixing: {'EM': 0.484375, 'QA-F1': 0.5523200757575757}
+11/10/2021 15:08:18 - INFO - __main__ - Found 33 errors.
+11/10/2021 15:08:18 - INFO - __main__ - Start error-fixing (len(examples_to_train)=33) .... Timecode: 68
+11/10/2021 15:08:34 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:08:34 - INFO - __main__ - Saving the current error examples (len=33) to the memory.
+11/10/2021 15:08:34 - INFO - __main__ - Current memory size: 1955.
+11/10/2021 15:08:34 - INFO - __main__ - Save 33 examples to the memory.
+11/10/2021 15:08:34 - INFO - __main__ - .................. Done.
+11/10/2021 15:08:36 - INFO - __main__ - Overall: 0.7145471014492755 from scores=[0.5446105072463768, 1.0, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:08:36 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:08:36 - INFO - __main__ - Evaluating to get errors .... Timecode: 69
+11/10/2021 15:08:39 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6409226190476192}
+11/10/2021 15:08:39 - INFO - __main__ - Found 28 errors.
+11/10/2021 15:08:39 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:08:39 - INFO - __main__ - Current memroy_module size: 1988.
+11/10/2021 15:08:39 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:08:39 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:08:39 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:08:39 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:08:39 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:08:39 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:08:39 - INFO - __main__ - Start error-fixing (len(examples_to_train)=60) .... Timecode: 69
+11/10/2021 15:09:05 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:09:05 - INFO - __main__ - Saving the current error examples (len=28) to the memory.
+11/10/2021 15:09:05 - INFO - __main__ - Current memory size: 1988.
+11/10/2021 15:09:05 - INFO - __main__ - Save 28 examples to the memory.
+11/10/2021 15:09:05 - INFO - __main__ - .................. Done.
+11/10/2021 15:09:07 - INFO - __main__ - Overall: 0.7145982142857144 from scores=[0.5448660714285714, 1.0, 0.8359375, 0.71484375, 0.47734375]
+11/10/2021 15:09:07 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:09:07 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=70
+11/10/2021 15:09:32 - INFO - __main__ - Upstream Knowledge Retation (UKR@70): 0.7441
+11/10/2021 15:09:34 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=70
+11/10/2021 15:10:06 - INFO - __main__ - Online Knowledge Retation (OKR@70): 0.8535
+11/10/2021 15:10:06 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=70
+11/10/2021 15:11:14 - INFO - __main__ - Future Knowledge Generalization (KG@70): 0.5164
+11/10/2021 15:11:14 - INFO - __main__ - Evaluating to get errors .... Timecode: 70
+11/10/2021 15:11:18 - INFO - __main__ - Before Error Fixing: {'EM': 0.515625, 'QA-F1': 0.6208174015526957}
+11/10/2021 15:11:18 - INFO - __main__ - Found 31 errors.
+11/10/2021 15:11:18 - INFO - __main__ - Start error-fixing (len(examples_to_train)=31) .... Timecode: 70
+11/10/2021 15:11:29 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:11:29 - INFO - __main__ - Saving the current error examples (len=31) to the memory.
+11/10/2021 15:11:29 - INFO - __main__ - Current memory size: 2016.
+11/10/2021 15:11:29 - INFO - __main__ - Save 31 examples to the memory.
+11/10/2021 15:11:29 - INFO - __main__ - .................. Done.
+11/10/2021 15:11:31 - INFO - __main__ - Overall: 0.7252517321671968 from scores=[0.5444542253521127, 0.967741935483871, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:11:34 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_070.pt.
+11/10/2021 15:11:34 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 70.
+11/10/2021 15:11:34 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:11:34 - INFO - __main__ - Evaluating to get errors .... Timecode: 71
+11/10/2021 15:11:37 - INFO - __main__ - Before Error Fixing: {'EM': 0.453125, 'QA-F1': 0.5253100198412698}
+11/10/2021 15:11:37 - INFO - __main__ - Found 35 errors.
+11/10/2021 15:11:37 - INFO - __main__ - Start error-fixing (len(examples_to_train)=35) .... Timecode: 71
+11/10/2021 15:11:53 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:11:53 - INFO - __main__ - Saving the current error examples (len=35) to the memory.
+11/10/2021 15:11:53 - INFO - __main__ - Current memory size: 2047.
+11/10/2021 15:11:53 - INFO - __main__ - Save 35 examples to the memory.
+11/10/2021 15:11:53 - INFO - __main__ - .................. Done.
+11/10/2021 15:11:55 - INFO - __main__ - Overall: 0.7257353670634921 from scores=[0.5431857638888888, 0.9714285714285714, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:11:55 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:11:55 - INFO - __main__ - Evaluating to get errors .... Timecode: 72
+11/10/2021 15:11:58 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.7068393640350876}
+11/10/2021 15:11:58 - INFO - __main__ - Found 25 errors.
+11/10/2021 15:11:58 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:11:58 - INFO - __main__ - Current memroy_module size: 2082.
+11/10/2021 15:11:58 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:11:58 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:11:58 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:11:58 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:11:58 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:11:58 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:11:58 - INFO - __main__ - Start error-fixing (len(examples_to_train)=57) .... Timecode: 72
+11/10/2021 15:12:23 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:12:23 - INFO - __main__ - Saving the current error examples (len=25) to the memory.
+11/10/2021 15:12:23 - INFO - __main__ - Current memory size: 2082.
+11/10/2021 15:12:23 - INFO - __main__ - Save 25 examples to the memory.
+11/10/2021 15:12:23 - INFO - __main__ - .................. Done.
+11/10/2021 15:12:25 - INFO - __main__ - Overall: 0.7236309931506849 from scores=[0.5440924657534247, 0.96, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:12:25 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:12:25 - INFO - __main__ - Evaluating to get errors .... Timecode: 73
+11/10/2021 15:12:29 - INFO - __main__ - Before Error Fixing: {'EM': 0.640625, 'QA-F1': 0.6805555555555555}
+11/10/2021 15:12:29 - INFO - __main__ - Found 23 errors.
+11/10/2021 15:12:29 - INFO - __main__ - Start error-fixing (len(examples_to_train)=23) .... Timecode: 73
+11/10/2021 15:12:40 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:12:40 - INFO - __main__ - Saving the current error examples (len=23) to the memory.
+11/10/2021 15:12:40 - INFO - __main__ - Current memory size: 2106.
+11/10/2021 15:12:40 - INFO - __main__ - Save 23 examples to the memory.
+11/10/2021 15:12:40 - INFO - __main__ - .................. Done.
+11/10/2021 15:12:41 - INFO - __main__ - Overall: 0.7231962397179789 from scores=[0.5453969594594594, 0.9565217391304348, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:12:41 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:12:41 - INFO - __main__ - Evaluating to get errors .... Timecode: 74
+11/10/2021 15:12:44 - INFO - __main__ - Before Error Fixing: {'EM': 0.4375, 'QA-F1': 0.5333333333333332}
+11/10/2021 15:12:44 - INFO - __main__ - Found 36 errors.
+11/10/2021 15:12:44 - INFO - __main__ - Start error-fixing (len(examples_to_train)=36) .... Timecode: 74
+11/10/2021 15:13:00 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:13:00 - INFO - __main__ - Saving the current error examples (len=36) to the memory.
+11/10/2021 15:13:00 - INFO - __main__ - Current memory size: 2129.
+11/10/2021 15:13:00 - INFO - __main__ - Save 36 examples to the memory.
+11/10/2021 15:13:00 - INFO - __main__ - .................. Done.
+11/10/2021 15:13:02 - INFO - __main__ - Overall: 0.7204930555555557 from scores=[0.5439583333333333, 0.9444444444444444, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:13:02 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:13:02 - INFO - __main__ - Evaluating to get errors .... Timecode: 75
+11/10/2021 15:13:05 - INFO - __main__ - Before Error Fixing: {'EM': 0.46875, 'QA-F1': 0.546875}
+11/10/2021 15:13:05 - INFO - __main__ - Found 34 errors.
+11/10/2021 15:13:05 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:13:05 - INFO - __main__ - Current memroy_module size: 2165.
+11/10/2021 15:13:05 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:13:05 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:13:05 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:13:05 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:13:05 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:13:05 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:13:05 - INFO - __main__ - Start error-fixing (len(examples_to_train)=66) .... Timecode: 75
+11/10/2021 15:13:35 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:13:35 - INFO - __main__ - Saving the current error examples (len=34) to the memory.
+11/10/2021 15:13:35 - INFO - __main__ - Current memory size: 2165.
+11/10/2021 15:13:35 - INFO - __main__ - Save 34 examples to the memory.
+11/10/2021 15:13:35 - INFO - __main__ - .................. Done.
+11/10/2021 15:13:36 - INFO - __main__ - Overall: 0.73140625 from scores=[0.54296875, 1.0, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:13:36 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:13:36 - INFO - __main__ - Evaluating to get errors .... Timecode: 76
+11/10/2021 15:13:42 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.6316362283549783}
+11/10/2021 15:13:42 - INFO - __main__ - Found 30 errors.
+11/10/2021 15:13:42 - INFO - __main__ - Start error-fixing (len(examples_to_train)=30) .... Timecode: 76
+11/10/2021 15:13:55 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:13:55 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 15:13:55 - INFO - __main__ - Current memory size: 2199.
+11/10/2021 15:13:55 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 15:13:55 - INFO - __main__ - .................. Done.
+11/10/2021 15:13:57 - INFO - __main__ - Overall: 0.7313758116883117 from scores=[0.5428165584415585, 1.0, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:13:57 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:13:57 - INFO - __main__ - Evaluating to get errors .... Timecode: 77
+11/10/2021 15:14:01 - INFO - __main__ - Before Error Fixing: {'EM': 0.640625, 'QA-F1': 0.705654761904762}
+11/10/2021 15:14:01 - INFO - __main__ - Found 23 errors.
+11/10/2021 15:14:01 - INFO - __main__ - Start error-fixing (len(examples_to_train)=23) .... Timecode: 77
+11/10/2021 15:14:11 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:14:11 - INFO - __main__ - Saving the current error examples (len=23) to the memory.
+11/10/2021 15:14:11 - INFO - __main__ - Current memory size: 2227.
+11/10/2021 15:14:11 - INFO - __main__ - Save 23 examples to the memory.
+11/10/2021 15:14:11 - INFO - __main__ - .................. Done.
+11/10/2021 15:14:12 - INFO - __main__ - Overall: 0.7316266025641026 from scores=[0.5440705128205128, 1.0, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:14:12 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:14:12 - INFO - __main__ - Evaluating to get errors .... Timecode: 78
+11/10/2021 15:14:15 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.6489087301587302}
+11/10/2021 15:14:15 - INFO - __main__ - Found 28 errors.
+11/10/2021 15:14:15 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:14:15 - INFO - __main__ - Current memroy_module size: 2249.
+11/10/2021 15:14:15 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:14:15 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:14:15 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:14:15 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:14:15 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:14:15 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:14:15 - INFO - __main__ - Start error-fixing (len(examples_to_train)=60) .... Timecode: 78
+11/10/2021 15:14:42 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:14:42 - INFO - __main__ - Saving the current error examples (len=28) to the memory.
+11/10/2021 15:14:42 - INFO - __main__ - Current memory size: 2249.
+11/10/2021 15:14:42 - INFO - __main__ - Save 28 examples to the memory.
+11/10/2021 15:14:42 - INFO - __main__ - .................. Done.
+11/10/2021 15:14:43 - INFO - __main__ - Overall: 0.731673259493671 from scores=[0.5443037974683544, 1.0, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:14:43 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:14:43 - INFO - __main__ - Evaluating to get errors .... Timecode: 79
+11/10/2021 15:14:46 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.5998263888888888}
+11/10/2021 15:14:46 - INFO - __main__ - Found 30 errors.
+11/10/2021 15:14:46 - INFO - __main__ - Start error-fixing (len(examples_to_train)=30) .... Timecode: 79
+11/10/2021 15:15:00 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:15:00 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 15:15:00 - INFO - __main__ - Current memory size: 2276.
+11/10/2021 15:15:00 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 15:15:00 - INFO - __main__ - .................. Done.
+11/10/2021 15:15:01 - INFO - __main__ - Overall: 0.731640625 from scores=[0.544140625, 1.0, 0.853515625, 0.744140625, 0.51640625]
+11/10/2021 15:15:01 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:15:01 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=80
+11/10/2021 15:15:25 - INFO - __main__ - Upstream Knowledge Retation (UKR@80): 0.7676
+11/10/2021 15:15:26 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=80
+11/10/2021 15:15:57 - INFO - __main__ - Online Knowledge Retation (OKR@80): 0.8516
+11/10/2021 15:15:57 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=80
+11/10/2021 15:17:01 - INFO - __main__ - Future Knowledge Generalization (KG@80): 0.5086
+11/10/2021 15:17:01 - INFO - __main__ - Evaluating to get errors .... Timecode: 80
+11/10/2021 15:17:05 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7160962301587301}
+11/10/2021 15:17:05 - INFO - __main__ - Found 22 errors.
+11/10/2021 15:17:05 - INFO - __main__ - Start error-fixing (len(examples_to_train)=22) .... Timecode: 80
+11/10/2021 15:17:15 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:17:15 - INFO - __main__ - Saving the current error examples (len=22) to the memory.
+11/10/2021 15:17:15 - INFO - __main__ - Current memory size: 2306.
+11/10/2021 15:17:15 - INFO - __main__ - Save 22 examples to the memory.
+11/10/2021 15:17:15 - INFO - __main__ - .................. Done.
+11/10/2021 15:17:16 - INFO - __main__ - Overall: 0.7164699950897868 from scores=[0.5455246913580247, 0.9090909090909091, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:17:18 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_080.pt.
+11/10/2021 15:17:18 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 80.
+11/10/2021 15:17:18 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:17:18 - INFO - __main__ - Evaluating to get errors .... Timecode: 81
+11/10/2021 15:17:22 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.6044851771680333}
+11/10/2021 15:17:22 - INFO - __main__ - Found 32 errors.
+11/10/2021 15:17:22 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:17:22 - INFO - __main__ - Current memroy_module size: 2328.
+11/10/2021 15:17:22 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:17:22 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:17:22 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:17:22 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:17:22 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:17:22 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:17:22 - INFO - __main__ - Start error-fixing (len(examples_to_train)=64) .... Timecode: 81
+11/10/2021 15:17:49 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:17:49 - INFO - __main__ - Saving the current error examples (len=32) to the memory.
+11/10/2021 15:17:49 - INFO - __main__ - Current memory size: 2328.
+11/10/2021 15:17:49 - INFO - __main__ - Save 32 examples to the memory.
+11/10/2021 15:17:49 - INFO - __main__ - .................. Done.
+11/10/2021 15:17:52 - INFO - __main__ - Overall: 0.7220407774390244 from scores=[0.5449695121951219, 0.9375, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:17:52 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:17:52 - INFO - __main__ - Evaluating to get errors .... Timecode: 82
+11/10/2021 15:17:55 - INFO - __main__ - Before Error Fixing: {'EM': 0.546875, 'QA-F1': 0.633110119047619}
+11/10/2021 15:17:55 - INFO - __main__ - Found 29 errors.
+11/10/2021 15:17:55 - INFO - __main__ - Start error-fixing (len(examples_to_train)=29) .... Timecode: 82
+11/10/2021 15:18:08 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:18:08 - INFO - __main__ - Saving the current error examples (len=29) to the memory.
+11/10/2021 15:18:08 - INFO - __main__ - Current memory size: 2357.
+11/10/2021 15:18:08 - INFO - __main__ - Save 29 examples to the memory.
+11/10/2021 15:18:08 - INFO - __main__ - .................. Done.
+11/10/2021 15:18:10 - INFO - __main__ - Overall: 0.7069591620793518 from scores=[0.5449924698795181, 0.8620689655172413, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:18:10 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:18:10 - INFO - __main__ - Evaluating to get errors .... Timecode: 83
+11/10/2021 15:18:14 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.5745863511488511}
+11/10/2021 15:18:14 - INFO - __main__ - Found 32 errors.
+11/10/2021 15:18:14 - INFO - __main__ - Start error-fixing (len(examples_to_train)=32) .... Timecode: 83
+11/10/2021 15:18:28 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:18:28 - INFO - __main__ - Saving the current error examples (len=32) to the memory.
+11/10/2021 15:18:28 - INFO - __main__ - Current memory size: 2386.
+11/10/2021 15:18:28 - INFO - __main__ - Save 32 examples to the memory.
+11/10/2021 15:18:28 - INFO - __main__ - .................. Done.
+11/10/2021 15:18:30 - INFO - __main__ - Overall: 0.734438244047619 from scores=[0.5444568452380952, 1.0, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:18:30 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:18:30 - INFO - __main__ - Evaluating to get errors .... Timecode: 84
+11/10/2021 15:18:33 - INFO - __main__ - Before Error Fixing: {'EM': 0.5, 'QA-F1': 0.5774305555555554}
+11/10/2021 15:18:33 - INFO - __main__ - Found 32 errors.
+11/10/2021 15:18:33 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:18:33 - INFO - __main__ - Current memroy_module size: 2418.
+11/10/2021 15:18:33 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:18:33 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:18:33 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:18:33 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:18:33 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:18:33 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:18:33 - INFO - __main__ - Start error-fixing (len(examples_to_train)=64) .... Timecode: 84
+11/10/2021 15:19:01 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:19:01 - INFO - __main__ - Saving the current error examples (len=32) to the memory.
+11/10/2021 15:19:01 - INFO - __main__ - Current memory size: 2418.
+11/10/2021 15:19:01 - INFO - __main__ - Save 32 examples to the memory.
+11/10/2021 15:19:01 - INFO - __main__ - .................. Done.
+11/10/2021 15:19:03 - INFO - __main__ - Overall: 0.7343336397058824 from scores=[0.5439338235294118, 1.0, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:19:03 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:19:03 - INFO - __main__ - Evaluating to get errors .... Timecode: 85
+11/10/2021 15:19:06 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.6170138888888889}
+11/10/2021 15:19:06 - INFO - __main__ - Found 30 errors.
+11/10/2021 15:19:06 - INFO - __main__ - Start error-fixing (len(examples_to_train)=30) .... Timecode: 85
+11/10/2021 15:19:20 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:19:20 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 15:19:20 - INFO - __main__ - Current memory size: 2450.
+11/10/2021 15:19:20 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 15:19:20 - INFO - __main__ - .................. Done.
+11/10/2021 15:19:21 - INFO - __main__ - Overall: 0.7143041424418606 from scores=[0.5437863372093024, 0.9, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:19:21 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:19:21 - INFO - __main__ - Evaluating to get errors .... Timecode: 86
+11/10/2021 15:19:25 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.622112063695825}
+11/10/2021 15:19:25 - INFO - __main__ - Found 30 errors.
+11/10/2021 15:19:25 - INFO - __main__ - Start error-fixing (len(examples_to_train)=30) .... Timecode: 86
+11/10/2021 15:19:39 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:19:39 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 15:19:39 - INFO - __main__ - Current memory size: 2476.
+11/10/2021 15:19:39 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 15:19:39 - INFO - __main__ - .................. Done.
+11/10/2021 15:19:42 - INFO - __main__ - Overall: 0.7342753232758621 from scores=[0.5436422413793103, 1.0, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:19:42 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:19:42 - INFO - __main__ - Evaluating to get errors .... Timecode: 87
+11/10/2021 15:19:46 - INFO - __main__ - Before Error Fixing: {'EM': 0.5625, 'QA-F1': 0.59453125}
+11/10/2021 15:19:46 - INFO - __main__ - Found 28 errors.
+11/10/2021 15:19:46 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:19:46 - INFO - __main__ - Current memroy_module size: 2506.
+11/10/2021 15:19:46 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:19:46 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:19:46 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:19:46 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:19:46 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:19:46 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:19:46 - INFO - __main__ - Start error-fixing (len(examples_to_train)=60) .... Timecode: 87
+11/10/2021 15:20:13 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:20:13 - INFO - __main__ - Saving the current error examples (len=28) to the memory.
+11/10/2021 15:20:13 - INFO - __main__ - Current memory size: 2506.
+11/10/2021 15:20:13 - INFO - __main__ - Save 28 examples to the memory.
+11/10/2021 15:20:13 - INFO - __main__ - .................. Done.
+11/10/2021 15:20:14 - INFO - __main__ - Overall: 0.7343181818181819 from scores=[0.5438565340909092, 1.0, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:20:14 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:20:14 - INFO - __main__ - Evaluating to get errors .... Timecode: 88
+11/10/2021 15:20:17 - INFO - __main__ - Before Error Fixing: {'EM': 0.59375, 'QA-F1': 0.6562635281385281}
+11/10/2021 15:20:17 - INFO - __main__ - Found 26 errors.
+11/10/2021 15:20:17 - INFO - __main__ - Start error-fixing (len(examples_to_train)=26) .... Timecode: 88
+11/10/2021 15:20:29 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:20:29 - INFO - __main__ - Saving the current error examples (len=26) to the memory.
+11/10/2021 15:20:29 - INFO - __main__ - Current memory size: 2532.
+11/10/2021 15:20:29 - INFO - __main__ - Save 26 examples to the memory.
+11/10/2021 15:20:29 - INFO - __main__ - .................. Done.
+11/10/2021 15:20:30 - INFO - __main__ - Overall: 0.7344303019662922 from scores=[0.5444171348314606, 1.0, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:20:30 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:20:30 - INFO - __main__ - Evaluating to get errors .... Timecode: 89
+11/10/2021 15:20:35 - INFO - __main__ - Before Error Fixing: {'EM': 0.578125, 'QA-F1': 0.6495199692780338}
+11/10/2021 15:20:35 - INFO - __main__ - Found 27 errors.
+11/10/2021 15:20:36 - INFO - __main__ - Start error-fixing (len(examples_to_train)=27) .... Timecode: 89
+11/10/2021 15:20:48 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:20:48 - INFO - __main__ - Saving the current error examples (len=27) to the memory.
+11/10/2021 15:20:48 - INFO - __main__ - Current memory size: 2558.
+11/10/2021 15:20:48 - INFO - __main__ - Save 27 examples to the memory.
+11/10/2021 15:20:48 - INFO - __main__ - .................. Done.
+11/10/2021 15:20:49 - INFO - __main__ - Overall: 0.7345052083333334 from scores=[0.5447916666666667, 1.0, 0.8515625, 0.767578125, 0.50859375]
+11/10/2021 15:20:49 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:20:49 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=90
+11/10/2021 15:21:13 - INFO - __main__ - Upstream Knowledge Retation (UKR@90): 0.7617
+11/10/2021 15:21:15 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=90
+11/10/2021 15:21:46 - INFO - __main__ - Online Knowledge Retation (OKR@90): 0.7969
+11/10/2021 15:21:46 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=90
+11/10/2021 15:22:54 - INFO - __main__ - Future Knowledge Generalization (KG@90): 0.4813
+11/10/2021 15:22:54 - INFO - __main__ - Evaluating to get errors .... Timecode: 90
+11/10/2021 15:22:57 - INFO - __main__ - Before Error Fixing: {'EM': 0.453125, 'QA-F1': 0.5208333333333333}
+11/10/2021 15:22:57 - INFO - __main__ - Found 35 errors.
+11/10/2021 15:22:57 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:22:57 - INFO - __main__ - Current memroy_module size: 2583.
+11/10/2021 15:22:57 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:22:57 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:22:57 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:22:57 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:22:57 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:22:57 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:22:57 - INFO - __main__ - Start error-fixing (len(examples_to_train)=67) .... Timecode: 90
+11/10/2021 15:23:27 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:23:27 - INFO - __main__ - Saving the current error examples (len=35) to the memory.
+11/10/2021 15:23:27 - INFO - __main__ - Current memory size: 2583.
+11/10/2021 15:23:27 - INFO - __main__ - Save 35 examples to the memory.
+11/10/2021 15:23:27 - INFO - __main__ - .................. Done.
+11/10/2021 15:23:29 - INFO - __main__ - Overall: 0.7167256181318682 from scores=[0.5437843406593407, 1.0, 0.796875, 0.76171875, 0.48125]
+11/10/2021 15:23:31 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_090.pt.
+11/10/2021 15:23:31 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 90.
+11/10/2021 15:23:31 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:23:31 - INFO - __main__ - Evaluating to get errors .... Timecode: 91
+11/10/2021 15:23:35 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7284970238095239}
+11/10/2021 15:23:35 - INFO - __main__ - Found 22 errors.
+11/10/2021 15:23:35 - INFO - __main__ - Start error-fixing (len(examples_to_train)=22) .... Timecode: 91
+11/10/2021 15:23:44 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:23:44 - INFO - __main__ - Saving the current error examples (len=22) to the memory.
+11/10/2021 15:23:44 - INFO - __main__ - Current memory size: 2618.
+11/10/2021 15:23:44 - INFO - __main__ - Save 22 examples to the memory.
+11/10/2021 15:23:44 - INFO - __main__ - .................. Done.
+11/10/2021 15:23:45 - INFO - __main__ - Overall: 0.7169701086956521 from scores=[0.5450067934782609, 1.0, 0.796875, 0.76171875, 0.48125]
+11/10/2021 15:23:45 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:23:45 - INFO - __main__ - Evaluating to get errors .... Timecode: 92
+11/10/2021 15:23:50 - INFO - __main__ - Before Error Fixing: {'EM': 0.46875, 'QA-F1': 0.6134108946608947}
+11/10/2021 15:23:50 - INFO - __main__ - Found 34 errors.
+11/10/2021 15:23:50 - INFO - __main__ - Start error-fixing (len(examples_to_train)=34) .... Timecode: 92
+11/10/2021 15:24:03 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:24:03 - INFO - __main__ - Saving the current error examples (len=34) to the memory.
+11/10/2021 15:24:03 - INFO - __main__ - Current memory size: 2640.
+11/10/2021 15:24:03 - INFO - __main__ - Save 34 examples to the memory.
+11/10/2021 15:24:03 - INFO - __main__ - .................. Done.
+11/10/2021 15:24:06 - INFO - __main__ - Overall: 0.7168061155913978 from scores=[0.5441868279569892, 1.0, 0.796875, 0.76171875, 0.48125]
+11/10/2021 15:24:06 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:24:06 - INFO - __main__ - Evaluating to get errors .... Timecode: 93
+11/10/2021 15:24:10 - INFO - __main__ - Before Error Fixing: {'EM': 0.703125, 'QA-F1': 0.7657749368686868}
+11/10/2021 15:24:10 - INFO - __main__ - Found 19 errors.
+11/10/2021 15:24:10 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:24:10 - INFO - __main__ - Current memroy_module size: 2673.
+11/10/2021 15:24:10 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:24:10 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:24:10 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:24:10 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:24:10 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:24:10 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:24:10 - INFO - __main__ - Start error-fixing (len(examples_to_train)=51) .... Timecode: 93
+11/10/2021 15:24:30 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:24:30 - INFO - __main__ - Saving the current error examples (len=19) to the memory.
+11/10/2021 15:24:30 - INFO - __main__ - Current memory size: 2673.
+11/10/2021 15:24:30 - INFO - __main__ - Save 19 examples to the memory.
+11/10/2021 15:24:30 - INFO - __main__ - .................. Done.
+11/10/2021 15:24:32 - INFO - __main__ - Overall: 0.7066179661254199 from scores=[0.5458776595744681, 0.9473684210526315, 0.796875, 0.76171875, 0.48125]
+11/10/2021 15:24:32 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:24:32 - INFO - __main__ - Evaluating to get errors .... Timecode: 94
+11/10/2021 15:24:35 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.6432291666666666}
+11/10/2021 15:24:35 - INFO - __main__ - Found 25 errors.
+11/10/2021 15:24:35 - INFO - __main__ - Start error-fixing (len(examples_to_train)=25) .... Timecode: 94
+11/10/2021 15:24:47 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:24:47 - INFO - __main__ - Saving the current error examples (len=25) to the memory.
+11/10/2021 15:24:47 - INFO - __main__ - Current memory size: 2692.
+11/10/2021 15:24:47 - INFO - __main__ - Save 25 examples to the memory.
+11/10/2021 15:24:47 - INFO - __main__ - .................. Done.
+11/10/2021 15:24:49 - INFO - __main__ - Overall: 0.7092779605263158 from scores=[0.546546052631579, 0.96, 0.796875, 0.76171875, 0.48125]
+11/10/2021 15:24:49 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:24:49 - INFO - __main__ - Evaluating to get errors .... Timecode: 95
+11/10/2021 15:24:53 - INFO - __main__ - Before Error Fixing: {'EM': 0.46875, 'QA-F1': 0.6184057295603315}
+11/10/2021 15:24:53 - INFO - __main__ - Found 34 errors.
+11/10/2021 15:24:53 - INFO - __main__ - Start error-fixing (len(examples_to_train)=34) .... Timecode: 95
+11/10/2021 15:25:09 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:25:09 - INFO - __main__ - Saving the current error examples (len=34) to the memory.
+11/10/2021 15:25:09 - INFO - __main__ - Current memory size: 2717.
+11/10/2021 15:25:09 - INFO - __main__ - Save 34 examples to the memory.
+11/10/2021 15:25:09 - INFO - __main__ - .................. Done.
+11/10/2021 15:25:11 - INFO - __main__ - Overall: 0.7112335324754901 from scores=[0.5457356770833333, 0.9705882352941176, 0.796875, 0.76171875, 0.48125]
+11/10/2021 15:25:11 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:25:11 - INFO - __main__ - Evaluating to get errors .... Timecode: 96
+11/10/2021 15:25:16 - INFO - __main__ - Before Error Fixing: {'EM': 0.53125, 'QA-F1': 0.6196304563492063}
+11/10/2021 15:25:16 - INFO - __main__ - Found 30 errors.
+11/10/2021 15:25:16 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:25:16 - INFO - __main__ - Current memroy_module size: 2751.
+11/10/2021 15:25:16 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:25:16 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:25:16 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:25:16 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:25:16 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:25:16 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:25:16 - INFO - __main__ - Start error-fixing (len(examples_to_train)=62) .... Timecode: 96
+11/10/2021 15:25:43 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:25:43 - INFO - __main__ - Saving the current error examples (len=30) to the memory.
+11/10/2021 15:25:43 - INFO - __main__ - Current memory size: 2751.
+11/10/2021 15:25:43 - INFO - __main__ - Save 30 examples to the memory.
+11/10/2021 15:25:43 - INFO - __main__ - .................. Done.
+11/10/2021 15:25:45 - INFO - __main__ - Overall: 0.7170860180412372 from scores=[0.5455863402061856, 1.0, 0.796875, 0.76171875, 0.48125]
+11/10/2021 15:25:45 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:25:45 - INFO - __main__ - Evaluating to get errors .... Timecode: 97
+11/10/2021 15:25:50 - INFO - __main__ - Before Error Fixing: {'EM': 0.46875, 'QA-F1': 0.5546639101943378}
+11/10/2021 15:25:50 - INFO - __main__ - Found 34 errors.
+11/10/2021 15:25:50 - INFO - __main__ - Start error-fixing (len(examples_to_train)=34) .... Timecode: 97
+11/10/2021 15:26:04 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:26:04 - INFO - __main__ - Saving the current error examples (len=34) to the memory.
+11/10/2021 15:26:04 - INFO - __main__ - Current memory size: 2781.
+11/10/2021 15:26:04 - INFO - __main__ - Save 34 examples to the memory.
+11/10/2021 15:26:04 - INFO - __main__ - .................. Done.
+11/10/2021 15:26:07 - INFO - __main__ - Overall: 0.7051645033013205 from scores=[0.5448022959183674, 0.9411764705882353, 0.796875, 0.76171875, 0.48125]
+11/10/2021 15:26:07 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:26:07 - INFO - __main__ - Evaluating to get errors .... Timecode: 98
+11/10/2021 15:26:10 - INFO - __main__ - Before Error Fixing: {'EM': 0.65625, 'QA-F1': 0.7235644257703081}
+11/10/2021 15:26:10 - INFO - __main__ - Found 22 errors.
+11/10/2021 15:26:10 - INFO - __main__ - Start error-fixing (len(examples_to_train)=22) .... Timecode: 98
+11/10/2021 15:26:20 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:26:20 - INFO - __main__ - Saving the current error examples (len=22) to the memory.
+11/10/2021 15:26:20 - INFO - __main__ - Current memory size: 2815.
+11/10/2021 15:26:20 - INFO - __main__ - Save 22 examples to the memory.
+11/10/2021 15:26:20 - INFO - __main__ - .................. Done.
+11/10/2021 15:26:22 - INFO - __main__ - Overall: 0.7171543560606061 from scores=[0.5459280303030303, 1.0, 0.796875, 0.76171875, 0.48125]
+11/10/2021 15:26:22 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:26:22 - INFO - __main__ - Start eval_knowledge_retention for UKR @ Timecode=99
+11/10/2021 15:26:48 - INFO - __main__ - Upstream Knowledge Retation (UKR@99): 0.7480
+11/10/2021 15:26:49 - INFO - __main__ - Start eval_knowledge_retention for OKR @ Timecode=99
+11/10/2021 15:27:23 - INFO - __main__ - Online Knowledge Retation (OKR@99): 0.8457
+11/10/2021 15:27:23 - INFO - __main__ - Start eval_knowledge_generalization for KG @ Timecode=99
+11/10/2021 15:28:31 - INFO - __main__ - Future Knowledge Generalization (KG@99): 0.5258
+11/10/2021 15:28:31 - INFO - __main__ - Evaluating to get errors .... Timecode: 99
+11/10/2021 15:28:34 - INFO - __main__ - Before Error Fixing: {'EM': 0.609375, 'QA-F1': 0.7010416666666667}
+11/10/2021 15:28:34 - INFO - __main__ - Found 25 errors.
+11/10/2021 15:28:34 - INFO - __main__ - Triggering Sampling from Memory and starting to replay.
+11/10/2021 15:28:34 - INFO - __main__ - Current memroy_module size: 2836.
+11/10/2021 15:28:34 - INFO - __main__ - Current upstream_memroy_module size: 86420.
+11/10/2021 15:28:34 - INFO - __main__ - Memory from upstream_memroy_module = 16; 
+11/10/2021 15:28:34 - INFO - __main__ - Memory from memroy_module = 16; 
+11/10/2021 15:28:34 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:28:34 - INFO - __main__ - Randomly retrieve from the memory. `query_examples` not used
+11/10/2021 15:28:34 - INFO - __main__ - Mixed the retrieved examples (len=32) to the current batch for training.
+11/10/2021 15:28:34 - INFO - __main__ - Start error-fixing (len(examples_to_train)=57) .... Timecode: 99
+11/10/2021 15:29:00 - INFO - __main__ - Start error-fixing .... Done!
+11/10/2021 15:29:00 - INFO - __main__ - Saving the current error examples (len=25) to the memory.
+11/10/2021 15:29:00 - INFO - __main__ - Current memory size: 2836.
+11/10/2021 15:29:00 - INFO - __main__ - Save 25 examples to the memory.
+11/10/2021 15:29:00 - INFO - __main__ - .................. Done.
+11/10/2021 15:29:01 - INFO - __main__ - Overall: 0.71721875 from scores=[0.5465625000000001, 0.92, 0.845703125, 0.748046875, 0.52578125]
+11/10/2021 15:29:01 - INFO - __main__ - --------------------------------------------------
+11/10/2021 15:29:01 - INFO - __main__ - Start the final evaluation.
+11/10/2021 15:29:01 - INFO - __main__ - Nothing here.
+11/10/2021 15:29:03 - INFO - __main__ - Model saved to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/model_ckpt_100.pt.
+11/10/2021 15:29:03 - INFO - __main__ - Saved the cache to experiments/ckpt_dirs/qa/er/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8/memory_dict.pkl
+11/10/2021 15:29:03 - INFO - __main__ - Updated result feule: experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json at Timecode: 100.
+11/10/2021 15:29:03 - INFO - __main__ - Finished. Results saved to experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=32_rf=3_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_result.json
