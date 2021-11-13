@@ -63,7 +63,7 @@ class OfflineCL(NoneCL):
                 data_args, formatted_data_batch, mode="eval")
             bug_eval_loaders.append(eval_data_dataloader)
         
-        for bug_eval_loader in tqdm(bug_eval_loaders, desc="Online Evaluation"):
+        for bug_eval_loader, data_eval_loader in tqdm(zip(bug_eval_loaders, self.data_eval_loaders), desc="Online Evaluation"):
 
             result_dict = {"timecode": self.timecode}   # start with 0
             
@@ -74,7 +74,7 @@ class OfflineCL(NoneCL):
             # self._replay_based_eval(result_dict)
                 
             
-            # _, bug_eval_loader = self._get_dynamic_errors(data_eval_loader, result_dict)
+            _ = self._get_dynamic_errors(data_eval_loader, result_dict, return_raw_bug_examples=True) # we don't need the dataloader and empty cause false
             # bug_eval_loader = bug_eval_loaders[self.timecode]
 
             self.evaluate_error_fixing(result_dict, bug_eval_loader)

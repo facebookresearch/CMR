@@ -14,7 +14,7 @@ class GeneralDataset(object):
 
         self.data = []
         self.task_name = task_name
-        if given_data:
+        if given_data is not None:
             self.data = given_data
         else:
             with open(data_path) as fin:

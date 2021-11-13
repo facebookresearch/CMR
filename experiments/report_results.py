@@ -7,7 +7,21 @@ import glob, os
 
 from pandas.core import base
 
+def ema(values, period):
+    values = pd.DataFrame(np.array(values))
+    emas = pd.Series.ewm(values, span=period).mean()
+    return emas[0][len(values)-1]
+
+def sma(values, period):
+    return float(np.mean(values))
+    # values = pd.DataFrame(np.array(values))
+    # emas = pd.Series.ewm(values, span=period).mean()
+    # return emas[0][len(values)-1]
+
+
 def show_result(path): 
+    if path == "qa_nonecl_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_offline=yes_result.json":
+        print()
     o = json.load(open(path))
     r = {}
     debugger_args = eval(o["debugger_args"])
@@ -28,13 +42,22 @@ def show_result(path):
         replay_size = debugger_args.replay_size
         replay_freq = debugger_args.replay_frequency
         r["cl_method"] = f'{r["cl_method"]}-{replay_size}-{replay_freq}'
+        if hasattr(debugger_args, "diff_loss_weight"):
+            r["cl_method"] = f'{r["cl_method"]}-l2w={debugger_args.diff_loss_weight}'
     elif r["cl_method"] == "mir":
         replay_size = debugger_args.replay_size
         replay_freq = debugger_args.replay_frequency
         replay_candidate_size = debugger_args.replay_candidate_size
         mir_abalation_args = debugger_args.mir_abalation_args
         r["cl_method"] = f'{r["cl_method"]}-{replay_size}/{replay_candidate_size}-{replay_freq}-{mir_abalation_args}'
+        if hasattr(debugger_args, "diff_loss_weight"):
+            r["cl_method"] = f'{r["cl_method"]}-l2w={debugger_args.diff_loss_weight}'
         # replay_size = debugger_args.replay_size
+    elif r["cl_method"] == "index_cl_bart_io_index":
+        replay_size = debugger_args.replay_size
+        replay_freq = debugger_args.replay_frequency
+        r["cl_method"] = f'{r["cl_method"]}-{replay_size}-{replay_freq}'
+        
     r["steps"] = o["model_update_steps"]
     
     r["lr"] = 0 if r["cl_method"]=="none_cl" else debugger_args.learning_rate
@@ -52,18 +75,53 @@ def show_result(path):
     UKRs = [item["UKR"] for item in online if "UKR" in item]
     OKRs = [item["OKR"] for item in online if "OKR" in item]
     KGs = [item["KG"] for item in online if "KG" in item]
+    CSRs = [item["CSR"] for item in online if "CSR" in item]
     if len(EFRs) != ns_config["T"]:
         return None
     last_step = online[-1] 
     assert last_step["timecode"] == ns_config["T"] -1 
     
-    # print(len(UKRs))
+    
+    r["AEFR(T)"] = float(np.mean(EFRs))
+
+    r["UKR-sma"] = sma(UKRs, 3)
+    r["OKR-sma"] = sma(OKRs, 3)
+    # r["EFR-sma"] = sma(EFRs, 10)
+    r["CSR-sma"] = sma(CSRs, 10)
+    r["KG-sma"] = sma(KGs, 3)
+    r["AVG-sma"] = float(np.mean([r["UKR-sma"], r["OKR-sma"], r["CSR-sma"], r["KG-sma"]]))
+
+
     r["UKR(T)"] = UKRs[-1]
     r["OKR(T)"] = OKRs[-1]
-    r["AEFR(T)"] = float(np.mean(EFRs))
-    r["CSR(T)"] = last_step["CSR"]
+    
+    r["CSR(T)"] = CSRs[-1]
     r["KG(T)"] = KGs[-1]
-    r["AVG"] = float(np.mean([r["UKR(T)"], r["OKR(T)"], r["AEFR(T)"], r["CSR(T)"], r["KG(T)"]]))
+    r["AVG"] = float(np.mean([r["UKR(T)"], r["OKR(T)"],  r["CSR(T)"], r["KG(T)"]]))
+
+
+    # r["UKR-ema"] = ema(UKRs, 3)
+    # r["OKR-ema"] = ema(OKRs, 3)
+    # r["EFR-ema"] = ema(EFRs, 10)
+    # r["CSR-ema"] = ema(CSRs, 10)
+    # r["KG-ema"] = ema(KGs, 3)
+    # r["AVG-ema"] = float(np.mean([r["UKR-ema"], r["OKR-ema"], r["EFR-ema"], r["CSR-ema"], r["KG-ema"]]))
+
+    def take_half(s):
+        if len(s) > 1:
+            return s[:int(len(s)/2)]
+        else:
+            return s
+
+    # try:
+    # r["UKR(T/2)"] = take_half(UKRs)[-1]
+    # r["OKR(T/2)"] = take_half(OKRs)[-1]
+    # r["AEFR(T/2)"] = float(np.mean(take_half(EFRs)))
+    # r["CSR(T/2)"] = take_half(CSRs)[-1]
+    # r["KG(T/2)"] = take_half(KGs)[-1]
+    # r["AVG(T/2)"] = float(np.mean([r["UKR(T/2)"], r["OKR(T/2)"], r["AEFR(T/2)"], r["CSR(T/2)"], r["KG(T/2)"]]))
+    # except Exception as e:
+    #     print(e)
     return r
     
 
@@ -91,7 +149,7 @@ pd.set_option('display.float_format', lambda x: '%.3f' % x)
 for ns_config in results.ns_config.unique():
     # print(ns_config)
     r = results[results["ns_config"]==ns_config]
-    r = r[((r["lr"]==3e-5) & (r["num_epochs"]==10)) | (r["cl_method"]=="none_cl")]
+    r = r[((r["lr"]==3e-5) & (r["num_epochs"]==10)) | (r["cl_method"] == "none_cl") | (r["cl_method"] == "none_cl_offline_eval")]
     # r = r[(r["AEFR(T)"]>0.85) | (r["cl_method"]=="none_cl")]
     
     def _sort(column):
@@ -101,6 +159,7 @@ for ns_config in results.ns_config.unique():
         correspondence = {team: order for order, team in enumerate(cl_methods)}
         return column.map(correspondence)
     r = r.sort_values(by=["steps", "lr", "num_epochs", "cl_method"])
+    r = r.sort_values(by=["cl_method"], key = lambda x: x.str.len())
     r = r.sort_values(by="method_class", key=_sort, kind="mergesort")
     r = r.drop(columns=["ns_config", "method_class"])
     # r = r.drop(columns=["path"])

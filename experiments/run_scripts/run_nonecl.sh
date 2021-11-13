@@ -18,8 +18,8 @@ if [ "$task_name" = "qa" ]; then
     submission_stream_data="experiments/eval_data/qa/submission_stream.${ns_config}.json"
     upstream_eval_data="experiments/eval_data/qa/upstream_eval.jsonl"
     heldout_submission_data="experiments/eval_data/qa/heldout_eval.jsonl"
-    if [ "$offline" = "yes" ]; then
-        base_model_path="out/qa_${ns_config}_retrained_model/best-model.pt"
+    if [ "$offline" = "yes" ]; then 
+        base_model_path="out/qa_${ns_config}_offline_retrained_model/best-model.pt"
         cl_method="offline_cl"
     else
         base_model_path="out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt"
