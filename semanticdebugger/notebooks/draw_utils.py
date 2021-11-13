@@ -42,11 +42,11 @@ def draw_stacked_bars(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key
     ).configure_bar(binSpacing=0, width=bin_width).configure_axis(
         labelFontSize=25,
         titleFontSize=25,  
-    ).configure_legend(titleFontSize=0, labelFontSize=25, orient='top-left', strokeColor='gray',
+    ).configure_legend(titleFontSize=0, labelFontSize=30, orient='top-left', strokeColor='gray',
         fillColor='#EEEEEE',
         padding=5,
         cornerRadius=3,).configure_title(
-        fontSize=25,
+        fontSize=30,
         font='Courier',
         anchor='middle',
         orient="top", align="center",
