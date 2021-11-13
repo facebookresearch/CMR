@@ -56,7 +56,7 @@ all_data['OEC'] = all_data.drop(columns=["timecode", "EFR", "SR", "Overall"]).me
 color_dom = ["CFT", "OnL2Reg", "OnEWC",  "ER", "MaxLoss", "MIR"]
 color_range = ['gray', 'brown',  '#7fc97f', '#D35400', 'purple', '#386cb0']
 
-fig = draw_curve(df=all_data[all_data["UKR"].notnull()], fig_title=f"UKR", y_scale=[0.66, 0.82],  x_key="timecode:O", y_key="UKR:Q", y_title="UKR", height=700, width=500, orient="top-right", color_dom=color_dom, color_range=color_range)
+fig = draw_curve(df=all_data[all_data["UKR"].notnull()], fig_title=f"UKR", y_scale=[0.66, 0.82],  x_key="timecode:O", y_key="UKR:Q", y_title="UKR", height=700, width=500, orient="none", color_dom=color_dom, color_range=color_range)
 fig.save('figures/curves/UKRs.png', scale_factor=3.0)
 
 fig = draw_curve(df=all_data[all_data["OKR"].notnull()], fig_title=f"OKR", y_scale=[0.77, 0.96],  x_key="timecode:O", y_key="OKR:Q", y_title="OKR", height=700, width=500, orient="none", color_dom=color_dom, color_range=color_range)
