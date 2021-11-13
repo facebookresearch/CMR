@@ -22,16 +22,24 @@ def draw_curve(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key="timec
     return fig
 
 
-def draw_stacked_bars(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key="timecode", y_key="em:Q", height=800, width=1150, x_scale=[0, 100]):
+def draw_stacked_bars(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key="timecode", y_key="em:Q", height=800, width=1150, x_scale=[0, 100], bin_width=10, color_dom=None, color_range=None):
     
-    color=alt.Color('prefix:N')  
+    if color_dom and color_range:
+        color=alt.Color('prefix:N', scale=alt.Scale(domain=color_dom, range=color_range))  
+    else:
+        color=alt.Color('prefix:N')  
+
+    dom = ['Europe', 'Japan', 'USA']
+    rng = ['red', 'green', 'black']
+
     fig = alt.Chart(df).mark_bar().encode(x=alt.X(x_key, title="Time Step", axis=alt.Axis(tickMinStep=10, tickOffset=0, tickWidth=5,), scale=alt.Scale(domain=x_scale)), 
                                             y=alt.Y(y_key, title=y_title, scale=alt.Scale(domain=y_scale)), 
                                             color=color,).properties(title=fig_title)
 
+
     fig = alt.layer(fig).resolve_scale()
     fig = fig.properties(width=width, height=height).configure_title(fontSize=50,
-    ).configure_bar(binSpacing=0, width=15).configure_axis(
+    ).configure_bar(binSpacing=0, width=bin_width).configure_axis(
         labelFontSize=25,
         titleFontSize=25,  
     ).configure_legend(titleFontSize=0, labelFontSize=25, orient='top-left', strokeColor='gray',

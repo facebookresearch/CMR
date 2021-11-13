@@ -3,6 +3,8 @@ from os import path
 import random 
 import json
 
+from altair.vegalite.v4.schema.core import ColorName
+
 from semanticdebugger.benchmark_gen.bb_utils import bb_sample, bb_rescale, build_submission_stream
 from semanticdebugger.models.utils import set_seeds
 from semanticdebugger.notebooks.draw_utils import draw_curve, draw_stacked_bars
@@ -146,10 +148,13 @@ def visualize_stream(submission_stream, data_names, cfg, args):
     fig2.save(f'figures/{args.task_name}.init_error.{filename_str}.png', scale_factor=2.0)    
     
     # 50-version
-    fig1 =  draw_stacked_bars(df=submission_stat_pd[submission_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples", width=900)
+    color_dom = ["*squad", "hotpot", "news", "nq", "search", "trivia"]
+    # color_range = ["gray", "blue", "orange", "green", "black", "brown"]
+    color_range = ['#bab0ac', '#f0027f',  '#7fc97f', '#D35400', '#9c9ede', '#386cb0']
+    fig1 =  draw_stacked_bars(df=submission_stat_pd[submission_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples", width=1000, bin_width=13, color_dom=color_dom, color_range=color_range)
     fig1.save(f'figures/{args.task_name}.submission.{filename_str}.50.png', scale_factor=2.0)
     init_error_stat_pd = pd.DataFrame(init_error_stat)
-    fig2 =  draw_stacked_bars(df=init_error_stat_pd[init_error_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors", width=900)
+    fig2 =  draw_stacked_bars(df=init_error_stat_pd[init_error_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors", width=1000, bin_width=13, color_dom=color_dom, color_range=color_range)
     fig2.save(f'figures/{args.task_name}.init_error.{filename_str}.50.png', scale_factor=2.0)    
     return 
 
