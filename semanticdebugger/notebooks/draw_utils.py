@@ -22,9 +22,9 @@ def draw_curve(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key="timec
      # scale=alt.Scale(range=['cross', 'circle', 'square', 'triangle-right', 'diamond'])
     y=alt.Y(y_key, stack=None, title="", scale=alt.Scale(domain=y_scale), axis=alt.Axis(tickCount=10, grid=False))
 
-    points = alt.Chart(df).mark_point(opacity=0.8, filled=True, size=350).encode(x=x, y=y, shape=shape_wo_legend ,color=color_wo_lengend).properties(title=fig_title) 
+    points = alt.Chart(df).mark_point(opacity=0.8, filled=True, size=350).encode(x=x, y=y, shape=shape ,color=color).properties(title=fig_title) 
 
-    lines = alt.Chart(df).mark_line(point=False).encode(x=x, y=y, color=color_wo_lengend).properties(title=fig_title)
+    lines = alt.Chart(df).mark_line(point=False).encode(x=x, y=y, color=color).properties(title=fig_title)
     fig = alt.layer(points, lines).resolve_scale(color="independent", shape="independent")
     # fig = points
 
