@@ -20,8 +20,8 @@ def sma(values, period):
 
 
 def show_result(path): 
-    if path == "qa_nonecl_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_offline=yes_result.json":
-        print()
+    # if path == "qa_nonecl_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_offline=yes_result.json":
+    #     print()
     o = json.load(open(path))
     r = {}
     debugger_args = eval(o["debugger_args"])
@@ -84,12 +84,12 @@ def show_result(path):
     
     r["AEFR(T)"] = float(np.mean(EFRs))
 
-    r["UKR-sma"] = sma(UKRs, 3)
-    r["OKR-sma"] = sma(OKRs, 3)
-    # r["EFR-sma"] = sma(EFRs, 10)
-    r["CSR-sma"] = sma(CSRs, 10)
-    r["KG-sma"] = sma(KGs, 3)
-    r["AVG-sma"] = float(np.mean([r["UKR-sma"], r["OKR-sma"], r["CSR-sma"], r["KG-sma"]]))
+    r["AUKR"] = sma(UKRs, 3)
+    r["AOKR"] = sma(OKRs, 3)
+    # r["EFR"] = sma(EFRs, 10)
+    r["ACSR"] = sma(CSRs, 10)
+    r["AKG"] = sma(KGs, 3)
+    r["AOEC"] = float(np.mean([r["AUKR"], r["AOKR"], r["ACSR"], r["AKG"]]))
 
 
     r["UKR(T)"] = UKRs[-1]
@@ -97,32 +97,20 @@ def show_result(path):
     
     r["CSR(T)"] = CSRs[-1]
     r["KG(T)"] = KGs[-1]
-    r["AVG"] = float(np.mean([r["UKR(T)"], r["OKR(T)"],  r["CSR(T)"], r["KG(T)"]]))
+    r["OEC(T)"] = float(np.mean([r["UKR(T)"], r["OKR(T)"],  r["CSR(T)"], r["KG(T)"]]))
 
-
-    # r["UKR-ema"] = ema(UKRs, 3)
-    # r["OKR-ema"] = ema(OKRs, 3)
-    # r["EFR-ema"] = ema(EFRs, 10)
-    # r["CSR-ema"] = ema(CSRs, 10)
-    # r["KG-ema"] = ema(KGs, 3)
-    # r["AVG-ema"] = float(np.mean([r["UKR-ema"], r["OKR-ema"], r["EFR-ema"], r["CSR-ema"], r["KG-ema"]]))
-
-    def take_half(s):
-        if len(s) > 1:
-            return s[:int(len(s)/2)]
+    def filter(OECTs):
+        if not OECTs:
+            return True
+        if OECTs and f'{r["OEC(T)"]*100:.2f}' in OECTs:
+            return True
         else:
-            return s
-
-    # try:
-    # r["UKR(T/2)"] = take_half(UKRs)[-1]
-    # r["OKR(T/2)"] = take_half(OKRs)[-1]
-    # r["AEFR(T/2)"] = float(np.mean(take_half(EFRs)))
-    # r["CSR(T/2)"] = take_half(CSRs)[-1]
-    # r["KG(T/2)"] = take_half(KGs)[-1]
-    # r["AVG(T/2)"] = float(np.mean([r["UKR(T/2)"], r["OKR(T/2)"], r["AEFR(T/2)"], r["CSR(T/2)"], r["KG(T/2)"]]))
-    # except Exception as e:
-    #     print(e)
-    return r
+            return False        
+    if filter(["45.77", "61.58", "65.09", "65.31", "66.62", "66.55", "67.40"]):
+        print(f'{r["OEC(T)"]*100:.2f}', "#", path)
+        return r
+    else:
+        return None
     
 
 

@@ -1,24 +1,47 @@
-import altair as alt 
+import altair as alt
+from altair.vegalite.v4.schema.core import Legend 
 
-def draw_curve(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key="timecode", y_key="em:Q", height=800):
-    x = alt.X(x_key, type="ordinal", title="Timecode") 
-    color=alt.Color('prefix:N')  
-    fig = alt.Chart(df).mark_line(opacity=0.7,  point=True).encode(x=x, y=alt.Y(y_key, stack=None, title=y_title, scale=alt.Scale(domain=y_scale)), color=color).properties(title=fig_title)
+def draw_curve(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key="timecode", y_key="em:Q", height=800, width=1150, x_scale=[0, 100], color_dom=None, color_range=None, orient="top-right"):
 
-    fig = alt.layer(fig).resolve_scale()
-    fig = fig.properties(width=1100, height=height).configure_axis(
-        labelFontSize=18,
-        titleFontSize=16, 
-    ).configure_legend(titleFontSize=0, labelFontSize=20, orient='top-left', strokeColor='gray',
-        fillColor='#EEEEEE',
-        padding=5,
-        cornerRadius=3,).configure_title(
-        fontSize=20,
-        font='Courier',
-        anchor='middle',
-        orient="top", align="center",
-        color='black'
+    df = df[(df["timecode"] <= x_scale[1]) & (df["timecode"] >= x_scale[0])]
+    x = alt.X(x_key, type="ordinal", title="Time Step") 
+    
+    if color_dom and color_range:
+        color=alt.Color('prefix:N', scale=alt.Scale(domain=color_dom, range=color_range), sort=color_dom)  
+        color_wo_lengend = alt.Color('prefix:N', scale=alt.Scale(domain=color_dom, range=color_range), sort=color_dom, legend=None)  
+        shape=alt.Shape('prefix:N', sort=color_dom)
+    else:
+        color=alt.Color('prefix:N', )  
+        color_wo_lengend = alt.Color('prefix:N', legend=None)  
+        shape=alt.Shape('prefix:N', )
+    
+    
+
+     # scale=alt.Scale(range=['cross', 'circle', 'square', 'triangle-right', 'diamond'])
+    y=alt.Y(y_key, stack=None, title=y_title, scale=alt.Scale(domain=y_scale), axis=alt.Axis(tickCount=10))
+
+    points = alt.Chart(df).mark_point(opacity=0.8, filled=True, size=350).encode(x=x, y=y, shape=shape ,color=color).properties(title=fig_title) 
+
+    lines = alt.Chart(df).mark_line(point=False).encode(x=x, y=y, color=color_wo_lengend).properties(title=fig_title)
+    fig = alt.layer(points, lines).resolve_scale(color="independent", shape="independent")
+    # fig = points
+
+    
+    fig = fig.properties(width=width, height=height).configure_axis(
+        labelFontSize=30,
+        titleFontSize=30, 
     )
+    if orient != "none":
+        fig = fig.configure_legend(titleFontSize=0, labelFontSize=30, symbolSize=300, orient=orient, strokeColor='gray',
+            fillColor='#EEEEEE',
+            padding=5, 
+            cornerRadius=3,).configure_title(
+            fontSize=30,
+            font='Courier',
+            anchor='middle',
+            orient="top", align="center",
+            color='black'
+        )
     return fig
 
 
