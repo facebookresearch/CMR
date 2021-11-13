@@ -151,12 +151,13 @@ def visualize_stream(submission_stream, data_names, cfg, args):
     # color_dom = ["*squad", "hotpot", "news", "nq", "search", "trivia"]
     # color_range = ["gray", "blue", "orange", "green", "black", "brown"]
     # color_range = ['#bab0ac', '#f0027f',  '#7fc97f', '#D35400', '#9c9ede', '#386cb0']
-    color_dom=None; color_range=None
-    fig1 =  draw_stacked_bars(df=submission_stat_pd[submission_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples", width=1000, bin_width=18, color_dom=color_dom, color_range=color_range)
-    fig1.save(f'figures/{args.task_name}.submission.{filename_str}.50.png', scale_factor=2.0)
-    init_error_stat_pd = pd.DataFrame(init_error_stat)
-    fig2 =  draw_stacked_bars(df=init_error_stat_pd[init_error_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors", width=1000, bin_width=18, color_dom=color_dom, color_range=color_range)
-    fig2.save(f'figures/{args.task_name}.init_error.{filename_str}.50.png', scale_factor=2.0)    
+
+    # color_dom=None; color_range=None
+    # fig1 =  draw_stacked_bars(df=submission_stat_pd[submission_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples", width=1000, bin_width=18, color_dom=color_dom, color_range=color_range)
+    # fig1.save(f'figures/{args.task_name}.submission.{filename_str}.50.png', scale_factor=2.0)
+    # init_error_stat_pd = pd.DataFrame(init_error_stat)
+    # fig2 =  draw_stacked_bars(df=init_error_stat_pd[init_error_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors", width=1000, bin_width=18, color_dom=color_dom, color_range=color_range)
+    # fig2.save(f'figures/{args.task_name}.init_error.{filename_str}.50.png', scale_factor=2.0)    
     return 
 
 
@@ -275,17 +276,19 @@ def main():
     configs = {}
     # configs["QA"] = dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=1)
     configs["QA"] = []
-    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0, gamma=0.5))
-    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0.5, gamma=0.5))
-    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=0.7, gamma=0.5))
-    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=0.5))
-    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.98, beta=1, gamma=1))
-    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0, beta=0.7, gamma=0.5))
-    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.95, beta=0.7, gamma=0.5))
-    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.7, gamma=0.5))
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.9, gamma=0.8))
     configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.5, gamma=0.8))
-    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.1, gamma=0.8))
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.1, gamma=0.8)) 
+ 
+    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.5, gamma=0.8)) 
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.5, gamma=0.5)) 
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.5, gamma=0.2)) 
+
+    # configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.5, gamma=0.8))
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.1, beta=0.5, gamma=0.8))
+    configs["QA"].append(dict(upstream="squad", T=args.num_episodes, b=args.episode_size, alpha=0.95, beta=0.5, gamma=0.8))
+
+    
 
     configs["NLI"] = []
     configs["NLI"].append(dict(upstream="snli", T=args.num_episodes, b=args.episode_size, alpha=0.9, beta=0.9, gamma=0.8))
