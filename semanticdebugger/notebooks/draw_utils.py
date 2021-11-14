@@ -1,5 +1,5 @@
 import altair as alt
-from altair.vegalite.v4.schema.core import Legend 
+from altair.vegalite.v4.schema.core import Axis, Legend 
 
 def draw_curve(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key="timecode", y_key="em:Q", height=800, width=1150, x_scale=[0, 100], color_dom=None, color_range=None, orient="top-right"):
 
@@ -78,5 +78,40 @@ def draw_stacked_bars(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key
         orient="top", align="center",
         color='black'
     )
+    return fig
+
+
+
+
+def draw_grouped_bars(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key="timecode", group_key="", y_key="em:Q", height=800, width=1150, x_scale=[0, 100], bin_width=10, color_dom=None, color_range=None, orient = "none"):
+    
+    if color_dom and color_range:
+        color=alt.Color(x_key, scale=alt.Scale(domain=color_dom, range=color_range), sort=color_dom, legend=None)  
+    else:
+        color=alt.Color(x_key)  
+ 
+    fig = alt.Chart(df).mark_bar(clip=True).encode(x=alt.X(x_key, title="CL Method", sort=color_dom), 
+                                            y=alt.Y(y_key, title=y_title, scale=alt.Scale(domain=y_scale), axis=alt.Axis(grid=False)), 
+                                            color=color).properties(title=fig_title)
+
+
+    # fig = alt.layer(fig).resolve_scale()
+    fig = fig.properties(width=width, height=height).configure_title(fontSize=0,
+    ).configure_bar(binSpacing=0, width=bin_width).configure_axis(
+        labelFontSize=10,
+        titleFontSize=10,  
+    )
+    if orient != "none":
+        fig = fig.configure_legend(titleFontSize=0, labelFontSize=30, orient='top-left', strokeColor='gray',
+            fillColor='#EEEEEE',
+            padding=5,
+            cornerRadius=3,)
+    fig = fig.configure_title(
+            fontSize=10,
+            font='Courier',
+            anchor='middle',
+            orient="top", align="center",
+            color='black'
+        )
     return fig
 
