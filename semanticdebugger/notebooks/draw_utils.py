@@ -90,11 +90,20 @@ def draw_grouped_bars(df, y_scale=[0, 1], fig_title="", y_title="Y Title", x_key
     else:
         color=alt.Color(x_key)  
  
-    fig = alt.Chart(df).mark_bar(clip=True).encode(x=alt.X(x_key, title="CL Method", sort=color_dom), 
+    bars = alt.Chart(df).mark_bar(clip=True).encode(x=alt.X(x_key, title="CL Method", sort=color_dom), 
                                             y=alt.Y(y_key, title=y_title, scale=alt.Scale(domain=y_scale), axis=alt.Axis(grid=False)), 
                                             color=color).properties(title=fig_title)
 
 
+    text = bars.mark_text(
+            align='left',
+            baseline='middle',
+            dx=3  # Nudges text to right so it doesn't appear on top of the bar
+        ).encode(
+            text=y_key
+        )
+        
+    fig = bars
     # fig = alt.layer(fig).resolve_scale()
     fig = fig.properties(width=width, height=height).configure_title(fontSize=0,
     ).configure_bar(binSpacing=0, width=bin_width).configure_axis(
