@@ -67,7 +67,7 @@ def show_result(path):
     ns_config_str = data_args.submission_stream_data[start:end]
     r["ns_config"] = ns_config_str
     ns_config = eval(f"dict({ns_config_str})")
-    # r.update(ns_config)
+    r.update(ns_config)
     
 
     online = o["online_eval_results"]
@@ -99,18 +99,21 @@ def show_result(path):
     r["KG(T)"] = KGs[-1]
     r["OEC(T)"] = float(np.mean([r["UKR(T)"], r["OKR(T)"],  r["CSR(T)"], r["KG(T)"]]))
 
-    def filter(OECTs):
-        if not OECTs:
-            return True
-        if OECTs and f'{r["OEC(T)"]*100:.2f}' in OECTs:
-            return True
-        else:
-            return False        
-    if filter(["45.77", "61.58", "65.09", "65.31", "66.62", "66.55", "67.40"]):
-        print(f'{r["OEC(T)"]*100:.2f}', "#", path)
-        return r
-    else:
-        return None
+
+    return r
+
+    # def filter(OECTs):
+    #     if not OECTs:
+    #         return True
+    #     if OECTs and f'{r["OEC(T)"]*100:.2f}' in OECTs:
+    #         return True
+    #     else:
+    #         return False        
+    # if filter(["45.77", "61.58", "65.09", "65.31", "66.62", "66.55", "67.40"]):
+    #     print(f'{r["OEC(T)"]*100:.2f}', "#", path)
+    #     return r
+    # else:
+    #     return None
     
 
 
