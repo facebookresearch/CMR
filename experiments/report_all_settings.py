@@ -32,8 +32,8 @@ for a,b in zip(cl_methods, cl_prefix):
     df = df.replace(a, b)
 
 df.rename(columns={'OEC(T)':'OECT'}, inplace=True)
-df = df[df.cl_method != "Frozen"]
-settings = [(0.9, 0.5, 0.8), (0.9, 0.1, 0.8), (0.9, 0.9, 0.8), (0.1, 0.5, 0.8), (0.9, 0.5, 0.2), (0.9, 0.5, 0.5)]
+# df = df[df.cl_method != "Frozen"]
+settings = [(0.9, 0.5, 0.8), (0.9, 0.1, 0.8), (0.9, 0.9, 0.8), (0.9, 0.5, 0.2), (0.9, 0.5, 0.5), (0.1, 0.5, 0.8)]
 # (0.9, 0.1, 0.8), (0.9, 0.9, 0.8)
 
 table = []
@@ -42,7 +42,7 @@ for alpha, beta, gamma in settings:
     data = df[(df["alpha"]==alpha) & (df["beta"]==beta) & (df["gamma"]==gamma)] 
     prefix = f"$alpha$={alpha},$beta$={beta},$gamma$={gamma}"
     # print()
-    OECTs = {c: data[data.cl_method==c].iloc[0]["OECT"] for c in cl_prefix[1:]}
+    OECTs = {c: data[data.cl_method==c].iloc[0]["OECT"] for c in cl_prefix[:]}
     OECTs["prefix"] = prefix
     table.append(OECTs)
     # print(data)

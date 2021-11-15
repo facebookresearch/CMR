@@ -141,10 +141,10 @@ def visualize_stream(submission_stream, data_names, cfg, args):
     submission_stat_pd = pd.DataFrame(submission_stat)
     filename_str = f"T={cfg['T']},b={cfg['b']},alpha={cfg['alpha']},beta={cfg['beta']},gamma={cfg['gamma']}"
     title_str = f"alpha={cfg['alpha']}, beta={cfg['beta']}, gamma={cfg['gamma']}"
-    fig1 =  draw_stacked_bars(df=submission_stat_pd, fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples")
+    fig1 =  draw_stacked_bars(df=submission_stat_pd, fig_title=f"Submission Stream ({title_str})", y_scale=[0., args.episode_size+1], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples")
     fig1.save(f'figures/{args.task_name}.submission.{filename_str}.png', scale_factor=2.0)
     init_error_stat_pd = pd.DataFrame(init_error_stat)
-    fig2 =  draw_stacked_bars(df=init_error_stat_pd, fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors")
+    fig2 =  draw_stacked_bars(df=init_error_stat_pd, fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., args.episode_size+1], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors")
     fig2.save(f'figures/{args.task_name}.init_error.{filename_str}.png', scale_factor=2.0)    
     
     # 50-version
@@ -269,7 +269,7 @@ def main():
         args.submission_stream_file = args.submission_stream_file.replace("qa", "nli")
         args.sampled_upstream_dataset = args.sampled_upstream_dataset.replace("qa", "nli")
         args.heldout_submission_eval_file = args.heldout_submission_eval_file.replace("qa", "nli")
-        args.episode_size = 128
+        args.episode_size = 256
         # args.metric = "EM"
 
      # QA:
@@ -324,3 +324,8 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+"""
+python semanticdebugger/benchmark_gen/sample_submission_streams.py --task_name NLI
+"""

@@ -117,7 +117,7 @@ def show_result(path):
     
 
 
-os.chdir("experiments/results/qa/")
+os.chdir("experiments/results/nli/")
 os.makedirs("csvs/", exist_ok=True)
 result_files = []
 for file in glob.glob("*.json"):
