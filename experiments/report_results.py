@@ -69,6 +69,8 @@ def show_result(path):
     ns_config = eval(f"dict({ns_config_str})")
     r.update(ns_config)
     
+    if ns_config["b"] == 128:
+        print()
 
     online = o["online_eval_results"]
     EFRs = [item["EFR"] for item in online]
@@ -140,7 +142,9 @@ pd.set_option('display.float_format', lambda x: '%.3f' % x)
 for ns_config in results.ns_config.unique():
     # print(ns_config)
     r = results[results["ns_config"]==ns_config]
-    r = r[((r["lr"]==3e-5) & (r["num_epochs"]==10)) | (r["cl_method"] == "none_cl") | (r["cl_method"] == "none_cl_offline_eval")]
+    
+    # r = r[((r["lr"]==3.5e-5) & (r["num_epochs"]==10)) | (r["cl_method"] == "none_cl") | (r["cl_method"] == "none_cl_offline_eval")]
+
     # r = r[(r["AEFR(T)"]>0.85) | (r["cl_method"]=="none_cl")]
     
     def _sort(column):
