@@ -4,6 +4,7 @@ import random
 import json
 
 from altair.vegalite.v4.schema.core import ColorName
+from sklearn.utils import validation
 
 from semanticdebugger.benchmark_gen.bb_utils import bb_sample, bb_rescale, build_submission_stream
 from semanticdebugger.models.utils import set_seeds
@@ -162,7 +163,7 @@ def visualize_stream(submission_stream, data_names, cfg, args):
 
 
 
-def generate_submission_stream_v2(submission_data, args, cfg):
+def generate_submission_stream(submission_data, args, cfg):
     submission_stream = []
     upstream = cfg["upstream"]; T = cfg["T"]; b = cfg["b"]
     alpha = cfg["alpha"]; beta = cfg["beta"]; gamma = cfg["gamma"]
@@ -201,64 +202,25 @@ def generate_submission_stream_v2(submission_data, args, cfg):
         if random.random() < 1 - beta:
             current_major_ood = random.choice(other_oods)
         submission_stream.append(S_t)
-    data_names = [upstream] + OODs
-    visualize_stream(submission_stream, data_names, cfg, args)
+    
+    # visualize_stream(submission_stream, [upstream] + OODs, cfg, args) # TODO: only visualize if needed for generating figures.
     return submission_stream    
-
-def generate_submission_stream_v1(submission_data, args):
-    # QA:
-    configs = {}
-    configs["QA"] = OrderedDict({
-        "squad": dict(count=3000, a=1, b=1.3, upstream=True),
-        "trivia": dict(count=1000, a=300, b=400, upstream=False),
-        "hotpot": dict(count=1000, a=30, b=60, upstream=False),
-        "nq": dict(count=1500, a=1.3, b=2, upstream=False), 
-        "news": dict(count=1000, a=5, b=2, upstream=False),
-        "search": dict(count=1000, a=4, b=1, upstream=False), 
-    })
-    
-
-    all_pmfs = []
-    for data_name, params in configs["QA"].items():
-        if params["upstream"]:
-            data_name = f"*{data_name}"
-        all_pmfs += bb_sample(n=args.num_episodes, 
-                                a=params["a"], b=params["b"], 
-                                prefix=data_name, count=params["count"])
-    
-    all_pmfs_pd = pd.DataFrame(all_pmfs)
-    # print(all_pmfs_pd.head())
-    fig1 = draw_curve(df=all_pmfs_pd, fig_title="Temporal distribution of each data cluster.", y_scale=[0., 150], x_key="time_step", y_key="p", y_title="# of Examples")
-    fig1.save('figures/mrqa.submission_stream_each.png', scale_factor=2.0)
-
-
-    scaled_all_pmfs = bb_rescale(all_pmfs, batch_size=args.episode_size)
-    scaled_all_pmfs_pd = pd.DataFrame(scaled_all_pmfs)
-    fig2 =  draw_stacked_bars(df=scaled_all_pmfs_pd, fig_title="Submission Stream (bsz=64)", y_scale=[0., 65], x_key="time_step", y_key="sum(p)", y_title="# of Examples")
-    fig2.save('figures/mrqa.submission_stream_all_scaled.png', scale_factor=2.0)
-
-    submission_stream, init_error_pmfs = build_submission_stream(submission_data, scaled_all_pmfs, configs["QA"], args)
-
-    init_error_pmfs_pd = pd.DataFrame(init_error_pmfs)
-    fig3 =  draw_stacked_bars(df=init_error_pmfs_pd, fig_title="Error Stream of f_0 (bsz=64)", y_scale=[0., 65], x_key="time_step", y_key="sum(p)", y_title="# of Errors")
-    fig3.save('figures/mrqa.submission_stream.init_errors.png', scale_factor=2.0)
-
-    return submission_stream
-
 
 
 def main():
     parser = argparse.ArgumentParser() 
-    parser.add_argument("--upstream_eval_size", type=int, default=512, required=False)
-    parser.add_argument("--heldout_submission_size", type=int, default=256, required=False)
-    parser.add_argument("--episode_size", type=int, default=64, required=False)
-    parser.add_argument("--num_episodes", type=int, default=100, required=False)
-    parser.add_argument("--seed", type=int, default=42, required=False)
-    parser.add_argument("--metric", default="EM|QA-F1", required=False)
-    parser.add_argument("--submission_stream_file", default="experiments/eval_data/qa/submission_stream.#args.json", required=False)
-    parser.add_argument("--sampled_upstream_dataset", default="experiments/eval_data/qa/upstream_eval.jsonl", required=False)
-    parser.add_argument("--heldout_submission_eval_file", default="experiments/eval_data/qa/heldout_eval.jsonl", required=False)
-    parser.add_argument("--task_name", default="QA", required=False)
+    parser.add_argument("--upstream_eval_size", type=int, default=512)
+    parser.add_argument("--heldout_submission_size", type=int, default=256)
+    parser.add_argument("--episode_size", type=int, default=64)
+    parser.add_argument("--num_episodes", type=int, default=100)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--metric", default="EM|QA-F1")
+    parser.add_argument("--num_val", type=int, default=3)
+    parser.add_argument("--num_test", type=int, default=5)
+    parser.add_argument("--submission_stream_file", default="experiments/eval_data/qa/submission_stream.#args.json")
+    parser.add_argument("--sampled_upstream_dataset", default="experiments/eval_data/qa/upstream_eval.jsonl")
+    parser.add_argument("--heldout_submission_eval_file", default="experiments/eval_data/qa/heldout_eval.jsonl")
+    parser.add_argument("--task_name", default="QA")
     
     
     args = parser.parse_args()
@@ -268,9 +230,7 @@ def main():
     if args.task_name == "NLI":
         args.submission_stream_file = args.submission_stream_file.replace("qa", "nli")
         args.sampled_upstream_dataset = args.sampled_upstream_dataset.replace("qa", "nli")
-        args.heldout_submission_eval_file = args.heldout_submission_eval_file.replace("qa", "nli")
-        args.episode_size = 256
-        # args.metric = "EM"
+        args.heldout_submission_eval_file = args.heldout_submission_eval_file.replace("qa", "nli") 
 
      # QA:
     configs = {}
@@ -313,19 +273,33 @@ def main():
     
 
     cfgs = configs[args.task_name]
-    for cfg in cfgs:    
-        submission_stream = generate_submission_stream_v2(submission_data, args, cfg)
-        title_str = f"T={cfg['T']},b={cfg['b']},alpha={cfg['alpha']},beta={cfg['beta']},gamma={cfg['gamma']}"
+    for cfg in cfgs:
+        # Generate Validaiton/Test Streams
+        validation_streams = []
+        test_streams = []
+        for _ in range(args.num_val):
+            submission_stream = generate_submission_stream(submission_data, args, cfg)
+            validation_streams.append(submission_stream)
+        for _ in range(args.num_test):
+            submission_stream = generate_submission_stream(submission_data, args, cfg)
+            test_streams.append(submission_stream)
+        prefix_title_str = f"T={cfg['T']},b={cfg['b']},alpha={cfg['alpha']},beta={cfg['beta']},gamma={cfg['gamma']}"
+
+        title_str = prefix_title_str + "-val"
         with open(args.submission_stream_file.replace("#args", title_str), "w") as f:
-            json.dump(submission_stream, f)
-            
-    
-    
+            print(f"To save {f.name}")
+            json.dump(validation_streams, f)
+
+        title_str = prefix_title_str + "-test"
+        with open(args.submission_stream_file.replace("#args", title_str), "w") as f:
+            print(f"To save {f.name}")
+            json.dump(test_streams, f) 
 
 if __name__ == '__main__':
     main()
 
 
 """
-python semanticdebugger/benchmark_gen/sample_submission_streams.py --task_name NLI
+python semanticdebugger/benchmark_gen/sample_submission_streams.py --task_name QA
+python semanticdebugger/benchmark_gen/sample_submission_streams.py --task_name NLI --episode_size 256
 """
