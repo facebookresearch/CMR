@@ -77,10 +77,11 @@ class OnlineDebuggingMethod():
         #     logger.info(f"eval_results_overall_forget: {offline_bound_results['eval_results_overall_forget']['metric_results']}")
         with open(self.data_args.result_file, "w") as f:
             json.dump(output_info, f)
-        self.logger.info(f"Updated result feule: {self.data_args.result_file} at Timecode: {self.timecode}.")
+        self.logger.info(f"Updated result file: {self.data_args.result_file} at Timecode: {self.timecode}.")
 
     def _check_data_args(self, additional_args=[]):
         required_atts = ["submission_stream_data",
+                         "stream_id",
                          "upstream_eval_data",
                          "heldout_submission_data",
                          "do_lowercase",
@@ -103,7 +104,7 @@ class OnlineDebuggingMethod():
             data_stream = given_data_stream
         else:
             with open(data_args.submission_stream_data) as f:
-                data_stream = json.load(f)
+                data_stream = json.load(f)[data_args.stream_id]
         self.data_stream = data_stream
         self.num_data_batches = len(data_stream)
         self.data_batch_size = len(data_stream[0])

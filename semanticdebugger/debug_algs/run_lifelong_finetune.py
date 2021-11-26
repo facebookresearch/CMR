@@ -89,6 +89,7 @@ def setup_args(args):
     
     data_args = Namespace(
         submission_stream_data=args.submission_stream_data,
+        stream_id=args.stream_id,
         upstream_eval_data=args.upstream_eval_data,
         heldout_submission_data=args.heldout_submission_data,
         upstream_data_path=args.upstream_data_path,
@@ -112,7 +113,7 @@ def setup_args(args):
         model_type=args.base_model_type,
         base_model_path=args.base_model_path
     )
-    if args.cl_method_name in ["none_cl", "offline_cl", "simple_cl", "online_ewc", "offline_debug", "er", "mir", "mbpa", "mbpa++", "index_cl", "hyper_cl", "simple_ds_mine"]:
+    if args.cl_method_name in ["none_cl", "offline_cl", "simple_cl", "online_ewc", "er", "mir", "mbpa", "mbpa++", "index_cl", "hyper_cl", "simple_ds_mine"]:
         debugger_args = Namespace(
             weight_decay=args.weight_decay,
             learning_rate=args.learning_rate,
@@ -166,49 +167,21 @@ def setup_args(args):
 
 def run(args):
     debugging_alg, data_args, base_model_args, debugger_args, logger = setup_args(args)
-
-    if args.num_threads_eval <= 0:
-        # The Online Debugging Mode + Computing offline debugging bounds.
-        
-        # setattr(data_args, "data_stream_json_path", args.data_stream_json_path)
-        # setattr(data_args, "replay_stream_json_path", args.replay_stream_json_path)
-        debugging_alg.load_data(data_args)
+ 
+    # The Online Debugging Mode + Computing offline debugging bounds.
     
-        debugging_alg.load_base_model(base_model_args)
-        debugging_alg.debugger_setup(debugger_args)
+    # setattr(data_args, "data_stream_json_path", args.data_stream_json_path)
+    # setattr(data_args, "replay_stream_json_path", args.replay_stream_json_path)
+    debugging_alg.load_data(data_args)
 
-        if args.cl_method_name in ["offline_debug"]:
-            debugging_alg.offline_debug()
-        else: 
-            debugging_alg.online_debug() 
+    debugging_alg.load_base_model(base_model_args)
+    debugging_alg.debugger_setup(debugger_args)
 
-        
-        # logger.info(f'output_info["final_eval_results"]={output_info["final_eval_results"]}')
-        debugging_alg.save_result_file()
-        logger.info(f"Finished. Results saved to {args.result_file}")
-    else:
-        # Parallel offline evaluation mode 
-        timecodes = np.array_split(range(0, args.max_timecode+1), args.num_threads_eval)[args.current_thread_id]
-        thread_results = {}
-        debugging_alg.load_data(data_args)
-        # debugging_alg.debugger_setup(debugger_args)
-        for timecode in tqdm(timecodes, desc=f"Threads on {args.current_thread_id}"):
-            logger.info(f"Starting the offline evaluation of {timecode}")
-            timecode = int(timecode)
-            base_model_args.base_model_path = os.path.join(args.ckpt_dir, f"model_ckpt_{timecode:03d}.pt")
-            debugging_alg.debugger_args = debugger_args
-            debugging_alg.load_base_model(base_model_args, mode="offline_eval")
+    debugging_alg.online_debug()
 
-            if args.cl_method_name in ["mbpa++"]:
-                if args.num_adapt_epochs > 0:
-                    debugging_alg.debugger_setup(debugger_args) # because there are local adaptation.
-                else:
-                    debugging_alg.debugger_args = debugger_args
-            single_result = debugging_alg.single_timecode_eval(timecode)
-            thread_results[timecode] = single_result
-            # logger.info(f"Results: {json.dumps(single_result)}")
-        with open(args.path_to_thread_result, "w") as f:
-            json.dump(thread_results, f)
+    # logger.info(f'output_info["final_eval_results"]={output_info["final_eval_results"]}')
+    debugging_alg.save_result_file()
+    logger.info(f"Finished. Results saved to {args.result_file}")
     return
 
 
@@ -220,7 +193,7 @@ def get_cli_parser():
                         default="facebook/bart-base", required=False)
     parser.add_argument(
         "--base_model_path",
-        default="out/mrqa_squad_bart-base_1029_upstream_model//best-model.pt", type=str)
+        default="out/mrqa_squad_bart-base_1029_upstream_model/best-model.pt", type=str)
 
     # data_args
 
@@ -345,6 +318,8 @@ def get_cli_parser():
                         help="Prefix for saving predictions")
     parser.add_argument('--seed', type=int, default=42,
                         help="random seed for initialization")
+    parser.add_argument('--stream_id', type=int, default=0,
+                        help="multiple_streams")
     parser.add_argument(
         "--result_file", default="bug_data/results.json", type=str)
     
