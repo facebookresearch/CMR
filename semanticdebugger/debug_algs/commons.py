@@ -105,6 +105,7 @@ class OnlineDebuggingMethod():
         else:
             with open(data_args.submission_stream_data) as f:
                 data_stream = json.load(f)[data_args.stream_id]
+                self.logger.info(f"Loading the stream from {f.name} and use the ${data_args.stream_id} part.")
         self.data_stream = data_stream
         self.num_data_batches = len(data_stream)
         self.data_batch_size = len(data_stream[0])

@@ -34,11 +34,13 @@ fi
 
 if [ "$stream_split" = "val" ]; then
     use_wandb=False
+    max_timecode=100
     save_ckpt_freq=100
     kr_eval_freq=50
     kg_eval_freq=50
 elif [ "$stream_split" = "test" ]; then
     use_wandb=True
+    max_timecode=100
     save_ckpt_freq=10
     kr_eval_freq=10
     kg_eval_freq=10
@@ -47,7 +49,7 @@ fi
 
 gpu=0
 prefix="${task_name}_simplecl_lr=${lr}_ep=${ep}_l2w=${l2_weight}_${ns_config}-${stream_split}[${stream_id}]"
-ckpt_dir="experiments/ckpt_dirs/${task_name}/er/${prefix}"
+ckpt_dir="experiments/ckpt_dirs/${task_name}/simplecl/${prefix}"
 mkdir -p ${ckpt_dir}
 
 
@@ -66,9 +68,9 @@ CUDA_VISIBLE_DEVICES=$gpu python semanticdebugger/debug_algs/run_lifelong_finetu
     --base_model_path ${base_model_path} \
     --num_beams 3 \
     --predict_batch_size 48 \
-    --max_timecode 100 \
-    --kr_eval_freq 10 --kr_eval_mode "metric" \
-    --kg_eval_freq 10 --kg_eval_mode "metric" \
+    --max_timecode ${max_timecode} \
+    --kr_eval_freq ${kr_eval_freq} --kr_eval_mode "metric" \
+    --kg_eval_freq ${kg_eval_freq} --kg_eval_mode "metric" \
     --prefix ${prefix} \
     --submission_stream_data ${submission_stream_data} \
     --upstream_eval_data ${upstream_eval_data} \
