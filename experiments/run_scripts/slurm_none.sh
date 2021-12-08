@@ -11,7 +11,8 @@ seed=42
 if [ "$mode" = "val" ]; then 
     declare -a stream_ids=("0" "1" "2")
 else
-    declare -a stream_ids=("0" "1" "2" "3" "4") # 
+    # declare -a stream_ids=("0" "1" "2" "3" "4") # 
+    declare -a stream_ids=("5")
 fi
 
 for stream_id in "${stream_ids[@]}"

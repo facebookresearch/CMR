@@ -43,7 +43,8 @@ else
     declare -a lrs=("3e-5")
     declare -a eps=("10")
     declare -a l2ws=("0")
-    declare -a stream_ids=("0" "1" "2" "3" "4") # 
+    # declare -a stream_ids=("0" "1" "2" "3" "4") # 
+    declare -a stream_ids=("5") # 
     declare -a rss=("32")
     declare -a rfs=("1" "3")
     for rs in "${rss[@]}"

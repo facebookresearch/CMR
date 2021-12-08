@@ -40,7 +40,8 @@ else
     declare -a eps=("10")
     declare -a lambdas=("500" "100" "1000")
     declare -a gammas=("1")
-    declare -a stream_ids=("0" "1" "2" "3" "4")
+    # declare -a stream_ids=("0" "1" "2" "3" "4")
+    declare -a stream_ids=("5")
     for lr in "${lrs[@]}"
     do
     for ep in "${eps[@]}"

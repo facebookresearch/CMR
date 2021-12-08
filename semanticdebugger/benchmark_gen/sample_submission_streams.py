@@ -3,12 +3,9 @@ from os import path
 import random 
 import json
 
-from altair.vegalite.v4.schema.core import ColorName
-from sklearn.utils import validation
 
-from semanticdebugger.benchmark_gen.bb_utils import bb_sample, bb_rescale, build_submission_stream
+
 from semanticdebugger.models.utils import set_seeds
-from semanticdebugger.notebooks.draw_utils import draw_curve, draw_stacked_bars
 from semanticdebugger.task_manager.eval_metrics import evaluate_func
 import numpy as np
 import matplotlib.pyplot as plt
@@ -125,42 +122,6 @@ def load_datasets(args):
     
     # QA_submission_data, QA_heldout_submission_data, QA_upstream_sampled_data 
     return submission_data, heldout_submission_data, upstream_sampled_data
-
-
-def visualize_stream(submission_stream, data_names, cfg, args):
-    submission_stat = []
-    init_error_stat = []
-    for time_step, episode_data in enumerate(list(submission_stream)):
-        for dn in data_names:
-            examples = [ex for ex in episode_data if ex["data_name"]==dn]
-            num_init_errors = [ex for ex in examples if ex["init_status"]=="error"]
-            if dn == data_names[0]:
-                dn = "*" + dn 
-            submission_stat.append(dict(time_step=time_step, num_examples=len(examples), prefix=dn))
-            init_error_stat.append(dict(time_step=time_step, num_examples=len(num_init_errors), prefix=dn))
-            
-    submission_stat_pd = pd.DataFrame(submission_stat)
-    filename_str = f"T={cfg['T']},b={cfg['b']},alpha={cfg['alpha']},beta={cfg['beta']},gamma={cfg['gamma']}"
-    title_str = f"alpha={cfg['alpha']}, beta={cfg['beta']}, gamma={cfg['gamma']}"
-    fig1 =  draw_stacked_bars(df=submission_stat_pd, fig_title=f"Submission Stream ({title_str})", y_scale=[0., args.episode_size+1], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples")
-    fig1.save(f'figures/{args.task_name}.submission.{filename_str}.png', scale_factor=2.0)
-    init_error_stat_pd = pd.DataFrame(init_error_stat)
-    fig2 =  draw_stacked_bars(df=init_error_stat_pd, fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., args.episode_size+1], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors")
-    fig2.save(f'figures/{args.task_name}.init_error.{filename_str}.png', scale_factor=2.0)    
-    
-    # 50-version
-    # color_dom = ["*squad", "hotpot", "news", "nq", "search", "trivia"]
-    # color_range = ["gray", "blue", "orange", "green", "black", "brown"]
-    # color_range = ['#bab0ac', '#f0027f',  '#7fc97f', '#D35400', '#9c9ede', '#386cb0']
-
-    # color_dom=None; color_range=None
-    # fig1 =  draw_stacked_bars(df=submission_stat_pd[submission_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"Submission Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Examples", width=1000, bin_width=18, color_dom=color_dom, color_range=color_range)
-    # fig1.save(f'figures/{args.task_name}.submission.{filename_str}.50.png', scale_factor=2.0)
-    # init_error_stat_pd = pd.DataFrame(init_error_stat)
-    # fig2 =  draw_stacked_bars(df=init_error_stat_pd[init_error_stat_pd["time_step"]<=50], x_scale=[0, 50], fig_title=f"(Initial) Error Stream ({title_str})", y_scale=[0., 65], x_key="time_step", y_key="sum(num_examples)", y_title="# of Errors", width=1000, bin_width=18, color_dom=color_dom, color_range=color_range)
-    # fig2.save(f'figures/{args.task_name}.init_error.{filename_str}.50.png', scale_factor=2.0)    
-    return 
-
 
 
 def generate_submission_stream(submission_data, args, cfg):

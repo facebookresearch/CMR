@@ -12,7 +12,7 @@ from pandas.core import base
 os.chdir("/private/home/yuchenlin/SemanticDebugger")
 base_dir = "experiments/results/qa/" 
 split = "test"
-num_streams = 5
+num_streams = 6
 
 def sma(values):
     return float(np.mean(values)) 
@@ -157,7 +157,8 @@ if __name__ == '__main__':
     pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
     # %%
-    
+    results.to_csv(f"{base_dir}/csvs/full_results.csv", index=False, sep=",")
+
     for ns_config in results.ns_config.unique():
         # print(ns_config)
         r = results[results["ns_config"]==ns_config]
@@ -167,19 +168,24 @@ if __name__ == '__main__':
         for noid_path in results.noid_path.unique():
             r_r = results[results["noid_path"]==noid_path]
             if len(r_r) != num_streams:
-                print(f"{noid_path} does not have ${num_streams} runs, so we skip it.")
+                print(f"{noid_path} does not have {num_streams} runs, so we skip it.")
                 continue
             # %% 
             # print(r_r)
             records = r_r.to_dict("records")
             mean_item = records[0]
-            keys = ["AUKR", "AOKR", "ACSR", "AKG", "UKR(T)", "OKR(T)", "CSR(T)", "KG(T)", "OEC(T)", "AOEC"]
+            keys = ["AEFR(T)", "AUKR", "AOKR", "ACSR", "AKG", "UKR(T)", "AOEC", "OKR(T)", "CSR(T)", "KG(T)", "OEC(T)"]
             for key in keys:
-                mean_item[key] = r_r[key].max()
+                mean_item[key] = r_r[key].mean()
+            mean_item["OEC(T)-std"] = r_r["OEC(T)"].std()
             mean_item["stream_id"] = -1
             # print(mean_item)
+
+            mean_item = [record for record in records if record["stream_id"]==5][0]  # TODO: debug only
             items.append(mean_item)
         r = pd.DataFrame(items)
+        if "AEFR(T)" not in r:
+            print()
         r = r[(r["AEFR(T)"]>=0.9) | (r["cl_method"]=="none_cl")]
         r = r.sort_values(by=["steps", "lr", "num_epochs", "cl_method"])
         r = r.sort_values(by=["cl_method"], key = lambda x: x.str.len())

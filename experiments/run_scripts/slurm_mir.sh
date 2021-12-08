@@ -35,7 +35,7 @@ if [ "$mode" = "val" ]; then
     do
     for stream_id in "${stream_ids[@]}"
     do
-    session_name=${task}_mir_ep=${ep}_lr=${lr}_l2w=${l2w}_${rs}_${rf}_si=${stream_id}_${mcs}_${mconfg}
+    session_name=${task}_mir_ep=${ep}_lr=${lr}_l2w=${l2w}_${rs}_${rf}_${mcs}_${mconfg}_si=${stream_id}
     tmux new-session -d -s ${session_name} "srun --job-name ${session_name} --gpus-per-node=1 --partition=devlab --time=180 --cpus-per-task 4 --pty experiments/run_scripts/run_mir.sh ${lr} ${ep} ${l2w} ${rs} ${rf} 0.5 ${mcs} ${mconfg} ${ns_config} ${task} val ${stream_id}"
     echo "Created tmux session: ${session_name}"
     done
@@ -52,7 +52,8 @@ else
     declare -a lrs=("3e-5")
     declare -a eps=("10")
     declare -a l2ws=("0")
-    declare -a stream_ids=("0" "1" "2" "3" "4") # 
+    # declare -a stream_ids=("0" "1" "2" "3" "4") # 
+    declare -a stream_ids=("5") # 
     declare -a rss=("32")
     declare -a rfs=("1" "3")
     declare -a mir_cand_sizes=("256" "512")
@@ -74,8 +75,8 @@ else
     do
     for stream_id in "${stream_ids[@]}"
     do
-    session_name=${task}_mir_ep=${ep}_lr=${lr}_l2w=${l2w}_${rs}_${rf}_si=${stream_id}_${mcs}_${mconfg}
-    tmux new-session -d -s ${session_name} "srun --job-name ${session_name} --gpus-per-node=1 --partition=devlab --time=120 --cpus-per-task 4 --pty experiments/run_scripts/run_mir.sh ${lr} ${ep} ${l2w} ${rs} ${rf} 0.5 ${mcs} ${mconfg} ${ns_config} ${task} test ${stream_id}"
+    session_name=${task}_mir_ep=${ep}_lr=${lr}_l2w=${l2w}_${rs}_${rf}_${mcs}_${mconfg}_si=${stream_id}
+    tmux new-session -d -s ${session_name} "srun --job-name ${session_name} --gpus-per-node=1 --partition=devlab --time=180 --cpus-per-task 4 --pty experiments/run_scripts/run_mir.sh ${lr} ${ep} ${l2w} ${rs} ${rf} 0.5 ${mcs} ${mconfg} ${ns_config} ${task} test ${stream_id}"
     echo "Created tmux session: ${session_name}"
     done
     done
