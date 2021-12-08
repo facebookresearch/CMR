@@ -13,15 +13,18 @@ upstream_ratio=$6
 mir_cand_size=$7
 mir_abalation_args=$8   # none, largest_beforeloss, largest_afterloss
 
-memory_store_rate=1.0
-seed=42
-gpu=0
+
 
 ## Paths ##
 ns_config=$9
 task_name=${10}
 stream_split=${11}
 stream_id=${12}
+
+
+seed=${13}
+memory_store_rate=1.0
+gpu=0
 
 echo "task_name=${task_name}"
 
@@ -60,11 +63,11 @@ fi
 
 
 
-prefix="${task_name}_mir_lr=${lr}_ep=${ep}_l2w=${l2w}_rs=${replay_size}_rf=${replay_freq}_mcs=${mir_cand_size}_${mir_abalation_args}_${ns_config}-${stream_split}[${stream_id}]"
+prefix="${task_name}_mir_lr=${lr}_ep=${ep}_l2w=${l2w}_rs=${replay_size}_rf=${replay_freq}_mcs=${mir_cand_size}_${mir_abalation_args}_${ns_config}-${stream_split}[${stream_id}]_seed=${seed}"
 ckpt_dir="experiments/ckpt_dirs/${task_name}/mir/${prefix}"
 mkdir -p ${ckpt_dir}
 
-log_file="experiments/logs/run_1109_${prefix}_seed=${seed}.log"
+log_file="experiments/logs/run_1109_${prefix}.log"
 echo "Starting ${log_file}."
 touch ${log_file}
 

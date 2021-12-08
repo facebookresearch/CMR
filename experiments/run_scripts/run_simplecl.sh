@@ -48,12 +48,12 @@ fi
 
 
 gpu=0
-prefix="${task_name}_simplecl_lr=${lr}_ep=${ep}_l2w=${l2_weight}_${ns_config}-${stream_split}[${stream_id}]"
+prefix="${task_name}_simplecl_lr=${lr}_ep=${ep}_l2w=${l2_weight}_${ns_config}-${stream_split}[${stream_id}]_seed=${seed}"
 ckpt_dir="experiments/ckpt_dirs/${task_name}/simplecl/${prefix}"
 mkdir -p ${ckpt_dir}
 
 
-log_file="experiments/logs/run_1125_${prefix}_seed=${seed}.log"
+log_file="experiments/logs/run_1125_${prefix}.log"
 echo "Starting ${log_file}."
 touch ${log_file}
  

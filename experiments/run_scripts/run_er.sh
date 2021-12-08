@@ -10,15 +10,16 @@ l2w=$3
 replay_size=$4
 replay_freq=$5
 upstream_ratio=$6
-seed=42
-gpu=0
-memory_store_rate=1.0
 
 ## Paths ##
 ns_config=$7
 task_name=$8
 stream_split=$9
 stream_id=${10}
+
+seed=${11}
+gpu=0
+memory_store_rate=1.0
 
 
 if [ "$task_name" = "qa" ]; then
@@ -53,8 +54,8 @@ fi
 
 
 
-prefix="${task_name}_er_lr=${lr}_ep=${ep}_l2w=${l2w}_rs=${replay_size}_rf=${replay_freq}_${ns_config}-${stream_split}[${stream_id}]"
-log_file="experiments/logs/run_1125_${prefix}_seed=${seed}.log"
+prefix="${task_name}_er_lr=${lr}_ep=${ep}_l2w=${l2w}_rs=${replay_size}_rf=${replay_freq}_${ns_config}-${stream_split}[${stream_id}]_seed=${seed}"
+log_file="experiments/logs/run_1125_${prefix}.log"
 ckpt_dir="experiments/ckpt_dirs/${task_name}/er/${prefix}"
 mkdir -p ${ckpt_dir}
 

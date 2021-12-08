@@ -5,7 +5,7 @@ task=$1
 mode=$2
 
 ns_config="T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8"
-seed=42 
+
 
 
 if [ "$mode" = "val" ]; then
@@ -16,6 +16,8 @@ if [ "$mode" = "val" ]; then
     declare -a stream_ids=("0" "1" "2")
     declare -a rss=("32")
     declare -a rfs=("1" "3")
+    seed=42 
+
     for rs in "${rss[@]}"
     do
     for rf in "${rfs[@]}"
@@ -29,7 +31,7 @@ if [ "$mode" = "val" ]; then
     for stream_id in "${stream_ids[@]}"
     do
     session_name=${task}_er_ep=${ep}_lr=${lr}_l2w=${l2w}_${rs}_${rf}_si=${stream_id}
-    tmux new-session -d -s ${session_name} "srun --job-name ${session_name} --gpus-per-node=1 --partition=devlab --time=180 --cpus-per-task 4 --pty experiments/run_scripts/run_er.sh ${lr} ${ep} ${l2w} ${rs} ${rf} 0.5 ${ns_config} ${task} val ${stream_id}"
+    tmux new-session -d -s ${session_name} "srun --job-name ${session_name} --gpus-per-node=1 --partition=devlab --time=180 --cpus-per-task 4 --pty experiments/run_scripts/run_er.sh ${lr} ${ep} ${l2w} ${rs} ${rf} 0.5 ${ns_config} ${task} val ${stream_id} ${seed}"
     echo "Created tmux session: ${session_name}"
     done
     done
@@ -47,6 +49,7 @@ else
     declare -a stream_ids=("5") # 
     declare -a rss=("32")
     declare -a rfs=("1" "3")
+    declare -a seeds=("42" "1213" "888" "2333" "666")
     for rs in "${rss[@]}"
     do
     for rf in "${rfs[@]}"
@@ -59,9 +62,12 @@ else
     do
     for stream_id in "${stream_ids[@]}"
     do
-    session_name=${task}_er_ep=${ep}_lr=${lr}_l2w=${l2w}_${rs}_${rf}_si=${stream_id}
-    tmux new-session -d -s ${session_name} "srun --job-name ${session_name} --gpus-per-node=1 --partition=devlab --time=120 --cpus-per-task 4 --pty experiments/run_scripts/run_er.sh ${lr} ${ep} ${l2w} ${rs} ${rf} 0.5 ${ns_config} ${task} test ${stream_id}"
+    for seed in "${seeds[@]}"
+    do
+    session_name=${task}_er_ep=${ep}_lr=${lr}_l2w=${l2w}_${rs}_${rf}_si=${stream_id}_seed=${seed}
+    tmux new-session -d -s ${session_name} "srun --job-name ${session_name} --gpus-per-node=1 --partition=devlab --time=120 --cpus-per-task 4 --pty experiments/run_scripts/run_er.sh ${lr} ${ep} ${l2w} ${rs} ${rf} 0.5 ${ns_config} ${task} test ${stream_id} ${seed}"
     echo "Created tmux session: ${session_name}"
+    done
     done
     done
     done
