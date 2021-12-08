@@ -49,12 +49,12 @@ fi
 
 gpu=0
 
-prefix="${task_name}_oewc_lr=${lr}_ep=${ep}_lbd=${ewc_lambda}_gm=${ewc_gamma}_${ns_config}-${stream_split}[${stream_id}]"
+prefix="${task_name}_oewc_lr=${lr}_ep=${ep}_lbd=${ewc_lambda}_gm=${ewc_gamma}_${ns_config}-${stream_split}[${stream_id}]_seed=${seed}"
 ckpt_dir="experiments/ckpt_dirs/${task_name}/owc/${prefix}"
 mkdir -p ${ckpt_dir}
 
 
-log_file="experiments/logs/run_1110_${prefix}_seed=${seed}.log"
+log_file="experiments/logs/run_1110_${prefix}.log"
 echo "Starting ${log_file}."
 touch ${log_file} 
 

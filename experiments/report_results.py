@@ -25,15 +25,22 @@ def show_result(path):
     debugger_args = eval(o["debugger_args"])
     data_args = eval(o["data_args"])
     r["stream_id"] = data_args.stream_id
+     
     path = path.replace(base_dir, "")
     r["path"] = path.replace(",", "|")
-
-    r["noid_path"] = r["path"]
+    path_info = path.replace(",", "|").replace("_", "|").replace("-", "|").split("|")
+    if path_info[-2].startswith("seed="):
+        r["seed"] = path_info[-2][4:]
+    elif "nonecl" in path:
+        r["seed"] = "N/A (42)" 
+    else:        
+        return None 
+    r["standard_path"] = "|".join(path_info[:-2])
 
     for _ind in range(10):
         txt = f"[{_ind}]_result"
-        if txt in r["noid_path"]:
-            r["noid_path"] = r["noid_path"].replace(txt, "[]_result")
+        if txt in r["standard_path"]:
+            r["standard_path"] = r["standard_path"].replace(txt, "[]_result")
 
     # r["prefix"] = prefix
     r["method_class"] = o["method_class"]
@@ -165,24 +172,38 @@ if __name__ == '__main__':
         
         # r = r[((r["lr"]==3.5e-5) & (r["num_epochs"]==10)) | (r["cl_method"] == "none_cl") | (r["cl_method"] == "none_cl_offline_eval")]
         items = []
-        for noid_path in results.noid_path.unique():
-            r_r = results[results["noid_path"]==noid_path]
-            if len(r_r) != num_streams:
-                print(f"{noid_path} does not have {num_streams} runs, so we skip it.")
-                continue
+        for standard_path in results.standard_path.unique():
+            r_r = results[results["standard_path"]==standard_path]
+            # if len(r_r) != num_streams:
+            #     print(f"{standard_path} does not have {num_streams} runs, so we skip it.")
+            #     continue
             # %% 
             # print(r_r)
-            records = r_r.to_dict("records")
-            mean_item = records[0]
+            
+            do_average_across_stream_id = False
+            do_average_across_seed = True
+            shown_item = dict()
+            if do_average_across_stream_id:
+                records = r_r.to_dict("records")
+                shown_item = records[0]
+                shown_item["stream_id"] = -1
+                # print(shown_item)
+            if do_average_across_seed:
+                r_r = r_r[(r_r["stream_id"] == 5) & (r_r["stream_id"] != "N/A (42)")]
+                if r_r.empty:
+                    continue
+                records = r_r.to_dict("records")
+                shown_item = records[0]
+                shown_item["seed"] = -1
+            print(f"len(r_r)={len(r_r)}")
             keys = ["AEFR(T)", "AUKR", "AOKR", "ACSR", "AKG", "UKR(T)", "AOEC", "OKR(T)", "CSR(T)", "KG(T)", "OEC(T)"]
             for key in keys:
-                mean_item[key] = r_r[key].mean()
-            mean_item["OEC(T)-std"] = r_r["OEC(T)"].std()
-            mean_item["stream_id"] = -1
-            # print(mean_item)
-
-            mean_item = [record for record in records if record["stream_id"]==5][0]  # TODO: debug only
-            items.append(mean_item)
+                shown_item[key] = r_r[key].mean()
+            shown_item["OEC(T)-std"] = r_r["OEC(T)"].std()
+            shown_item["OEC(T)-min"] = r_r["OEC(T)"].min()
+            shown_item["OEC(T)-median"] = r_r["OEC(T)"].median()
+            shown_item["OEC(T)-max"] = r_r["OEC(T)"].max()
+            items.append(shown_item)
         r = pd.DataFrame(items)
         if "AEFR(T)" not in r:
             print()
@@ -190,7 +211,7 @@ if __name__ == '__main__':
         r = r.sort_values(by=["steps", "lr", "num_epochs", "cl_method"])
         r = r.sort_values(by=["cl_method"], key = lambda x: x.str.len())
         r = r.sort_values(by="method_class", key=_sort, kind="mergesort")
-        r = r.drop(columns=["ns_config", "method_class", "path", "stream_id", "noid_path", "ACSR", "AOEC", "AKG", "AUKR", "AOKR"])
+        r = r.drop(columns=["ns_config", "method_class", "path",  "standard_path", "ACSR", "AOEC", "AKG", "AUKR", "AOKR"])
         # r = r.drop(columns=["lr", "num_epochs"])
         r.to_csv(f"{base_dir}/csvs/{ns_config}.csv", index=False, sep=",")
         print("-"*50)
