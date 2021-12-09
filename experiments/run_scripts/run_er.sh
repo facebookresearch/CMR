@@ -47,7 +47,7 @@ if [ "$stream_split" = "val" ]; then
 elif [ "$stream_split" = "test" ]; then
     use_wandb=True
     max_timecode=100
-    save_ckpt_freq=10
+    save_ckpt_freq=25
     kr_eval_freq=10
     kg_eval_freq=10
 fi

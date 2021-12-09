@@ -49,14 +49,14 @@ if [ "$mode" = "val" ]; then
 
 else
     echo "Testing mode with tuned hps"
-    declare -a lrs=("3e-5")
+    declare -a lrs=("3e-5" "5e-5")
     declare -a eps=("10")
-    declare -a l2ws=("0")
+    declare -a l2ws=("0" "1")
     # declare -a stream_ids=("0" "1" "2" "3" "4") # 
     declare -a stream_ids=("5") # 
-    declare -a rss=("32")
-    declare -a rfs=("1" "3")
-    declare -a mir_cand_sizes=("256" "512")
+    declare -a rss=("32" "64")
+    declare -a rfs=("1")
+    declare -a mir_cand_sizes=("256" "512" "1024")
     declare -a mir_configs=("none" "largest_afterloss")
     declare -a seeds=("42" "1213" "888" "2333" "666")
 
