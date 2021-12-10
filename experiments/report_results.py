@@ -18,8 +18,8 @@ def sma(values):
     return float(np.mean(values)) 
 
 def show_result(path): 
-    # if path == "qa_nonecl_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8_offline=yes_result.json":
-    #     print()
+    if path == "experiments/results/qa/qa_er_lr=3e-5_ep=10_l2w=0_rs=64_rf=1_T=100,b=64,alpha=0.9,beta=0.5,gamma=0.8-test[5]_seed=42_result.json":
+        print()
     o = json.load(open(path))
     r = {}
     debugger_args = eval(o["debugger_args"])
@@ -38,9 +38,10 @@ def show_result(path):
     r["standard_path"] = "|".join(path_info[:-2])
 
     for _ind in range(10):
-        txt = f"[{_ind}]_result"
+        txt = f"test[{_ind}]"
         if txt in r["standard_path"]:
-            r["standard_path"] = r["standard_path"].replace(txt, "[]_result")
+            r["standard_path"] = r["standard_path"].replace(txt, "test[]")
+            break
 
     # r["prefix"] = prefix
     r["method_class"] = o["method_class"]
@@ -77,7 +78,11 @@ def show_result(path):
     r["lr"] = 0 if r["cl_method"]=="none_cl" else debugger_args.learning_rate
     r["num_epochs"] = 0 if r["cl_method"]=="none_cl" else debugger_args.num_epochs
     start = data_args.submission_stream_data.index("submission_stream.") + len("submission_stream.")
-    end = data_args.submission_stream_data.index(".json") 
+    end = data_args.submission_stream_data.index(".json")
+    # if "-test.json" in data_args.submission_stream_data:
+    #     end = data_args.submission_stream_data.index("-test.json") 
+    # elif "-val.json" in data_args.submission_stream_data:
+    #     end = data_args.submission_stream_data.index("-val.json") 
     ns_config_str = data_args.submission_stream_data[start:end]
     r["ns_config"] = ns_config_str
     if "-val" in ns_config_str:
@@ -98,10 +103,11 @@ def show_result(path):
     KGs = [item["KG"] for item in online if "KG" in item]
     CSRs = [item["CSR"] for item in online if "CSR" in item]
     if mode!="val" and len(EFRs) != ns_config["T"]:
+        print(f"Error: ----> path={path}; len(EFRs)={len(EFRs)}")
         return None
     last_step = online[-1] 
     if last_step["timecode"] != ns_config["T"] -1:
-        print(f"Error: ----> path={path}; the results doesn't match the length")
+        print(f'Error: ----> path={path}; last_step["timecode"]={last_step["timecode"]}  the results does not match the length')
         return None
     
     r["AEFR(T)"] = float(np.mean(EFRs))
@@ -145,7 +151,7 @@ if __name__ == '__main__':
             continue
         result_files.append(file)
 
-    print(result_files)
+    print("\n".join(result_files))
     # %%
 
     results = []

@@ -38,10 +38,10 @@ if [ "$mode" = "val" ]; then
 
 else
     echo "Testing mode with tuned hps"
-    declare -a lrs=("3e-5")
+    declare -a lrs=("2e-5")
     declare -a eps=("10")
-    declare -a lambdas=("1000" "5000" "10000")
-    declare -a gammas=("1" "0.9")
+    declare -a lambdas=("10000" "5000" "50000")
+    declare -a gammas=("1")
     # declare -a stream_ids=("0" "1" "2" "3" "4")
     declare -a stream_ids=("5")
     declare -a seeds=("42" "1213" "888" "2333" "666")
@@ -60,7 +60,7 @@ else
     do
     session_name=${task}_oewc_ep=${ep}_lr=${lr}_lbd=${lambda}_gm=${gamma}_si=${stream_id}_seed=${seed}
     session_name=$(echo "${session_name}" | tr '.' '#')
-    tmux new-session -d -s ${session_name} "srun --job-name ${session_name} --gpus-per-node=1 --partition=learnlab --time=120 --cpus-per-task 4 --pty experiments/run_scripts/run_oewc.sh ${seed} ${lr} ${ep} ${lambda} ${gamma} ${ns_config} ${task} test ${stream_id}"
+    tmux new-session -d -s ${session_name} "srun --job-name ${session_name} --gpus-per-node=1 --partition=devlab --time=120 --cpus-per-task 4 --pty experiments/run_scripts/run_oewc.sh ${seed} ${lr} ${ep} ${lambda} ${gamma} ${ns_config} ${task} test ${stream_id}"
     echo "Created tmux session: ${session_name}"
     done
     done

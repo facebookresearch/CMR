@@ -32,9 +32,9 @@ if [ "$mode" = "val" ]; then
 
 else
     echo "Testing mode with tuned hps"
-    declare -a lrs=("3e-5")
+    declare -a lrs=("2e-5")
     declare -a eps=("10")
-    declare -a l2ws=("0" "1")
+    declare -a l2ws=("0" "1" "0.1" "10" )
     # declare -a stream_ids=("0" "1" "2" "3" "4")
     declare -a stream_ids=("5")
     declare -a seeds=("42" "1213" "888" "2333" "666")
